@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Экспресс-Ревизия</string>
+    <string name="settings_title">Настройки</string>
+    <string name="demoMode_off">Выключить демо-режим</string>
+    <string name="demoMode_on">Включить демо-режим</string>
+
+    <string-array name="entries">
+        <item>first</item>
+        <item>second</item>
+    </string-array>
+    <string-array name="entry_values">
+        <item>first_val</item>
+        <item>second_val</item>
+    </string-array>
+
+    <string name="btnLoadStudyExample">Загрузить обучающий пример</string>
+    <string name="btnStartPresentation">Начать презентацию</string>
+    <string name="btnLoadDocument">Загрузить ревизию</string>
+    <string name="btnEditDocument">Редактировать ревизию</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="cancel">Отмена</string>
+    <string name="demoModeOnConfirmation">Включить демо-режим?</string>
+    <string name="demoModeOnWarning">Внимание!\nВсе данные текущей ревизии будут уничтожены!\nПродолжить?</string>
+    <string name="demoModeOffConfirmation">Выключить демо-режим?</string>
+    <string name="demoModeOffWarning">""</string>
+
+</resources>
