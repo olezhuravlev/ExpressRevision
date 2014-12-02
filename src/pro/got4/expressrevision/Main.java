@@ -1,9 +1,6 @@
 package pro.got4.expressrevision;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -16,7 +13,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-public class Main extends FragmentActivity implements OnClickListener {
+public class Main extends FragmentActivity implements OnClickListener,
+		CustomDialogFragment.OnCloseDialogListener {
 
 	public static final String FIELD_DEMOMODE_NAME = "demoMode";
 
@@ -84,7 +82,10 @@ public class Main extends FragmentActivity implements OnClickListener {
 			@Override
 			public boolean onMenuItemClick(MenuItem item) {
 
-				showDialog(DIALOG_DEMOMODE_ID);
+				// Отображение диалога о смене режима работы.
+				CustomDialogFragment.showDialog_YesNo(
+						getString(R.string.demoModeOnConfirmation),
+						getString(R.string.demoModeOnWarning), Main.this);
 
 				return true;
 			}
@@ -94,8 +95,23 @@ public class Main extends FragmentActivity implements OnClickListener {
 	}
 
 	@Override
+	public void onCloseDialog(int id) {
+
+		String message = "";
+
+		if (id == CustomDialogFragment.BUTTON_YES)
+			message = "Yes!";
+		else
+			message = "No!";
+
+		Toast.makeText(Main.this, "onCloseDialog: " + message,
+				Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 
+		// Изменение подписи кнопки меню.
 		MenuItem item = menu.getItem(OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID);
 		item.setTitle(isDemoMode() ? R.string.demoMode_off
 				: R.string.demoMode_on);
@@ -121,6 +137,38 @@ public class Main extends FragmentActivity implements OnClickListener {
 					.show();
 		}
 	}
+
+	// Т.к. сигнатура отличается от определенного в Activity одноименного
+	// метода, то метод не перегружает showDialog, вызывающего Dialog, а
+	// использует FragmentDialog.
+	//
+	// public void showDialog() {
+
+	// DialogFragment.show() позаботится о добавлении фрагмента в
+	// транзакцию. Мы также хотим удалять любой отображаемый в данный момент
+	// диалог, поэтому создадим собственную транзакцию и сделаем это здесь.
+	// FragmentManager - Interface for interacting with Fragment objects inside
+	// of an Activity
+	// FragmentManager fm = getSupportFragmentManager();
+
+	// FragmentTransaction - API for performing a set of Fragment operations.
+	// FragmentTransaction ft = fm.beginTransaction();
+
+	// Fragment prev = fm.findFragmentByTag("dialog");
+	// if (prev != null) {
+	// ft.remove(prev);
+	// }
+	// ft.addToBackStack(null);
+
+	// можно сделать анимацию появления фрагмента путем установки
+	// setTransition() перед коммитом.
+	// ГДЕ ft.commit()???
+
+	// Создание и отображение диалога.
+	// DialogFragment newFragment = CustomDialogFragment.getYesNoDialog(
+	// "Заголовок", "Сообщение");
+	// newFragment.show(ft, "dialog");
+	// }
 
 	/**
 	 * Возвращает количество строк загруженного документа.
@@ -163,47 +211,48 @@ public class Main extends FragmentActivity implements OnClickListener {
 		tl.setBackgroundDrawable(image);
 	}
 
-	@Override
-	public Dialog onCreateDialog(int id) {
-
-		if (id == DIALOG_DEMOMODE_ID) {
-
-			AlertDialog.Builder adb = new AlertDialog.Builder(this);
-
-			System.out.println("onCreateDialog:demoMode = " + isDemoMode());
-
-			adb.setTitle(isDemoMode() ? R.string.demoModeOffConfirmation
-					: R.string.demoModeOnConfirmation);
-
-			// сообщение
-			adb.setMessage(isDemoMode() ? R.string.demoModeOffWarning
-					: R.string.demoModeOnWarning);
-
-			adb.setIcon(android.R.drawable.ic_dialog_alert);
-			adb.setPositiveButton(R.string.yes,
-					new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							setDemoMode(!isDemoMode());
-							setDemoModeBackground(Main.this, isDemoMode(),
-									R.id.backgroundLayout);
-						}
-					});
-
-			adb.setNegativeButton(R.string.no,
-					new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-						}
-					});
-
-			// создаем диалог
-			return adb.create();
-		}
-		return super.onCreateDialog(id);
-	}
+	// // Вызывается системой после вызова showDialog.
+	// @Override
+	// public Dialog onCreateDialog(int id) {
+	//
+	// if (id == DIALOG_DEMOMODE_ID) {
+	//
+	// AlertDialog.Builder adb = new AlertDialog.Builder(this);
+	//
+	// System.out.println("onCreateDialog:demoMode = " + isDemoMode());
+	//
+	// adb.setTitle(isDemoMode() ? R.string.demoModeOffConfirmation
+	// : R.string.demoModeOnConfirmation);
+	//
+	// // сообщение
+	// adb.setMessage(isDemoMode() ? R.string.demoModeOffWarning
+	// : R.string.demoModeOnWarning);
+	//
+	// adb.setIcon(android.R.drawable.ic_dialog_alert);
+	// adb.setPositiveButton(R.string.yes,
+	// new DialogInterface.OnClickListener() {
+	//
+	// @Override
+	// public void onClick(DialogInterface dialog, int which) {
+	// setDemoMode(!isDemoMode());
+	// setDemoModeBackground(Main.this, isDemoMode(),
+	// R.id.backgroundLayout);
+	// }
+	// });
+	//
+	// adb.setNegativeButton(R.string.no,
+	// new DialogInterface.OnClickListener() {
+	//
+	// @Override
+	// public void onClick(DialogInterface dialog, int which) {
+	// }
+	// });
+	//
+	// // создаем диалог
+	// return adb.create();
+	// }
+	// return super.onCreateDialog(id);
+	// }
 
 	/**
 	 * Возвращает значение флага демо-режима.
