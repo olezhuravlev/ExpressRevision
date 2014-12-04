@@ -33,7 +33,7 @@ public class DBase {
 
 	Context context;
 	DBaseHelper dbHelper;
-	private SQLiteDatabase db;
+	private SQLiteDatabase sqliteDb;
 
 	public DBase(Context context) {
 		this.context = context;
@@ -41,15 +41,15 @@ public class DBase {
 
 	public void open() {
 		dbHelper = new DBaseHelper();
-		db = dbHelper.getWritableDatabase();
+		sqliteDb = dbHelper.getWritableDatabase();
 	}
 
 	public void close() {
-		db.close();
+		sqliteDb.close();
 	}
 
 	public void insert(String tableName, ContentValues values) {
-		db.insert(tableName, null, values);
+		sqliteDb.insert(tableName, null, values);
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class DBase {
 	}
 
 	public SQLiteDatabase getSQLiteDatabase() {
-		return db;
+		return sqliteDb;
 	}
 
 	private class DBaseHelper extends SQLiteOpenHelper {
@@ -163,6 +163,7 @@ public class DBase {
 		// ///////////////////////////////////////
 		// Таблица списка документов.
 		ContentValues docsValues = new ContentValues();
+
 		docsValues.put(FIELD_REF_NAME, "7ba659f6-05f5-4a96-96fe-0c10b72a1608");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005264");
 		docsValues.put(FIELD_DATE_NAME, "2014-10-05");
@@ -192,6 +193,102 @@ public class DBase {
 		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
 		docsValues.put(FIELD_STORE_NAME, "95 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "Возьмите расписку с киоскера!");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "34b219c0-aa3f-41fc-a67d-4bc05414ad80");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005401");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "151 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "a2d2e074-f0c7-4f4d-b572-5dad3ec2e17e");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005402");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "152 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "cc1a518b-131a-4060-9502-240cdb660101");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005403");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "153 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "f9e9da10-57e5-447a-987d-f00a4b455b76");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005404");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "154 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "68889f55-cb89-4441-aeed-93a950f70bc4");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005405");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "155 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "Срочно!");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "28bad9df-055e-4197-aefc-e044dde77753");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005406");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "156 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "53a68452-3f22-4cb3-8dc4-3287f2322ecf");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005407");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "157 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "85a20773-02ba-4f3e-af47-7849cdc9ee6b");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005408");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "158 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "04a28a10-0329-484b-a30b-4a7983309136");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005409");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "159 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "81b8f28b-b4d5-4a98-a378-00c356a6ae00");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005410");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "160 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "557b36ab-0c3f-42c9-8576-309f35b97451");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005411");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "161 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
+
+		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+
+		docsValues.put(FIELD_REF_NAME, "cb3ad424-0f2b-49f6-9ee2-f01362fcb1fa");
+		docsValues.put(FIELD_NUM_NAME, "ЭКС0005412");
+		docsValues.put(FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(FIELD_STORE_NAME, "162 киоск");
+		docsValues.put(FIELD_COMMENT_NAME, "");
 
 		insert(dataBase, TABLE_DOCS_NAME, docsValues);
 
@@ -337,7 +434,8 @@ public class DBase {
 	}
 
 	// получить все данные из таблицы DB_TABLE
-	public Cursor getAllDocs() {
-		return db.query(TABLE_DOCS_NAME, null, null, null, null, null, null);
+	public Cursor getAllRows() {
+		return sqliteDb.query(TABLE_DOCS_NAME, null, null, null, null, null,
+				null);
 	}
 }

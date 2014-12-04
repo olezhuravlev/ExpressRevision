@@ -2,6 +2,7 @@ package pro.got4.expressrevision;
 
 import java.util.concurrent.TimeUnit;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -14,24 +15,36 @@ import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 
 public class DocsListFragmentActivity extends FragmentActivity implements
-		LoaderCallbacks<Cursor> {
+		LoaderCallbacks<Cursor>, OnClickListener {
 
-	private static final int CM_DELETE_ID = 1;
+	private static final int CONTEXTMENU_LOAD_BUTTON_ID = 0;
+	private static final int LOADER_DOCUMENTS_ID = 0;
+
 	ListView lvData;
 	DBase db;
 	SimpleCursorAdapter scAdapter;
 
+	Button buttonLoad;
+
 	/** Called when the activity is first created. */
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
+
+		System.out.println("onCreate()");
 
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.docs_list);
+
+		buttonLoad = (Button) findViewById(R.id.buttonLoad);
+		buttonLoad.setOnClickListener(this);
 
 		// открываем подключение к БД
 		db = new DBase(this);
@@ -67,56 +80,101 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		// создаем лоадер для чтения данных
 		System.out.println("before initLoader");
 
-		getSupportLoaderManager().initLoader(0, null, this);
+		// initLoader loads the data that was loaded in the last run, if it had
+		// run before. This is why you call in in the initialization method of
+		// your Fragment/Activity. This is handy because you won't have to
+		// requery on orientation change.
+
+		// Ensures a loader is initialized and active. If the loader doesn't
+		// already exist, one is created and (if the activity/fragment is
+		// currently started) starts the loader. Otherwise the last created
+		// loader is re-used.
+
+		// In either case, the given callback is associated with the loader, and
+		// will be called as the loader state changes. If at the point of call
+		// the caller is in its started state, and the requested loader already
+		// exists and has generated its data, then callback
+		// onLoadFinished(Loader, D) will be called immediately (inside of this
+		// function), so you must be prepared for this to happen.
+		getSupportLoaderManager().initLoader(LOADER_DOCUMENTS_ID, null, this);
+
+		// restartLoader cleans up previously loaded data so that you get a new
+		// Loader to work with (likely) different data.
+		// getSupportLoaderManager().restartLoader(0, null, this);
 
 		System.out.println("after initLoader");
 	}
 
-	// обработка нажатия кнопки
-	public void onButtonClick(View view) {
-		// // добавляем запись
-		// db.addRec("sometext " + (scAdapter.getCount() + 1),
-		// R.drawable.ic_launcher);
-		// получаем новый курсор с данными
-		getSupportLoaderManager().getLoader(0).forceLoad();
+	/**
+	 * Обработчик нажатия кнопок.
+	 */
+	@Override
+	public void onClick(View v) {
+
+		// db.open();
+
+		ContentValues docsValues = new ContentValues();
+
+		docsValues.put(DBase.FIELD_REF_NAME, "new");
+		docsValues.put(DBase.FIELD_NUM_NAME, "ЭКС00054__");
+		docsValues.put(DBase.FIELD_DATE_NAME, "2014-10-07");
+		docsValues.put(DBase.FIELD_STORE_NAME, "___ киоск");
+		docsValues.put(DBase.FIELD_COMMENT_NAME, "");
+
+		db.insert(DBase.TABLE_DOCS_NAME, docsValues);
+
+		// db.close();
+
+		// Перезапускает загрузку, не пересоздавая загрузчик.
+		// Эта функция используется, например, в дефолтной реализации
+		// onContentChanged() при обнаружении изменений в источнике.
+		getSupportLoaderManager().getLoader(LOADER_DOCUMENTS_ID).forceLoad();
+
+		// Пересоздает загрузчик, уничтожая старый.
+		// Внутри все равно вызывается forceLoad().
+		// getSupportLoaderManager()
+		// .restartLoader(LOADER_DOCUMENTS_ID, null, this);
 	}
 
+	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
-		menu.add(0, CM_DELETE_ID, 0, R.string.btnLoadDocument);
+		menu.add(0, CONTEXTMENU_LOAD_BUTTON_ID, 0, R.string.btnLoadDocument);
 	}
 
+	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 
-		if (item.getItemId() == CM_DELETE_ID) {
-
-			// получаем из пункта контекстного меню данные по пункту списка
-			// AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) item
-			// .getMenuInfo();
-
-			// извлекаем id записи и удаляем соответствующую запись в БД
-			// db.delRec(acmi.id);
+		// Загрузка списка документов.
+		if (item.getItemId() == CONTEXTMENU_LOAD_BUTTON_ID) {
 
 			// получаем новый курсор с данными
 			getSupportLoaderManager().getLoader(0).forceLoad();
 
 			return true;
 		}
+
 		return super.onContextItemSelected(item);
 	}
 
+	@Override
 	protected void onDestroy() {
+
+		System.out.println("onDestroy()");
 
 		super.onDestroy();
 
-		// закрываем подключение при выходе
-		db.close();
+		// Т.к. при изменении конфигурации менеджером используется то же самое
+		// подключение, то если здесь его закрыть,
+		// то добавить записи уже не удасться!
+		// db.close();
 	}
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle bndl) {
 
+		// Метод вызывается при вызове метода initLoader().
 		System.out.println("onCreateLoader");
 
 		return new MyCursorLoader(this, db);
@@ -132,15 +190,24 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
+
 		System.out.println("onLoaderReset");
+
+		// This is called when the last Cursor provided to onLoadFinished()
+		// above is about to be closed. We need to make sure we are no
+		// longer using it.
+		scAdapter.swapCursor(null);
 	}
 
-	static class MyCursorLoader extends CursorLoader {
+	private static class MyCursorLoader extends CursorLoader {
 
-		DBase db;
+		private DBase db;
 
-		public MyCursorLoader(Context context, DBase db) {
+		private MyCursorLoader(Context context, DBase db) {
+
 			super(context);
+
+			System.out.println("*** MyCursorLoader ***");
 			this.db = db;
 		}
 
@@ -149,18 +216,22 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 			System.out.println("loadInBackground");
 
-			Cursor cursor = db.getAllDocs();
+			Cursor cursor = db.getAllRows();
 
 			System.out.println("cursor has [" + cursor.getCount() + "] rows");
 
 			try {
 
-				for (int i = 0; i < 10; i++) {
-					TimeUnit.MILLISECONDS.sleep(50); // TODO ЗАДЕРЖКА!!!
+				for (int i = 0; i < 5; i++) {
+					System.out.println("loadInBackground: sleep()");
+					TimeUnit.MILLISECONDS.sleep(1000); // TODO ЗАДЕРЖКА!!!
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+
+			System.out.println("loadInBackground: return cursor;");
+
 			return cursor;
 		}
 
@@ -168,12 +239,8 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		public void deliverResult(Cursor cursor) {
 
 			System.out.println("deliverResult");
-
 			super.deliverResult(cursor);
 
-			if (isStarted()) {
-
-			}
 		}
 
 	}

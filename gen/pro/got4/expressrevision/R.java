@@ -31,9 +31,10 @@ public final class R {
     }
     public static final class id {
         public static final int backgroundLayout=0x7f090012;
-        public static final int btnLoadStudy=0x7f090016;
-        public static final int btnStartPresentation=0x7f090017;
-        public static final int buttonMain=0x7f090004;
+        public static final int btnLoadStudy=0x7f090017;
+        public static final int btnStartPresentation=0x7f090018;
+        public static final int buttonLoad=0x7f090004;
+        public static final int buttonMain=0x7f090015;
         public static final int buttonNo=0x7f090003;
         public static final int buttonYes=0x7f090002;
         public static final int commentTextView=0x7f09000a;
@@ -48,7 +49,7 @@ public final class R {
         public static final int storeTextView=0x7f090009;
         public static final int tableRow1=0x7f090013;
         public static final int tableRow2=0x7f090014;
-        public static final int tableRow3=0x7f090015;
+        public static final int tableRow3=0x7f090016;
         public static final int textViewID=0x7f09000f;
         public static final int textViewMessage=0x7f090001;
         public static final int textViewName=0x7f090010;
@@ -79,6 +80,7 @@ public final class R {
         public static final int demoMode_off=0x7f050002;
         public static final int demoMode_on=0x7f050003;
         public static final int no=0x7f050009;
+        public static final int resreshList=0x7f05000f;
         public static final int settings_title=0x7f050001;
         public static final int yes=0x7f050008;
     }

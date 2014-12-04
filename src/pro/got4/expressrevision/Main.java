@@ -14,7 +14,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 public class Main extends FragmentActivity implements OnClickListener,
-		CustomDialogFragment.OnCloseDialogListener {
+		CustomDialogFragment.OnCloseCustomDialogListener {
 
 	public static final String FIELD_DEMOMODE_NAME = "demoMode";
 
@@ -28,6 +28,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 	private boolean demoMode;
 
 	Button buttonMain;
+
+	FragmentActivity aa;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +59,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		buttonMain.setText(btnText);
 
-		setDemoModeBackground(this, isDemoMode(), R.id.backgroundLayout);
+		setDemoModeBackground(this, R.id.backgroundLayout, isDemoMode());
 	}
 
 	@Override
@@ -73,7 +75,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		MenuItem prefItem = menu.add(0, OPTIONS_MENU_PREFERENCES_BUTTON_ID, 0,
 				getResources().getString(R.string.settings_title));
-		prefItem.setIntent(new Intent(this, PrefActivity.class));
+		prefItem.setIntent(new Intent(this, Preferences.class));
 
 		MenuItem demoItem = menu.add(0, OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID, 1,
 				getResources().getString(R.string.demoMode_on));
@@ -83,29 +85,41 @@ public class Main extends FragmentActivity implements OnClickListener,
 			public boolean onMenuItemClick(MenuItem item) {
 
 				// ќтображение диалога о смене режима работы.
-				CustomDialogFragment.showDialog_YesNo(
-						getString(R.string.demoModeOnConfirmation),
-						getString(R.string.demoModeOnWarning), Main.this);
+				String title = "";
+				String message = "";
+				if (isDemoMode()) {
 
-				return true;
+					title = getString(R.string.demoModeOffConfirmation);
+					message = getString(R.string.demoModeOffWarning);
+
+				} else {
+
+					title = getString(R.string.demoModeOnConfirmation);
+					message = getString(R.string.demoModeOnWarning);
+
+				}
+
+				CustomDialogFragment
+						.showDialog_YesNo(title, message, Main.this);
+
+				return true; // —обытие отработано.
 			}
 		});
 
 		return super.onCreateOptionsMenu(menu);
 	}
 
+	/**
+	 * ¬ызываетс€ при закрытии пользовательского диалога.
+	 */
 	@Override
-	public void onCloseDialog(int id) {
+	public void onCloseCustomDialog(int id) {
 
-		String message = "";
+		if (id == CustomDialogFragment.BUTTON_YES) {
 
-		if (id == CustomDialogFragment.BUTTON_YES)
-			message = "Yes!";
-		else
-			message = "No!";
-
-		Toast.makeText(Main.this, "onCloseDialog: " + message,
-				Toast.LENGTH_SHORT).show();
+			setDemoMode(!isDemoMode());
+			setDemoModeBackground(this, R.id.backgroundLayout, isDemoMode());
+		}
 	}
 
 	@Override
@@ -121,21 +135,35 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 	@Override
 	public void onClick(View v) {
-		startActivityForResult(
-				new Intent(this, DocsListFragmentActivity.class),
-				DOCUMENTS_LIST_REQUEST_CODE);
+
+		int id = v.getId();
+
+		switch (id) {
+
+		case R.id.buttonMain:
+			startActivityForResult(new Intent(this,
+					DocsListFragmentActivity.class),
+					DOCUMENTS_LIST_REQUEST_CODE);
+			break;
+
+		default:
+		}
 	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-		if (requestCode == DOCUMENTS_LIST_REQUEST_CODE) {
+		switch (requestCode) {
+
+		case DOCUMENTS_LIST_REQUEST_CODE:
 
 			// ќтвет получен из активности, отображающей список документов и
 			// загружающей выбранный.
 			Toast.makeText(this, "ƒокумент загружен!", Toast.LENGTH_SHORT)
 					.show();
+
 		}
+
 	}
 
 	// “.к. сигнатура отличаетс€ от определенного в Activity одноименного
@@ -185,13 +213,19 @@ public class Main extends FragmentActivity implements OnClickListener,
 	}
 
 	/**
-	 * ”станавливает/снимает оформление заднего фона в демо/обычном режиме.
+	 * ”станавливает или снимает оформление заднего фона указанного вью
+	 * указанной активности в зависимости от того, включЄн или выключен
+	 * демо-режим.
 	 * 
+	 * @param activity
+	 *            - активность, в которой будет произведен поиск вью;
+	 * @param viewId
+	 *            - вью, задний фон которого следует установить;
+	 * @param demoModeOn
+	 *            - флаг демо-режима.
 	 */
-	public static void setDemoModeBackground(Activity activity,
-			boolean demoModeOn, int viewId) {
-
-		View tl = activity.findViewById(viewId);
+	public static void setDemoModeBackground(Activity activity, int viewId,
+			boolean demoModeOn) {
 
 		Drawable image = null;
 
@@ -208,7 +242,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		}
 
-		tl.setBackgroundDrawable(image);
+		View v = activity.findViewById(viewId);
+		v.setBackgroundDrawable(image);
 	}
 
 	// // ¬ызываетс€ системой после вызова showDialog.

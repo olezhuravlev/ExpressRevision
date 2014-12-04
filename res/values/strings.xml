@@ -26,5 +26,6 @@
     <string name="demoModeOnWarning">Внимание!\nВсе данные текущей ревизии будут уничтожены!\nПродолжить?</string>
     <string name="demoModeOffConfirmation">Выключить демо-режим?</string>
     <string name="demoModeOffWarning">""</string>
+    <string name="resreshList">"Обновить список"</string>
 
 </resources>

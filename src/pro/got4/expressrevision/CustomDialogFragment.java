@@ -21,8 +21,9 @@ public class CustomDialogFragment extends DialogFragment {
 	public static String FIELD_MESSAGE_NAME = "message";
 	public static String FIELD_STYLE_NAME = "style";
 	public static String FIELD_THEME_NAME = "theme";
+	public static String FIELD_DIALOGTAG_NAME = "dialogTag";
 
-	private static String DIALOG_YESNO_ID = "dialog_yesno_stringId";
+	private static String DIALOG_YESNO_TAG = "dialog_yesno_tag";
 
 	public static int BUTTON_NO = 0;
 	public static int BUTTON_YES = 1;
@@ -31,11 +32,12 @@ public class CustomDialogFragment extends DialogFragment {
 	private String message;
 	private int style;
 	private int theme;
+	private String dialogTag;
 
-	private OnCloseDialogListener listener;
+	private OnCloseCustomDialogListener listener;
 
-	public static interface OnCloseDialogListener {
-		public void onCloseDialog(int id);
+	public static interface OnCloseCustomDialogListener {
+		public void onCloseCustomDialog(int id);
 	}
 
 	@Override
@@ -44,7 +46,7 @@ public class CustomDialogFragment extends DialogFragment {
 		super.onAttach(activity);
 
 		try {
-			listener = ((OnCloseDialogListener) activity);
+			listener = ((OnCloseCustomDialogListener) activity);
 		} catch (ClassCastException e) {
 			throw new ClassCastException(activity.toString()
 					+ " must implement OnCloseDialogListener");
@@ -62,8 +64,18 @@ public class CustomDialogFragment extends DialogFragment {
 		style = getArguments().getInt(FIELD_STYLE_NAME);
 		theme = getArguments().getInt(FIELD_THEME_NAME);
 
+		dialogTag = getArguments().getString(FIELD_DIALOGTAG_NAME);
+
 		setStyle(style, theme);
 
+	}
+
+	@Override
+	public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+		// Здесь можно создать диалог с помощью билдера и не использовать потом
+		// onCreateView.
+		return super.onCreateDialog(savedInstanceState);
 	}
 
 	@Override
@@ -84,8 +96,8 @@ public class CustomDialogFragment extends DialogFragment {
 
 			@Override
 			public void onClick(View v) {
-				listener.onCloseDialog(BUTTON_YES);
-				closeDialog();
+				listener.onCloseCustomDialog(BUTTON_YES);
+				closeCustomDialog();
 			}
 		});
 
@@ -93,29 +105,24 @@ public class CustomDialogFragment extends DialogFragment {
 
 			@Override
 			public void onClick(View v) {
-				listener.onCloseDialog(BUTTON_NO);
-				closeDialog();
+				listener.onCloseCustomDialog(BUTTON_NO);
+				closeCustomDialog();
 			}
 		});
 
 		return v;
 	}
 
-	private void closeDialog() {
+	private void closeCustomDialog() {
 
+		// Закрытие самого себя.
 		FragmentManager fm = getActivity().getSupportFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
-		Fragment currentFragment = fm.findFragmentByTag(DIALOG_YESNO_ID);
+		Fragment currentFragment = fm.findFragmentByTag(dialogTag);
 		if (currentFragment != null) {
 			ft.remove(currentFragment);
 		}
 		ft.commit();
-	}
-
-	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-		return super.onCreateDialog(savedInstanceState);
 	}
 
 	/**
@@ -129,8 +136,16 @@ public class CustomDialogFragment extends DialogFragment {
 		Bundle args = new Bundle();
 		args.putString(FIELD_TITLE_NAME, title);
 		args.putString(FIELD_MESSAGE_NAME, message);
-		args.putInt(FIELD_STYLE_NAME, DialogFragment.STYLE_NO_FRAME);
+
+		// Стили:
+		// STYLE_NO_FRAME - фрейм полупрозрачный, воспринимает нажатия;
+		// STYLE_NO_INPUT - фрейм полупрозрачный, нажатия воспринимает фоновый
+		// фрейм;
+		// STYLE_NO_TITLE - фрейм не имеет заголовка, воспринимает нажатия;
+		// STYLE_NORMAL - имеет заголовок, воспринимает нажатия.
+		args.putInt(FIELD_STYLE_NAME, DialogFragment.STYLE_NO_TITLE);
 		args.putInt(FIELD_THEME_NAME, 0);
+		args.putString(FIELD_DIALOGTAG_NAME, DIALOG_YESNO_TAG);
 
 		dialog.setArguments(args);
 
@@ -142,9 +157,8 @@ public class CustomDialogFragment extends DialogFragment {
 		// }
 		// ft.addToBackStack(null);
 
-		dialog.show(ft, DIALOG_YESNO_ID); // Коммит производится здесь!
+		dialog.show(ft, DIALOG_YESNO_TAG); // Коммит производится здесь!
 
 		return dialog;
-
 	}
 }
