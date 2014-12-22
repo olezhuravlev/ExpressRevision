@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/backgroundLayout"
+    android:id="@+id/backgroundLayout_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -18,24 +18,14 @@
         android:layout_height="wrap_content"
         android:layout_weight="1" >
 
-        <TextView
-            android:id="@+id/textViewTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
         <Button
-            android:id="@+id/buttonMain"
+            android:id="@+id/buttonStart"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
+            android:layout_margin="50dp"
             android:layout_weight="1"
+            android:shadowRadius="10"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
-        <TextView
-            android:id="@+id/textViewMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
     </TableRow>
 
     <TableRow

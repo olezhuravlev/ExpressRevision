@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <CheckBoxPreference
-        android:key="chb1"
-        android:summary="checkbox1_summary"
-        android:title="checkbox1_title" >
-    </CheckBoxPreference>
-
     <EditTextPreference
-        android:key="address1"
-        android:summary="edittext1_summary"
-        android:title="edittext1_title" >
-    </EditTextPreference>
+        android:defaultValue="0"
+        android:key="refreshDocListOnOpening"
+        android:summary="@string/refreshDocListOnOpening_Summary"
+        android:title="@string/refreshDocListOnOpening" />
 
-    <ListPreference
-        android:entries="@array/entries"
-        android:entryValues="@array/entry_values"
-        android:key="list1"
-        android:summary="list1_summary"
-        android:title="list1_title" >
-    </ListPreference>
+    <PreferenceScreen
+        android:key="connectPrefs"
+        android:title="@string/connectPrefs" >
+        <EditTextPreference
+            android:key="connectionString"
+            android:title="@string/connectionString" />
+    </PreferenceScreen>
+
+    <PreferenceCategory
+        android:key="displayPrefs"
+        android:title="@string/displayPrefs" >
+        <ListPreference
+            android:entries="@array/displayOrientations_Entries"
+            android:entryValues="@array/displayOrientations"
+            android:key="displayOrientation"
+            android:title="@string/displayOrientation" >
+        </ListPreference>
+    </PreferenceCategory>
 
 </PreferenceScreen>

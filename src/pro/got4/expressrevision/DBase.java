@@ -5,6 +5,7 @@ import java.util.Locale;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -13,6 +14,7 @@ public class DBase {
 	public static final String DB_NAME = "ExpressRevision";
 
 	// Таблица документов.
+	public static final String TABLE_DOCS_DEMO_NAME = "documents_demo";
 	public static final String TABLE_DOCS_NAME = "documents";
 	public static final String FIELD_REF_NAME = "ref";
 	public static final String FIELD_NUM_NAME = "number";
@@ -21,6 +23,7 @@ public class DBase {
 	public static final String FIELD_COMMENT_NAME = "comment";
 
 	// Таблица загруженного документа.
+	public static final String TABLE_ITEMS_DEMO_NAME = "items_demo";
 	public static final String TABLE_ITEMS_NAME = "items";
 	public static final String FIELD_CODE_NAME = "code";
 	public static final String FIELD_NAME_NAME = "name";
@@ -31,8 +34,8 @@ public class DBase {
 
 	private final static int DBVersion = 1;
 
-	Context context;
-	DBaseHelper dbHelper;
+	private Context context;
+	private DBaseHelper dbHelper;
 	private SQLiteDatabase sqliteDb;
 
 	public DBase(Context context) {
@@ -48,8 +51,8 @@ public class DBase {
 		sqliteDb.close();
 	}
 
-	public void insert(String tableName, ContentValues values) {
-		sqliteDb.insert(tableName, null, values);
+	public long insert(String tableName, ContentValues values) {
+		return sqliteDb.insert(tableName, null, values);
 	}
 
 	/**
@@ -67,6 +70,7 @@ public class DBase {
 
 		// Добавление поля, используемого для поиска.
 		addItemIndexField(tableName, values);
+
 		return dataBase.insert(tableName, null, values);
 	}
 
@@ -84,6 +88,15 @@ public class DBase {
 		public void onCreate(SQLiteDatabase db) {
 
 			// Создание таблицы списка документов.
+			// Таблица, хранящая набор документов для демо-режима.
+			db.execSQL("CREATE TABLE " + TABLE_DOCS_DEMO_NAME
+					+ " (_id integer primary key autoincrement, "
+					+ FIELD_REF_NAME + " text," + FIELD_NUM_NAME + " text, "
+					+ FIELD_DATE_NAME + " text, " + FIELD_STORE_NAME
+					+ " text, " + FIELD_COMMENT_NAME + " text, "
+					+ FIELD_INDEX_NAME + " text);");
+
+			// Таблица, хранящая реальный набор документов.
 			db.execSQL("CREATE TABLE " + TABLE_DOCS_NAME
 					+ " (_id integer primary key autoincrement, "
 					+ FIELD_REF_NAME + " text," + FIELD_NUM_NAME + " text, "
@@ -92,6 +105,15 @@ public class DBase {
 					+ FIELD_INDEX_NAME + " text);");
 
 			// Создание таблицы загруженного документа.
+			// Таблица, хранящая набор номенклатуры для демонстрационных
+			// документов.
+			db.execSQL("CREATE TABLE " + TABLE_ITEMS_DEMO_NAME
+					+ " (_id integer primary key autoincrement, "
+					+ FIELD_CODE_NAME + " text," + FIELD_NAME_NAME + " text, "
+					+ FIELD_NAMEFULL_NAME + " text, " + FIELD_INDEX_NAME
+					+ " text);");
+
+			// Таблица, хранящая набор номенклатуры для реальных документов.
 			db.execSQL("CREATE TABLE " + TABLE_ITEMS_NAME
 					+ " (_id integer primary key autoincrement, "
 					+ FIELD_CODE_NAME + " text," + FIELD_NAME_NAME + " text, "
@@ -170,7 +192,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "1 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "Для Гули.");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "b2416c7e-74ed-42e8-bfc3-fc21a5be779b");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005325");
@@ -178,7 +200,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "2 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "Настя можно делать!");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "bbd58850-2d84-4ed1-bdfb-1782f9934b1b");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005368");
@@ -186,7 +208,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "135 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "612a5a2e-c61f-4a23-86d3-ee27d12aa9cf");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005369");
@@ -194,7 +216,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "95 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "Возьмите расписку с киоскера!");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "34b219c0-aa3f-41fc-a67d-4bc05414ad80");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005401");
@@ -202,7 +224,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "151 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "a2d2e074-f0c7-4f4d-b572-5dad3ec2e17e");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005402");
@@ -210,7 +232,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "152 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "cc1a518b-131a-4060-9502-240cdb660101");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005403");
@@ -218,7 +240,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "153 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "f9e9da10-57e5-447a-987d-f00a4b455b76");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005404");
@@ -226,7 +248,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "154 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "68889f55-cb89-4441-aeed-93a950f70bc4");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005405");
@@ -234,7 +256,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "155 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "Срочно!");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "28bad9df-055e-4197-aefc-e044dde77753");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005406");
@@ -242,7 +264,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "156 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "53a68452-3f22-4cb3-8dc4-3287f2322ecf");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005407");
@@ -250,7 +272,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "157 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "85a20773-02ba-4f3e-af47-7849cdc9ee6b");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005408");
@@ -258,7 +280,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "158 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "04a28a10-0329-484b-a30b-4a7983309136");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005409");
@@ -266,7 +288,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "159 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "81b8f28b-b4d5-4a98-a378-00c356a6ae00");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005410");
@@ -274,7 +296,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "160 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "557b36ab-0c3f-42c9-8576-309f35b97451");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005411");
@@ -282,7 +304,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "161 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		docsValues.put(FIELD_REF_NAME, "cb3ad424-0f2b-49f6-9ee2-f01362fcb1fa");
 		docsValues.put(FIELD_NUM_NAME, "ЭКС0005412");
@@ -290,7 +312,7 @@ public class DBase {
 		docsValues.put(FIELD_STORE_NAME, "162 киоск");
 		docsValues.put(FIELD_COMMENT_NAME, "");
 
-		insert(dataBase, TABLE_DOCS_NAME, docsValues);
+		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		// ///////////////////////////////////////
 		// Таблица загруженного документа.
@@ -299,143 +321,247 @@ public class DBase {
 		loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Натс");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "шоколадный батончик Nuts");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 2);
 		loadedDocsValues.put(FIELD_NAME_NAME, "гор.шок.Бабай 75");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"горький шоколад Бабаевский 75%");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 3);
 		loadedDocsValues.put(FIELD_NAME_NAME, "сиг.Друг");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "сигареты Друг");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 4);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ. Кр.Зв.");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "газета Красная Звезда");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 5);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ. Мол.Сиб.");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "газета Молодость Сибири");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 6);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ. Комс.Прав.");
 		loadedDocsValues
 				.put(FIELD_NAMEFULL_NAME, "газета Комсомольская Правда");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 7);
 		loadedDocsValues.put(FIELD_NAME_NAME, "жур. НиЖ");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "журнал Наука и жизнь");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, "ж");
 		loadedDocsValues.put(FIELD_NAME_NAME, "жур. Mens Health");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "журнал Mens Health");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, "Б97");
 		loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Сникрс 125");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"шоколадный батончик Сникерс, 125 гр.");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, "Б101");
 		loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Баунти 125");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"шоколадный батончик Баунти, 125 гр.");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 8);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ.нап.Фанта");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "газированный напиток Фанта");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 9);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ.нап.Тархун");
 		loadedDocsValues
 				.put(FIELD_NAMEFULL_NAME, "газированный напиток Тархун");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 1001);
 		loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Сникрс 200");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"шоколадный батончик Сникерс, 200 гр.");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, ".Бат");
 		loadedDocsValues.put(FIELD_NAME_NAME, "ж.р.Дирол");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "жевательная резинка Дирол");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 45006);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ.Веч.Нск.");
 		loadedDocsValues
 				.put(FIELD_NAMEFULL_NAME, "газета Вечерний Новосибирск");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 630005);
 		loadedDocsValues.put(FIELD_NAME_NAME, "жур. Поп.Мех.");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "журнал Популярная Механика");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 11);
 		loadedDocsValues.put(FIELD_NAME_NAME, "стир.рез.Кохинор");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"стирательная резинка Kohinoor");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 12);
 		loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Баунти 200");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"шоколадный батончик Баунти, 200 гр.");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, 14);
 		loadedDocsValues.put(FIELD_NAME_NAME, "газ.нап.К-Кола 330 ж/б");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME,
 				"газированный напиток Кока-кола, 330гр. жест.б.");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, "_ш07");
 		loadedDocsValues.put(FIELD_NAME_NAME, "шок.нап.Nesquick");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "шоколадный напиток Несквик");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 		loadedDocsValues.put(FIELD_CODE_NAME, "995");
 		loadedDocsValues.put(FIELD_NAME_NAME, "ватн.палочки Идеал");
 		loadedDocsValues.put(FIELD_NAMEFULL_NAME, "ватные палочки Идеал");
 
-		DBase.this.insert(dataBase, TABLE_ITEMS_NAME, loadedDocsValues);
+		DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
 
 	}
 
-	// получить все данные из таблицы DB_TABLE
-	public Cursor getAllRows() {
-		return sqliteDb.query(TABLE_DOCS_NAME, null, null, null, null, null,
-				null);
+	/**
+	 * Возвращает курсор на всё содержимое таблицы.
+	 * 
+	 * @return
+	 */
+	public Cursor getAllRows(String tableName) {
+		return sqliteDb.query(tableName, null, null, null, null, null, null);
+	}
+
+	/**
+	 * Возвращает количество строк таблицы.
+	 * 
+	 * @param tableName
+	 * @return
+	 */
+	public long getRowsCount(String tableName) {
+		return DatabaseUtils.queryNumEntries(sqliteDb, tableName);
+	}
+
+	/**
+	 * Очищает содержимое указанной таблицы.
+	 * 
+	 * @param tableName
+	 * @return
+	 */
+	public int clearTable(String tableName) {
+		return sqliteDb.delete(tableName, "1", null);
+	}
+
+	/**
+	 * Выполняет копирование содержимое из одной таблицы документов в другую.
+	 * 
+	 * @param receiverTableName
+	 *            - имя таблицы-приёмника данных.
+	 * @param source
+	 *            - курсор, указывающий на строку-источник..
+	 * @return
+	 */
+	public long copyDocRow(String receiverTableName, Cursor source) {
+
+		// db.execSQL("CREATE TABLE " + TABLE_DOCS_DEMO_NAME
+		// + " (_id integer primary key autoincrement, "
+		// + FIELD_REF_NAME + " text," + FIELD_NUM_NAME + " text, "
+		// + FIELD_DATE_NAME + " text, " + FIELD_STORE_NAME
+		// + " text, " + FIELD_COMMENT_NAME + " text, "
+		// + FIELD_INDEX_NAME + " text);");
+
+		ContentValues docValues = new ContentValues();
+
+		int refIdx = source.getColumnIndex(FIELD_REF_NAME);
+		int numIdx = source.getColumnIndex(FIELD_NUM_NAME);
+		int dateIdx = source.getColumnIndex(FIELD_DATE_NAME);
+		int storeIdx = source.getColumnIndex(FIELD_STORE_NAME);
+		int commentIdx = source.getColumnIndex(FIELD_COMMENT_NAME);
+
+		String ref = source.getString(refIdx);
+		String num = source.getString(numIdx);
+		String date = source.getString(dateIdx);
+		String store = source.getString(storeIdx);
+		String comment = source.getString(commentIdx);
+
+		docValues.put(FIELD_REF_NAME, ref);
+		docValues.put(FIELD_NUM_NAME, num);
+		docValues.put(FIELD_DATE_NAME, date);
+		docValues.put(FIELD_STORE_NAME, store);
+		docValues.put(FIELD_COMMENT_NAME, comment);
+
+		long rowId = insert(sqliteDb, receiverTableName, docValues);
+
+		return rowId;
+	}
+
+	/**
+	 * Выполняет копирование содержимое из одной таблицы номенкларуты в другую.
+	 * 
+	 * @param receiverTableName
+	 *            - имя таблицы-приёмника данных.
+	 * @param source
+	 *            - курсор, указывающий на строку-источник..
+	 * @return
+	 */
+	public long copyItemRow(String receiverTableName, Cursor source) {
+
+		// db.execSQL("CREATE TABLE " + TABLE_ITEMS_DEMO_NAME
+		// + " (_id integer primary key autoincrement, " + FIELD_CODE_NAME
+		// + " text," + FIELD_NAME_NAME + " text, " + FIELD_NAMEFULL_NAME
+		// + " text, " + FIELD_INDEX_NAME + " text);");
+
+		ContentValues itemValues = new ContentValues();
+
+		int codeIdx = source.getColumnIndex(FIELD_CODE_NAME);
+		int nameIdx = source.getColumnIndex(FIELD_NAME_NAME);
+		int nameFullIdx = source.getColumnIndex(FIELD_NAMEFULL_NAME);
+		int idxIdx = source.getColumnIndex(FIELD_INDEX_NAME);
+
+		String code = source.getString(codeIdx);
+		String name = source.getString(nameIdx);
+		String nameFull = source.getString(nameFullIdx);
+		String idx = source.getString(idxIdx);
+
+		itemValues.put(FIELD_CODE_NAME, code);
+		itemValues.put(FIELD_NAME_NAME, name);
+		itemValues.put(FIELD_NAMEFULL_NAME, nameFull);
+		itemValues.put(FIELD_INDEX_NAME, idx);
+
+		long rowId = insert(sqliteDb, receiverTableName, itemValues);
+
+		return rowId;
 	}
 }

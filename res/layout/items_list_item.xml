@@ -9,12 +9,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="6"
-        android:background="@color/Item_Id_ColorBack"
-        android:gravity="left|center_vertical"
-        android:text="ID"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@color/Item_Id_Color"
-        android:textColorLink="@color/Item_Id_Color" />
+        android:gravity="left|center_vertical" />
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -26,22 +21,13 @@
             android:id="@+id/textViewName"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:background="@color/Item_Name_ColorBack"
-            android:text="Name"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@color/Item_Name_Color"
-            android:textColorLink="@color/Item_Name_Color" />
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/textViewNameFull"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:background="@color/Item_NameFull_ColorBack"
-            android:text="Full name"
-            android:textColor="@color/Item_NameFull_Color"
-            android:textColorLink="@color/Item_NameFull_Color" />
+            android:layout_weight="1" />
     </LinearLayout>
 
 </LinearLayout>

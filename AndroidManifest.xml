@@ -10,21 +10,39 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/shop128"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
             android:name="Main"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="fullSensor" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="DocsListFragmentActivity">
+        <activity
+            android:name="DocsListFragmentActivity"
+            android:screenOrientation="fullSensor" >
         </activity>
-        <activity android:name="Preferences"></activity>
+        <activity
+            android:name="Preferences"
+            android:screenOrientation="fullSensor" >
+        </activity>
+        <activity
+            android:name="DocsListLoader"
+            android:screenOrientation="fullSensor" >
+        </activity>
+        <activity
+            android:name="ItemsListFragmentActivity"
+            android:screenOrientation="fullSensor" >
+        </activity>
+        <activity
+            android:name="ItemsListLoader"
+            android:screenOrientation="fullSensor" >
+        </activity>
     </application>
 
 </manifest>

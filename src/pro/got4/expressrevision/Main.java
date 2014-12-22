@@ -1,13 +1,22 @@
 package pro.got4.expressrevision;
 
+import java.util.GregorianCalendar;
+
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
+import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -16,36 +25,86 @@ import android.widget.Toast;
 public class Main extends FragmentActivity implements OnClickListener,
 		CustomDialogFragment.OnCloseCustomDialogListener {
 
+	// Имена полей.
 	public static final String FIELD_DEMOMODE_NAME = "demoMode";
 
-	public static final int DIALOG_DEMOMODE_ID = 0;
+	public static final int DIALOG_DEMOMODE_ONOFF_ID = 1;
+	public static final int DIALOG_DATA_CLEANING_CONFIRMATION = 2;
 
-	private final int DOCUMENTS_LIST_REQUEST_CODE = 0;
+	public DBase db;
+	public static Main main;
 
+	// Флаг демо-режима.
+	private static boolean demoMode;
+
+	private Button buttonMain;
+
+	// Идентификаторы вызываемых активностей.
+	// private final int DOCUMENTS_LIST_REQUEST_CODE = 0;
+
+	// Идентификаторы меню параметров.
 	private final int OPTIONS_MENU_PREFERENCES_BUTTON_ID = 0;
 	private final int OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID = 1;
+	private final int OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID = 2;
 
-	private boolean demoMode;
+	Intent intent;
+	Context ct;
+	Parcel pr;
+	Parcelable prl;
+	ParcelFileDescriptor pfd;
+	IBinder ib;
+	Binder bd;
+	Bundle bdle;
 
-	Button buttonMain;
+	MediaPlayer mp;
 
-	FragmentActivity aa;
+	/**
+	 * Дата последнего получения списка документов.
+	 */
+	private static GregorianCalendar lastDocsListFetchingTime;
+
+	/**
+	 * Дата последнего получения содержимого документа.
+	 */
+	private static GregorianCalendar lastItemsListFetchingTime;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
+		Main.main = this;
+
 		super.onCreate(savedInstanceState);
 
 		if (savedInstanceState != null) {
-
-			setDemoMode(savedInstanceState.getBoolean(FIELD_DEMOMODE_NAME));
-
+			Main.setDemoMode(savedInstanceState.getBoolean(FIELD_DEMOMODE_NAME));
 		}
 
 		setContentView(R.layout.main);
 
-		buttonMain = (Button) findViewById(R.id.buttonMain);
+		// открываем подключение к БД
+		db = new DBase(this);
+		db.open();
+
+		buttonMain = (Button) findViewById(R.id.buttonStart);
 		buttonMain.setOnClickListener(this);
+
+		if (savedInstanceState == null) {
+			mp = MediaPlayer.create(this, R.raw.win_start);
+			mp.start();
+		}
+	}
+
+	@Override
+	public void onResume() {
+
+		super.onResume();
+
+		setStyle(this);
+
+		setStartButtonText();
+	}
+
+	private void setStartButtonText() {
 
 		// Если в БД уже содержится загруженный документ, то выводится
 		// приглашение приступить к его редактированию. Если документа еще нет,
@@ -57,9 +116,17 @@ public class Main extends FragmentActivity implements OnClickListener,
 			btnText = btnText + ": " + getLoadedDocumentName();
 		}
 
-		buttonMain.setText(btnText);
+		Button btn = (Button) findViewById(R.id.buttonStart);
+		btn.setText(btnText);
+	}
 
-		setDemoModeBackground(this, R.id.backgroundLayout, isDemoMode());
+	@Override
+	public void onPause() {
+
+		super.onPause();
+
+		if (mp != null)
+			mp.release();
 	}
 
 	@Override
@@ -67,44 +134,21 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		super.onSaveInstanceState(outState);
 
-		outState.putBoolean(FIELD_DEMOMODE_NAME, isDemoMode());
+		outState.putBoolean(FIELD_DEMOMODE_NAME, Main.isDemoMode());
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 
-		MenuItem prefItem = menu.add(0, OPTIONS_MENU_PREFERENCES_BUTTON_ID, 0,
+		MenuItem item = menu.add(0, OPTIONS_MENU_PREFERENCES_BUTTON_ID, 0,
 				getResources().getString(R.string.settings_title));
-		prefItem.setIntent(new Intent(this, Preferences.class));
+		item.setIntent(new Intent(this, Preferences.class));
 
-		MenuItem demoItem = menu.add(0, OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID, 1,
-				getResources().getString(R.string.demoMode_on));
-		demoItem.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+		menu.add(0, OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID, 1, getResources()
+				.getString(R.string.demoMode_on));
 
-			@Override
-			public boolean onMenuItemClick(MenuItem item) {
-
-				// Отображение диалога о смене режима работы.
-				String title = "";
-				String message = "";
-				if (isDemoMode()) {
-
-					title = getString(R.string.demoModeOffConfirmation);
-					message = getString(R.string.demoModeOffWarning);
-
-				} else {
-
-					title = getString(R.string.demoModeOnConfirmation);
-					message = getString(R.string.demoModeOnWarning);
-
-				}
-
-				CustomDialogFragment
-						.showDialog_YesNo(title, message, Main.this);
-
-				return true; // Событие отработано.
-			}
-		});
+		menu.add(0, OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID, 2, getResources()
+				.getString(R.string.clearTables));
 
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -113,22 +157,69 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * Вызывается при закрытии пользовательского диалога.
 	 */
 	@Override
-	public void onCloseCustomDialog(int id) {
+	public void onCloseCustomDialog(int dialogId, int buttonId) {
 
-		if (id == CustomDialogFragment.BUTTON_YES) {
+		switch (dialogId) {
+		case DIALOG_DEMOMODE_ONOFF_ID:
 
-			setDemoMode(!isDemoMode());
-			setDemoModeBackground(this, R.id.backgroundLayout, isDemoMode());
+			// В вызванном диалоге включения/выключения деморежима пользователь
+			// подтвердил действие, поэтому режим меняется на противоположный.
+			if (buttonId == CustomDialogFragment.BUTTON_YES) {
+
+				Main.setDemoMode(!Main.isDemoMode());
+
+				// Включение/выключение демо-режима.
+				if (Main.isDemoMode()) {
+					switchDemoModeOn();
+				} else {
+					switchDemoModeOff();
+				}
+			}
+			break;
+
+		case (DIALOG_DATA_CLEANING_CONFIRMATION):
+
+			// В вызванном диалоге подтверждения очистки данных пользователь
+			// подтвердил действие.
+			if (buttonId == CustomDialogFragment.BUTTON_YES) {
+
+				// Очистка таблиц.
+				db.clearTable(DBase.TABLE_DOCS_NAME);
+				if (db.getRowsCount(DBase.TABLE_DOCS_NAME) != 0) {
+					Toast.makeText(this, R.string.docsTableNotCleared,
+							Toast.LENGTH_LONG).show();
+				}
+
+				db.clearTable(DBase.TABLE_ITEMS_NAME);
+				if (db.getRowsCount(DBase.TABLE_ITEMS_NAME) != 0) {
+					Toast.makeText(this, R.string.itemsTableNotCleared,
+							Toast.LENGTH_LONG).show();
+				}
+
+				setStartButtonText();
+			}
+
+		default:
 		}
 	}
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 
-		// Изменение подписи кнопки меню.
+		// Изменение подписи кнопки меню демо-режима.
 		MenuItem item = menu.getItem(OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID);
-		item.setTitle(isDemoMode() ? R.string.demoMode_off
+		item.setTitle(Main.isDemoMode() ? R.string.demoMode_off
 				: R.string.demoMode_on);
+
+		// Отключение кнопки очистки таблиц.
+		item = menu.getItem(DIALOG_DATA_CLEANING_CONFIRMATION);
+		boolean rowsExist = true;
+		if (db.getRowsCount(DBase.TABLE_DOCS_NAME)
+				+ db.getRowsCount(DBase.TABLE_ITEMS_NAME) == 0) {
+			rowsExist = false;
+		}
+		item.setEnabled(rowsExist);
+		item.setVisible(rowsExist);
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -140,10 +231,28 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		switch (id) {
 
-		case R.id.buttonMain:
-			startActivityForResult(new Intent(this,
-					DocsListFragmentActivity.class),
-					DOCUMENTS_LIST_REQUEST_CODE);
+		case R.id.buttonStart:
+
+			long loadedRows = getLoadedDocumentRowsCount();
+
+			// Загрузка или списка демо-документов, или списка реальных
+			// документов, в зависимости от того, находится ли приложение в
+			// демо-режиме.
+			if (loadedRows == 0) {
+
+				// Открытие списка документов.
+				startActivityForResult(new Intent(this,
+						DocsListFragmentActivity.class),
+						DocsListFragmentActivity.DOCS_LIST_ID);
+			} else {
+
+				// Открытие списка номенклатуры.
+				startActivityForResult(new Intent(this,
+						ItemsListFragmentActivity.class).putExtra(
+						ItemsListFragmentActivity.START_ITEMS_LOADER, false),
+						ItemsListFragmentActivity.ITEMS_LIST_ID);
+			}
+
 			break;
 
 		default:
@@ -151,58 +260,94 @@ public class Main extends FragmentActivity implements OnClickListener,
 	}
 
 	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+
+		switch (item.getItemId()) {
+		case (OPTIONS_MENU_PREFERENCES_BUTTON_ID): {
+			// См. onCreateOptionsMenu(Menu menu);
+			break;
+		}
+		case (OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID): {
+
+			boolean rowsExist = true;
+			if (db.getRowsCount(DBase.TABLE_DOCS_NAME)
+					+ db.getRowsCount(DBase.TABLE_ITEMS_NAME) == 0) {
+				rowsExist = false;
+			}
+
+			// Отображение диалога о смене режима работы.
+			String title = "";
+			String message = "";
+			if (Main.isDemoMode()) {
+
+				title = getString(R.string.demoModeOffConfirmation);
+
+				if (rowsExist)
+					message = getString(R.string.demoModeOffWarning);
+
+			} else {
+
+				title = getString(R.string.demoModeOnConfirmation);
+
+				if (rowsExist)
+					message = getString(R.string.demoModeOnWarning);
+			}
+
+			CustomDialogFragment.showDialog_YesNo(title, message,
+					DIALOG_DEMOMODE_ONOFF_ID, Main.this);
+
+			break;
+		}
+		case (OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID): {
+
+			// Отображение диалога об очистке таблиц.
+			CustomDialogFragment.showDialog_YesNo(
+					getString(R.string.dataCleaning),
+					getString(R.string.dataCleaningQuestion),
+					DIALOG_DATA_CLEANING_CONFIRMATION, Main.this);
+		}
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
 		switch (requestCode) {
 
-		case DOCUMENTS_LIST_REQUEST_CODE:
+		case DocsListFragmentActivity.DOCS_LIST_ID: {
 
 			// Ответ получен из активности, отображающей список документов и
 			// загружающей выбранный.
-			Toast.makeText(this, "Документ загружен!", Toast.LENGTH_SHORT)
-					.show();
 
+			Message.show("requestCode = " + requestCode + ", resultCode = "
+					+ resultCode);
+
+			switch (resultCode) {
+
+			case DocsListFragmentActivity.CONTEXTMENU_LOAD_BUTTON_ID: {
+
+				// Загрузка содержимого демо- или нормального документа (в
+				// зависимости от того, в каком режиме находится приложение).
+				startActivityForResult(new Intent(this,
+						ItemsListFragmentActivity.class).putExtra(
+						ItemsListFragmentActivity.START_ITEMS_LOADER, true),
+						ItemsListFragmentActivity.ITEMS_LIST_ID);
+
+				break;
+			}
+			}
 		}
-
+			break;
+		}
 	}
-
-	// Т.к. сигнатура отличается от определенного в Activity одноименного
-	// метода, то метод не перегружает showDialog, вызывающего Dialog, а
-	// использует FragmentDialog.
-	//
-	// public void showDialog() {
-
-	// DialogFragment.show() позаботится о добавлении фрагмента в
-	// транзакцию. Мы также хотим удалять любой отображаемый в данный момент
-	// диалог, поэтому создадим собственную транзакцию и сделаем это здесь.
-	// FragmentManager - Interface for interacting with Fragment objects inside
-	// of an Activity
-	// FragmentManager fm = getSupportFragmentManager();
-
-	// FragmentTransaction - API for performing a set of Fragment operations.
-	// FragmentTransaction ft = fm.beginTransaction();
-
-	// Fragment prev = fm.findFragmentByTag("dialog");
-	// if (prev != null) {
-	// ft.remove(prev);
-	// }
-	// ft.addToBackStack(null);
-
-	// можно сделать анимацию появления фрагмента путем установки
-	// setTransition() перед коммитом.
-	// ГДЕ ft.commit()???
-
-	// Создание и отображение диалога.
-	// DialogFragment newFragment = CustomDialogFragment.getYesNoDialog(
-	// "Заголовок", "Сообщение");
-	// newFragment.show(ft, "dialog");
-	// }
 
 	/**
 	 * Возвращает количество строк загруженного документа.
 	 */
-	private int getLoadedDocumentRowsCount() {
-		return 0;
+	private long getLoadedDocumentRowsCount() {
+		return db.getRowsCount(DBase.TABLE_ITEMS_NAME);
 	}
 
 	/**
@@ -224,86 +369,200 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * @param demoModeOn
 	 *            - флаг демо-режима.
 	 */
-	public static void setDemoModeBackground(Activity activity, int viewId,
-			boolean demoModeOn) {
+	public static void setStyle(Activity activity) {
 
 		Drawable image = null;
 
-		if (demoModeOn) {
+		String className = activity.getClass().getSimpleName();
+		if (className.equals("Main")) {
 
-			image = activity.getResources()
-					.getDrawable(R.drawable.demo_texture);
-			image.setAlpha(50);
+			if (Main.isDemoMode()) {
 
-		} else {
-			image = activity.getResources()
-					.getDrawable(R.drawable.work_texture);
-			image.setAlpha(255);
+				image = activity.getResources().getDrawable(
+						R.drawable.demo_texture);
+				image.setAlpha(30);
 
+			} else {
+				image = activity.getResources().getDrawable(
+						R.drawable.work_texture);
+				image.setAlpha(255);
+
+			}
+
+			View v = activity.findViewById(R.id.backgroundLayout_main);
+			v.setBackgroundDrawable(image);
+
+		} else if (className.equals("DocsListFragmentActivity")) {
+
+			if (Main.isDemoMode()) {
+
+				image = activity.getResources().getDrawable(
+						R.drawable.demo_texture);
+				image.setAlpha(30);
+
+			} else {
+				image = activity.getResources().getDrawable(
+						R.drawable.work_texture);
+				image.setAlpha(10);
+
+			}
+
+			View v = activity.findViewById(R.id.backgroundLayout);
+			v.setBackgroundDrawable(image);
+
+		} else if (className.equals("ItemsListFragmentActivity")) {
+
+			if (Main.isDemoMode()) {
+
+				image = activity.getResources().getDrawable(
+						R.drawable.demo_texture);
+				image.setAlpha(30);
+
+			} else {
+				image = activity.getResources().getDrawable(
+						R.drawable.work_texture);
+				image.setAlpha(60);
+
+			}
+
+			View v = activity.findViewById(R.id.backgroundLayout);
+			v.setBackgroundDrawable(image);
 		}
-
-		View v = activity.findViewById(viewId);
-		v.setBackgroundDrawable(image);
 	}
 
-	// // Вызывается системой после вызова showDialog.
-	// @Override
-	// public Dialog onCreateDialog(int id) {
-	//
-	// if (id == DIALOG_DEMOMODE_ID) {
-	//
-	// AlertDialog.Builder adb = new AlertDialog.Builder(this);
-	//
-	// System.out.println("onCreateDialog:demoMode = " + isDemoMode());
-	//
-	// adb.setTitle(isDemoMode() ? R.string.demoModeOffConfirmation
-	// : R.string.demoModeOnConfirmation);
-	//
-	// // сообщение
-	// adb.setMessage(isDemoMode() ? R.string.demoModeOffWarning
-	// : R.string.demoModeOnWarning);
-	//
-	// adb.setIcon(android.R.drawable.ic_dialog_alert);
-	// adb.setPositiveButton(R.string.yes,
-	// new DialogInterface.OnClickListener() {
-	//
-	// @Override
-	// public void onClick(DialogInterface dialog, int which) {
-	// setDemoMode(!isDemoMode());
-	// setDemoModeBackground(Main.this, isDemoMode(),
-	// R.id.backgroundLayout);
-	// }
-	// });
-	//
-	// adb.setNegativeButton(R.string.no,
-	// new DialogInterface.OnClickListener() {
-	//
-	// @Override
-	// public void onClick(DialogInterface dialog, int which) {
-	// }
-	// });
-	//
-	// // создаем диалог
-	// return adb.create();
-	// }
-	// return super.onCreateDialog(id);
-	// }
+	/**
+	 * Включение демо-режима.
+	 */
+	private void switchDemoModeOn() {
+
+		// Если происходит переключение в демо-режим или обратно, то следует
+		// очистить все содержимое таблиц документов и номенклатуры.
+
+		// Установка оформления.
+		Main.setDemoMode(true);
+		setStyle(this);
+
+		// Очистка таблиц.
+		db.clearTable(DBase.TABLE_DOCS_NAME);
+		db.clearTable(DBase.TABLE_ITEMS_NAME);
+
+		setStartButtonText();
+	}
 
 	/**
-	 * Возвращает значение флага демо-режима.
-	 * 
-	 * @return
+	 * Выключение демо-режима.
 	 */
-	public boolean isDemoMode() {
+	private void switchDemoModeOff() {
+
+		// Если происходит переключение в демо-режим или обратно, то следует
+		// очистить все содержимое таблиц документов и номенклатуры.
+
+		Main.setDemoMode(false);
+		setStyle(this);
+
+		// Очистка таблиц.
+		db.clearTable(DBase.TABLE_DOCS_NAME);
+		db.clearTable(DBase.TABLE_ITEMS_NAME);
+
+		setStartButtonText();
+	}
+
+	/**
+	 * Возвращает флаг необходимости получения нового списка документов с
+	 * сервера.
+	 */
+	public static boolean docsListNeedsToBeFetched() {
+
+		String refreshDocListOnOpening = PreferenceManager
+				.getDefaultSharedPreferences(Main.main).getString(
+						"refreshDocListOnOpening", "0");
+
+		Integer timeDelay = Integer.valueOf(0);
+		if (!refreshDocListOnOpening.isEmpty())
+			timeDelay = Integer.parseInt(refreshDocListOnOpening);
+
+		GregorianCalendar expiryTime = Main.getLastDocsListFetchingTime();
+		expiryTime.add(GregorianCalendar.SECOND, timeDelay.intValue());
+
+		GregorianCalendar currTime = new GregorianCalendar();
+
+		// Если с момента последнего получения списка прошло больше времени,
+		// чем задано в настройках, то список требуется получить с сервера
+		// снова.
+		if (currTime.after(expiryTime)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Возвращает флаг необходимости получения нового содержимого выбранного
+	 * документа с сервера.
+	 */
+	public static boolean itemsListNeedsToBeFetched() {
+
+		return true;
+	}
+
+	/**
+	 * @return the lastDocsListFetchingTime
+	 */
+	public static GregorianCalendar getLastDocsListFetchingTime() {
+
+		GregorianCalendar c = new GregorianCalendar(0, 0, 0);
+
+		if (lastDocsListFetchingTime != null)
+			c = (GregorianCalendar) lastDocsListFetchingTime.clone();
+
+		return c;
+	}
+
+	/**
+	 * @param lastDocsListFetchingTime
+	 *            the lastDocsListFetchingTime to set
+	 */
+	public static void setLastDocsListFetchingTime(GregorianCalendar time) {
+		Main.lastDocsListFetchingTime = time;
+	}
+
+	/**
+	 * @return the lastDocsListFetchingTime
+	 */
+	public static GregorianCalendar getLastItemsListFetchingTime() {
+
+		GregorianCalendar c = new GregorianCalendar(0, 0, 0);
+
+		if (lastItemsListFetchingTime != null)
+			c = (GregorianCalendar) lastItemsListFetchingTime.clone();
+
+		return c;
+	}
+
+	/**
+	 * @param lastDocsListFetchingTime
+	 *            the lastDocsListFetchingTime to set
+	 */
+	public static void setLastItemsListFetchingTime(GregorianCalendar time) {
+		Main.lastItemsListFetchingTime = time;
+	}
+
+	/**
+	 * Возвращает флаг установленного демо-режима.
+	 * 
+	 * @return the demoMode
+	 */
+	public static boolean isDemoMode() {
 		return demoMode;
 	}
 
 	/**
-	 * Устанавливает значение флага демо-режима.
+	 * Установка ре
 	 * 
 	 * @param demoMode
+	 *            the demoMode to set
 	 */
-	public void setDemoMode(boolean demoMode) {
-		this.demoMode = demoMode;
+	private static void setDemoMode(boolean demoMode) {
+		Main.demoMode = demoMode;
 	}
 }
