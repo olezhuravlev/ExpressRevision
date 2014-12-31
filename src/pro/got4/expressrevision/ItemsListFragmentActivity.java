@@ -15,9 +15,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class ItemsListFragmentActivity extends FragmentActivity implements
 		LoaderCallbacks<Cursor>, OnClickListener {
@@ -47,15 +47,29 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		db = new DBase(this);
 		db.open();
 
+		// FIELD_DOC_ID_NAME
+		// FIELD_ITEM_USE_SPECIF_NAME
+		//
+		// FIELD_QUANT_ACC_NAME
+		// FIELD_INDEX_NAME
 		// формируем столбцы сопоставления
-		String[] from = new String[] { DBase.FIELD_CODE_NAME,
-				DBase.FIELD_NAME_NAME, DBase.FIELD_NAMEFULL_NAME };
-		int[] to = new int[] { R.id.textViewID, R.id.textViewName,
-				R.id.textViewNameFull };
+		String[] from = new String[] {
+				DBase.FIELD_ROW_NUM_NAME,
+				DBase.FIELD_ITEM_CODE_NAME,
+				// DBase.FIELD_ITEM_DESCR_NAME,
+				DBase.FIELD_ITEM_DESCR_FULL_NAME, DBase.FIELD_SPECIF_CODE_NAME,
+				DBase.FIELD_SPECIF_DESCR_NAME, DBase.FIELD_MEASUR_DESCR_NAME,
+				DBase.FIELD_PRICE_NAME, DBase.FIELD_QUANT_NAME };
+		int[] to = new int[] { R.id.row_num_textView,
+				R.id.item_code_textView,
+				// R.id.item_descr_textView,
+				R.id.item_descr_full_textView, R.id.specif_code_textView,
+				R.id.specif_descr_textView, R.id.measur_textView,
+				R.id.price_textView, R.id.quant_button };
 
 		// создаем адаптер и настраиваем список
-		scAdapter = new SimpleCursorAdapter(this, R.layout.items_list_item,
-				null, from, to,
+		scAdapter = new SimpleCursorAdapter(this,
+				R.layout.items_list_item_specif_4, null, from, to,
 				SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
 		lvData = (ListView) findViewById(R.id.listViewItems);
@@ -70,7 +84,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		});
 
 		// Добавляем контекстное меню к списку.
-		//registerForContextMenu(lvData);
+		// registerForContextMenu(lvData);
 
 		// Загрузчик для чтения данных.
 		getSupportLoaderManager().initLoader(ITEMS_LIST_ID, null, this);
@@ -79,14 +93,21 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		Message.show("[hashCode = " + this.hashCode()
 				+ "], getIntent().hashCode() = [" + getIntent().hashCode()
 				+ "]");
+
 		if (getIntent().getExtras().getBoolean(START_ITEMS_LOADER) == true
 				&& savedInstanceState == null) {
 
 			// Очистка таблицы содержимого документа.
 			db.clearTable(DBase.TABLE_ITEMS_NAME);
 
-			startActivityForResult(new Intent(this, ItemsListLoader.class),
-					ItemsListLoader.ITEMSLIST_LOADER_ID);
+			Intent intent = new Intent(this, ItemsListLoader.class);
+
+			// Копирование параметров интента, в которых содержится в т.ч. номер
+			// и дата загружаемого документа.
+			intent.putExtras(getIntent());
+
+			// Запуск загрузки строк.
+			startActivityForResult(intent, ItemsListLoader.ITEMSLIST_LOADER_ID);
 
 			// Чтобы обновить список.
 			getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();

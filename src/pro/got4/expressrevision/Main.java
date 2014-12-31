@@ -7,12 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
-import android.os.Binder;
+import android.media.MediaPlayer.OnSeekCompleteListener;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Parcel;
-import android.os.ParcelFileDescriptor;
-import android.os.Parcelable;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
@@ -32,12 +31,15 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public static final int DIALOG_DATA_CLEANING_CONFIRMATION = 2;
 
 	public DBase db;
+
 	public static Main main;
 
 	// Флаг демо-режима.
 	private static boolean demoMode;
 
 	private Button buttonMain;
+
+	private MediaPlayer mp;
 
 	// Идентификаторы вызываемых активностей.
 	// private final int DOCUMENTS_LIST_REQUEST_CODE = 0;
@@ -46,17 +48,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 	private final int OPTIONS_MENU_PREFERENCES_BUTTON_ID = 0;
 	private final int OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID = 1;
 	private final int OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID = 2;
-
-	Intent intent;
-	Context ct;
-	Parcel pr;
-	Parcelable prl;
-	ParcelFileDescriptor pfd;
-	IBinder ib;
-	Binder bd;
-	Bundle bdle;
-
-	MediaPlayer mp;
 
 	/**
 	 * Дата последнего получения списка документов.
@@ -89,8 +80,43 @@ public class Main extends FragmentActivity implements OnClickListener,
 		buttonMain.setOnClickListener(this);
 
 		if (savedInstanceState == null) {
-			mp = MediaPlayer.create(this, R.raw.win_start);
-			mp.start();
+
+			// Проигрывание участка звукового файла.
+
+			// Начало и окончание проигрываемого отрезка.
+			final int mStartTime = 0;
+			final int mEndTime = 1200;
+
+			mp = MediaPlayer.create(this, R.raw.logo);
+			mp.setOnSeekCompleteListener(new OnSeekCompleteListener() {
+
+				Handler mHandler = new Handler();
+
+				// Слушатель процедуры поиска.
+				@Override
+				public void onSeekComplete(MediaPlayer mp) {
+					// Когда завершается процедура поиска, то вызывается это
+					// событие.
+					// Здесь запускаем плеер и хэндлеру отправляем
+					// запускаемый объект с лагом в исполнении на
+					// требуемое время.
+					mp.start();
+					mHandler.postDelayed(mStopAction, mEndTime - mStartTime);
+				}
+
+				// Запускаемый объект, который остановит проигрывание и
+				// освободит ресурс.
+				final Runnable mStopAction = new Runnable() {
+					@Override
+					public void run() {
+						mp.stop();
+						mp.release();
+					}
+				};
+			});
+
+			// Переход к проигрыванию отрезка.
+			mp.seekTo(mStartTime);
 		}
 	}
 
@@ -111,7 +137,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 		// то предлагается его загрузить.
 		String btnText = getString(R.string.btnLoadDocument);
 
-		if (getLoadedDocumentRowsCount() > 0) {
+		if (getLoadedItemsCount() > 0) {
 			btnText = getString(R.string.btnEditDocument);
 			btnText = btnText + ": " + getLoadedDocumentName();
 		}
@@ -122,11 +148,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 	@Override
 	public void onPause() {
-
 		super.onPause();
-
-		if (mp != null)
-			mp.release();
 	}
 
 	@Override
@@ -233,23 +255,35 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		case R.id.buttonStart:
 
-			long loadedRows = getLoadedDocumentRowsCount();
+			long loadedItems = getLoadedItemsCount();
 
 			// Загрузка или списка демо-документов, или списка реальных
 			// документов, в зависимости от того, находится ли приложение в
 			// демо-режиме.
-			if (loadedRows == 0) {
+			if (loadedItems == 0) {
 
-				// Открытие списка документов.
-				startActivityForResult(new Intent(this,
-						DocsListFragmentActivity.class),
+				// Открытие списка документов с передачей строки подключения,
+				// которая может понадобиться, если активность решит, что список
+				// устарел и его нужно загрузить повторно.
+				Intent intent = new Intent(this, DocsListFragmentActivity.class);
+				intent.putExtra(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+						getString(R.string.docsListConnectionString));
+
+				startActivityForResult(intent,
 						DocsListFragmentActivity.DOCS_LIST_ID);
 			} else {
 
-				// Открытие списка номенклатуры.
-				startActivityForResult(new Intent(this,
-						ItemsListFragmentActivity.class).putExtra(
-						ItemsListFragmentActivity.START_ITEMS_LOADER, false),
+				// Загруженные строки документа существуют,
+				// следовательно речь идет не о выборе документа для загрузке, а
+				// о возвращении к редактированию существующего документа.
+				// Поэтому просто открывается список номенклатуры.
+				// Загружать ничего не нужно, строка загрузки не нужна.
+				Intent intent = new Intent(this,
+						ItemsListFragmentActivity.class);
+				intent.putExtra(ItemsListFragmentActivity.START_ITEMS_LOADER,
+						false);
+
+				startActivityForResult(intent,
 						ItemsListFragmentActivity.ITEMS_LIST_ID);
 			}
 
@@ -328,11 +362,41 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			case DocsListFragmentActivity.CONTEXTMENU_LOAD_BUTTON_ID: {
 
+				// В контекстном меню списка документов была нажата кнопка
+				// загрузки документа.
+
+				// Bundle extras = data.getExtras();
+				// String docNum = "";
+				// String docDate = "";
+				// if (extras != null) {
+				// docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
+				//
+				// docDate = (String) extras.get(DBase.FIELD_DOC_DATE_NAME);
+				// }
+				//
+				// Message.show("Номер = " + docNum + ", Дата = " + docDate);
+				// Toast.makeText(this,
+				// "Номер = " + docNum + ", Дата = " + docDate,
+				// Toast.LENGTH_LONG).show();
+
 				// Загрузка содержимого демо- или нормального документа (в
 				// зависимости от того, в каком режиме находится приложение).
-				startActivityForResult(new Intent(this,
-						ItemsListFragmentActivity.class).putExtra(
-						ItemsListFragmentActivity.START_ITEMS_LOADER, true),
+				Intent intent = new Intent(this,
+						ItemsListFragmentActivity.class);
+
+				// Строка подключения.
+				intent.putExtra(ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
+						getString(R.string.itemsListConnectionString));
+
+				// Cведения о выбранном документе (были возвращены активностью,
+				// вернувшей результат).
+				intent.putExtras(data);
+
+				// Флаг необходимости запуска загрузчика.
+				intent.putExtra(ItemsListFragmentActivity.START_ITEMS_LOADER,
+						true);
+
+				startActivityForResult(intent,
 						ItemsListFragmentActivity.ITEMS_LIST_ID);
 
 				break;
@@ -346,7 +410,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	/**
 	 * Возвращает количество строк загруженного документа.
 	 */
-	private long getLoadedDocumentRowsCount() {
+	private long getLoadedItemsCount() {
 		return db.getRowsCount(DBase.TABLE_ITEMS_NAME);
 	}
 
@@ -354,7 +418,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * Возвращает имя загруженного документа ревизии.
 	 */
 	private String getLoadedDocumentName() {
-		return "2 киоск: ЭКС000254638 от 12.11.2014";
+		return "2 киоск: ЭКС000254638 от 12.11.2014";// TODO
 	}
 
 	/**
@@ -403,7 +467,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 			} else {
 				image = activity.getResources().getDrawable(
 						R.drawable.work_texture);
-				image.setAlpha(10);
+				image.setAlpha(100);
 
 			}
 
@@ -421,7 +485,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 			} else {
 				image = activity.getResources().getDrawable(
 						R.drawable.work_texture);
-				image.setAlpha(60);
+				image.setAlpha(100);
 
 			}
 
@@ -564,5 +628,18 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 */
 	private static void setDemoMode(boolean demoMode) {
 		Main.demoMode = demoMode;
+	}
+
+	/**
+	 * Проверка наличия подключения к сети.
+	 * 
+	 * @return
+	 */
+	public static boolean isNetworkAvailable(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager
+				.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 }

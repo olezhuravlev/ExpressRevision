@@ -15,7 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -35,6 +35,8 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	public DBase db;
 
+	private int lastLongClickedItemPosition;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -51,11 +53,11 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		buttonLoad.setOnClickListener(this);
 
 		// формируем столбцы сопоставления
-		String[] from = new String[] { DBase.FIELD_REF_NAME,
-				DBase.FIELD_NUM_NAME, DBase.FIELD_DATE_NAME,
-				DBase.FIELD_STORE_NAME, DBase.FIELD_COMMENT_NAME };
-		int[] to = new int[] { R.id.refTextView, R.id.numberTextView,
-				R.id.dateTextView, R.id.storeTextView, R.id.commentTextView };
+		String[] from = new String[] { DBase.FIELD_STORE_DESCR_NAME,
+				DBase.FIELD_DOC_DATE_NAME, DBase.FIELD_DOC_NUM_NAME,
+				DBase.FIELD_DOC_COMMENT_NAME };
+		int[] to = new int[] { R.id.storeTextView, R.id.dateTextView,
+				R.id.numberTextView, R.id.commentTextView };
 
 		// создаем адаптер и настраиваем список
 		scAdapter = new SimpleCursorAdapter(this, R.layout.docs_list_item,
@@ -65,11 +67,13 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		lvData = (ListView) findViewById(R.id.docsListView);
 		lvData.setAdapter(scAdapter);
 
-		lvData.setOnItemClickListener(new OnItemClickListener() {
+		lvData.setOnItemLongClickListener(new OnItemLongClickListener() {
 
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
 					int position, long id) {
+				lastLongClickedItemPosition = position;
+				return false;
 			}
 		});
 
@@ -92,8 +96,14 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			db.clearTable(DBase.TABLE_DOCS_NAME);
 			db.clearTable(DBase.TABLE_ITEMS_NAME);
 
-			startActivityForResult(new Intent(this, DocsListLoader.class),
-					DocsListLoader.DOCSLIST_LOADER_ID);
+			Intent intent = new Intent(this, DocsListLoader.class);
+
+			// Копирование параметров интента, в которых содержится в т.ч. и
+			// строка подключения.
+			intent.putExtras(getIntent());
+
+			// Запуск загрузки строк.
+			startActivityForResult(intent, DocsListLoader.DOCSLIST_LOADER_ID);
 
 			// Чтобы обновить список.
 			getSupportLoaderManager().getLoader(DOCS_LIST_ID).forceLoad();
@@ -123,7 +133,10 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			db.clearTable(DBase.TABLE_DOCS_NAME);
 			db.clearTable(DBase.TABLE_ITEMS_NAME);
 
-			startActivityForResult(new Intent(this, DocsListLoader.class),
+			startActivityForResult(
+					new Intent(this, DocsListLoader.class).putExtra(
+							DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+							getString(R.string.docsListConnectionString)),
 					DocsListLoader.DOCSLIST_LOADER_ID);
 
 			break;
@@ -167,7 +180,17 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		if (item.getItemId() == CONTEXTMENU_LOAD_BUTTON_ID) {
 
 			// Загрузка списка документов.
-			setResult(CONTEXTMENU_LOAD_BUTTON_ID);
+			Cursor cursor = (Cursor) scAdapter
+					.getItem(lastLongClickedItemPosition);
+
+			int numIdx = cursor.getColumnIndex(DBase.FIELD_DOC_NUM_NAME);
+			int dateIdx = cursor.getColumnIndex(DBase.FIELD_DOC_DATE_NAME);
+			String docNum = cursor.getString(numIdx);
+			String docDate = cursor.getString(dateIdx);
+
+			setResult(CONTEXTMENU_LOAD_BUTTON_ID,
+					new Intent().putExtra(DBase.FIELD_DOC_NUM_NAME, docNum)
+							.putExtra(DBase.FIELD_DOC_DATE_NAME, docDate));
 
 			finish();
 

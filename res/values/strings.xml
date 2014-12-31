@@ -28,7 +28,7 @@
     <string name="demoModeOffConfirmation">Выключить демо-режим?</string>
     <string name="demoModeOffWarning">"Внимание!\nВсе тренировочные данные будут уничтожены!\nПродолжить?"</string>
     <string name="resreshList">"Обновить список"</string>
-    <string name="loadDocuments">"Загрузить список ревизий"</string>
+    <string name="loadDocuments">"Обновить список ревизий"</string>
     <string name="addDocument">Добавить ревизию</string>
     <string name="loading">Загрузка</string>
     <string name="loadingDocuments">Загрузка ревизий</string>
@@ -47,8 +47,13 @@
     <string name="dataCleaning">Очистка данных</string>
     <string name="dataCleaningQuestion">Удалить данные ревизии?</string>
     <string name="documentIsntLoaded">Ревизия не загружена!</string>
-    <string name="rowsDeleted">Cтрок удалено:</string>
+    <string name="rowsDeleted">Cтрок:</string>
     <string name="documentLoaded">Ревизия загружена.</string>
-    <string name="rowsLoaded">Загружено строк:</string>
+    <string name="rowsLoaded">Строк:</string>
+    <string name="enterFilterString">Введите строку для поиска...</string>
+    <string name="networkNotAvailable">Отсутствует подключение к сети!</string>
+    <string name="docsListConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
+    <string name="itemsListConnectionString">http://express.nsk.ru:9999/eritems.php</string>
+     <string name="rub">руб.</string>
 
 </resources>

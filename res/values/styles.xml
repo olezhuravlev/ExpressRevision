@@ -2,13 +2,13 @@
 
     <!--
         Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
     <style name="AppBaseTheme" parent="android:Theme.Light">
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
+            backward-compatibility can go here.
         -->
     </style>
 
@@ -23,7 +23,15 @@
     <color name="Item_Name_ColorBack">#FFFFFF</color>
     <color name="Item_NameFull_Color">#FFAAAA</color>
     <color name="Item_NameFull_ColorBack">#FFFFFF</color>
-    
-   
+    <color name="Item_Comment_ColorBack">#ADC4B2</color>
+    <color name="Item_Comment_ColorBack_Light">#B4CCB9</color>
+    <color name="BasicColor_yellow_light">#F9EBB2</color>
+    <color name="BasicColor_yellow">#EEE1AB</color>
+    <color name="BasicColor_dark">#394240</color>
+    <color name="BasicColor_red">#F76D57</color>
+    <color name="BasicColor_green_light">#B4CCB9</color>
+    <color name="BasicColor_green">#ADC4B2</color>
+    <color name="BasicColor_blue_light">#45AAB8</color>
+    <color name="BasicColor_blue">#45A4B1</color>
 
 </resources>

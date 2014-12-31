@@ -1,12 +1,29 @@
 package pro.got4.expressrevision;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.URLEncoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.http.protocol.HTTP;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import pro.got4.expressrevision.ProgressDialogFragment.DialogListener;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +31,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.telephony.TelephonyManager;
+import android.widget.Toast;
 
 /**
  * Асинхронный загрузчик, выводящий прогресс-диалог.
@@ -36,10 +55,42 @@ public class ItemsListLoader extends FragmentActivity implements
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
 
-	private static final int SLEEP_TIME = 500;
+	private static final int DEMO_MODE_SLEEP_TIME = 20;
 
-	private int rowsCounter;
-	private int rowsTotal;
+	// Имя поля, которое в экстрах хранится строка соединения.
+	public static final String CONNECTION_STRING_FIELD_NAME = "connection_string";
+
+	private static String connectionString;
+	private static String docDate = "";
+	private static String docNum = "";
+
+	private static int rowsCounter;
+	private static int rowsTotal;
+
+	// Поля XML-парсера.
+	private static final String DOC_TAG_NAME = "doc";
+	private static final String DOC_NUM_TAG_NAME = "num";
+	private static final String DOC_DATE_TAG_NAME = "date";
+
+	private static final String ROW_TAG_NAME = "doc_row";
+	private static final String ROW_NUM_TAG_NAME = "num";
+
+	private static final String ITEM_TAG_NAME = "item";
+	private static final String ITEM_CODE_TAG_NAME = "code";
+	private static final String ITEM_DESCR_TAG_NAME = "descr";
+	private static final String ITEM_DESCR_FULL_TAG_NAME = "descr_full";
+	private static final String ITEM_USE_SPECIF_TAG_NAME = "use_specif";
+
+	private static final String SPECIF_TAG_NAME = "specif";
+	private static final String SPECIF_CODE_TAG_NAME = "code";
+	private static final String SPECIF_DESCR_TAG_NAME = "descr";
+
+	private static final String MEASUR_TAG_NAME = "measur";
+	private static final String MEASUR_DESCR_TAG_NAME = "descr";
+
+	private static final String PRICE_TAG_NAME = "price";
+	private static final String QUANT_ACC_TAG_NAME = "quant_acc";
+	private static final String QUANT_TAG_NAME = "quant";
 
 	// Во избежание утечек (см. подсказку, которая появляется, если класс
 	// хэндлера не делать статическим).
@@ -102,6 +153,27 @@ public class ItemsListLoader extends FragmentActivity implements
 		Message.show(this);
 
 		super.onCreate(savedInstanceState);
+
+		Bundle extras = getIntent().getExtras();
+		if (extras == null) {
+			Toast.makeText(this, "Нет экстр у загрузчика строк документа!",
+					Toast.LENGTH_LONG).show();
+			finish();
+		}
+
+		connectionString = extras.getString(CONNECTION_STRING_FIELD_NAME);
+		if (connectionString == null) {
+			Toast.makeText(
+					this,
+					"Не указана строка соединения у загрузчика строк документа!",
+					Toast.LENGTH_LONG).show();
+			finish();
+		}
+
+		if (extras != null) {
+			docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
+			docDate = (String) extras.get(DBase.FIELD_DOC_DATE_NAME);
+		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<ItemsListLoader>(this);
 
@@ -219,9 +291,6 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		private MediaPlayer mp;
 
-		// private int rowsTotal;
-		// private int rowsCounter;
-
 		private DBase dBase;
 
 		public ItemsAsyncTaskLoader(Context context) {
@@ -241,10 +310,8 @@ public class ItemsListLoader extends FragmentActivity implements
 			dBase = new DBase(context);
 			dBase.open();
 
-			mp = MediaPlayer.create(context, R.raw.zx);
-			mp.seekTo(18000);
-			mp.setLooping(true);
-			mp.start();
+			mp = MediaPlayer.create(context, R.raw.powerup);
+			mp.setLooping(false);
 
 			forceLoad();
 
@@ -264,7 +331,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 			Message.show(this);
 
-			if (Main.isDemoMode() || !Main.isDemoMode()) {
+			if (Main.isDemoMode()) {
 
 				Cursor cursor = dBase.getAllRows(DBase.TABLE_ITEMS_DEMO_NAME);
 
@@ -294,7 +361,7 @@ public class ItemsListLoader extends FragmentActivity implements
 					while (cursor.moveToNext()) {
 
 						try {
-							TimeUnit.MILLISECONDS.sleep(SLEEP_TIME);
+							TimeUnit.MILLISECONDS.sleep(DEMO_MODE_SLEEP_TIME);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -318,8 +385,276 @@ public class ItemsListLoader extends FragmentActivity implements
 				}
 
 			} else {
+
 				// Загрузка с сервера.
-			} // if (Main.isDemoMode() || !Main.isDemoMode()) {
+
+				// Получение идентификатора устройства.
+				TelephonyManager tm = (TelephonyManager) context
+						.getSystemService(Context.TELEPHONY_SERVICE);
+				String deviceId = tm.getDeviceId();
+
+				// Итоговая строка должна иметь вид:
+				// http://express.nsk.ru:9999/eritems.php?deviceid=12345&docdate=20141223120310&docnum="ЭКС00000001"
+				// Дата в строковом типе имеет вид "2014-01-01 00:00:00",
+				// следует преобразовать его к виду "20140101000000".
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+						"yyyy-MM-dd H:m:s", Locale.US);
+				String dateURIFormattedString = getURIFormattedString(docDate,
+						simpleDateFormat);
+				String query = "?deviceid=" + deviceId + "&docdate="
+						+ dateURIFormattedString + "&docnum='";
+
+				// В номере документа может содержаться кириллица, поэтому
+				// необходимо преобразование.
+				try {
+					query = query + URLEncoder.encode(docNum, HTTP.UTF_8) + "'";
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
+				}
+
+				String uriString = connectionString + query;
+
+				try {
+
+					DocumentBuilderFactory dbFactory = DocumentBuilderFactory
+							.newInstance();
+
+					DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+					Document domDoc = dBuilder.parse(uriString);
+					domDoc.getDocumentElement().normalize();
+
+					// Получение всех узлов документов. Т.к. за раз всегда
+					// извлекается содержимое только одного документа, то и узел
+					// всегда один.
+					NodeList docNodes = domDoc
+							.getElementsByTagName(DOC_TAG_NAME);
+
+					// Извлечение номера и даты документа.
+					String docNumValue = "";
+					String docDateTimeValue = "";
+
+					int docsTotal = docNodes.getLength();
+					if (docsTotal > 0) {
+
+						Node docNode = docNodes.item(0);
+
+						NamedNodeMap docAttr = docNode.getAttributes();
+						Node docNumNode = docAttr
+								.getNamedItem(DOC_NUM_TAG_NAME);
+						Node docDateTimeNode = docAttr
+								.getNamedItem(DOC_DATE_TAG_NAME);
+
+						if (docNumNode != null)
+							docNumValue = docNumNode.getTextContent();
+
+						if (docDateTimeNode != null)
+							docDateTimeValue = docDateTimeNode.getTextContent();
+					}
+
+					// Получение всех узлов строк.
+					NodeList rowNodes = domDoc
+							.getElementsByTagName(ROW_TAG_NAME);
+					rowsTotal = rowNodes.getLength();
+					rowsCounter = 0;
+
+					SQLiteDatabase sqliteDb = dBase.getSQLiteDatabase();
+
+					// Перебор всех строк.
+					for (int rowIdx = 0; rowIdx < rowsTotal; rowIdx++) {
+
+						if (!isStarted() || isAbandoned() || isReset())
+							return null;
+
+						Node rowNode = rowNodes.item(rowIdx);
+
+						// Извлечение номера строки.
+						NamedNodeMap rowAttr = rowNode.getAttributes();
+						Node rowNumNode = rowAttr
+								.getNamedItem(ROW_NUM_TAG_NAME);
+
+						String rowNumValue = rowNumNode.getTextContent();
+
+						// Извлечение содержимого строки.
+						String itemCode = ""; // Код номенклатуры.
+						String itemDescr = ""; // Наименование номенклатуры.
+						String itemDescrFull = ""; // Полное наименование
+													// номенклатуры.
+						int itemUseSpecif = 0; // Вести учет по
+												// характеристикам.
+						String specifCode = ""; // Код характеристики
+												// номенклатуры.
+						String specifDescr = ""; // Наименование характеристики
+													// номенклатуры.
+						String measurDescr = ""; // Наименование единицы
+													// измерения.
+						float price = 0; // Цена.
+						float quantAcc = 0; // Количество в учете.
+						float quant = 0; // Количество по инвентаризации.
+
+						// Перебор всех полей строки.
+						NodeList rowFields = rowNode.getChildNodes();
+						int rowFieldsTotal = rowFields.getLength();
+						for (int rowFieldIdx = 0; rowFieldIdx < rowFieldsTotal; rowFieldIdx++) {
+
+							Node rowFieldNode = rowFields.item(rowFieldIdx);
+							String rowFieldName = rowFieldNode.getNodeName();
+
+							if (rowFieldName.equals(ITEM_TAG_NAME)) {
+
+								// Получение кода номенклатуры.
+								NamedNodeMap itemAttr = rowFieldNode
+										.getAttributes();
+
+								Node itemCodeNode = itemAttr
+										.getNamedItem(ITEM_CODE_TAG_NAME);
+								itemCode = itemCodeNode.getTextContent();
+
+								// Перебор всех полей номенклатуры.
+								NodeList itemFields = rowFieldNode
+										.getChildNodes();
+								int itemFieldsTotal = itemFields.getLength();
+								for (int itemFieldIdx = 0; itemFieldIdx < itemFieldsTotal; itemFieldIdx++) {
+
+									Node itemFieldNode = itemFields
+											.item(itemFieldIdx);
+									String itemFieldName = itemFieldNode
+											.getNodeName();
+
+									if (itemFieldName
+											.equals(ITEM_DESCR_TAG_NAME)) {
+										itemDescr = itemFieldNode
+												.getTextContent();
+
+									} else if (itemFieldName
+											.equals(ITEM_DESCR_FULL_TAG_NAME)) {
+										itemDescrFull = itemFieldNode
+												.getTextContent();
+									} else if (itemFieldName
+											.equals(ITEM_USE_SPECIF_TAG_NAME)) {
+
+										String itemUseSpecifSting = itemFieldNode
+												.getTextContent();
+
+										if (itemUseSpecifSting.equals("1")) {
+											itemUseSpecif = 1;
+										} else {
+											itemUseSpecif = 0;
+										}
+									}
+								}
+
+							} else if (rowFieldName.equals(SPECIF_TAG_NAME)) {
+
+								// Получение кода характеристики номенклатуры.
+								NamedNodeMap specifAttr = rowFieldNode
+										.getAttributes();
+
+								Node specifCodeNode = specifAttr
+										.getNamedItem(SPECIF_CODE_TAG_NAME);
+								specifCode = specifCodeNode.getTextContent();
+
+								// Перебор всех полей характеристики
+								// номенклатуры.
+								NodeList specifFields = rowFieldNode
+										.getChildNodes();
+								int specifFieldsTotal = specifFields
+										.getLength();
+								for (int specifFieldIdx = 0; specifFieldIdx < specifFieldsTotal; specifFieldIdx++) {
+
+									Node specifFieldNode = specifFields
+											.item(specifFieldIdx);
+									String specifFieldName = specifFieldNode
+											.getNodeName();
+
+									if (specifFieldName
+											.equals(SPECIF_DESCR_TAG_NAME)) {
+										specifDescr = specifFieldNode
+												.getTextContent();
+									}
+								}
+
+							} else if (rowFieldName.equals(MEASUR_TAG_NAME)) {
+
+								// Перебор всех полей единицы измерения.
+								NodeList measurFields = rowFieldNode
+										.getChildNodes();
+								int measurFieldsTotal = measurFields
+										.getLength();
+								for (int measurFieldIdx = 0; measurFieldIdx < measurFieldsTotal; measurFieldIdx++) {
+
+									Node measurFieldNode = measurFields
+											.item(measurFieldIdx);
+									String measurFieldName = measurFieldNode
+											.getNodeName();
+
+									if (measurFieldName
+											.equals(MEASUR_DESCR_TAG_NAME)) {
+										measurDescr = measurFieldNode
+												.getTextContent();
+									}
+								}
+
+							} else if (rowFieldName.equals(PRICE_TAG_NAME)) {
+
+								String priceString = rowFieldNode
+										.getTextContent();
+								price = Float.parseFloat(priceString.replace(
+										",", "."));
+
+							} else if (rowFieldName.equals(QUANT_ACC_TAG_NAME)) {
+
+								String quant_accString = rowFieldNode
+										.getTextContent();
+								quantAcc = Float.parseFloat(quant_accString
+										.replace(",", "."));
+
+							} else if (rowFieldName.equals(QUANT_TAG_NAME)) {
+
+								String quantString = rowFieldNode
+										.getTextContent();
+								quant = Float.parseFloat(quantString.replace(
+										",", "."));
+							}
+						} // for (int rowFieldIdx = 0; rowFieldIdx <
+							// rowFieldsTotal; rowFieldIdx++)
+
+						ContentValues itemValues = new ContentValues();
+
+						// Идентификатор документа состоит из даты документа и
+						// его номера.
+						itemValues.put(DBase.FIELD_DOC_ID_NAME,
+								docDateTimeValue.concat(docNumValue));
+
+						itemValues.put(DBase.FIELD_ROW_NUM_NAME,
+								Integer.parseInt(rowNumValue));
+						itemValues.put(DBase.FIELD_ITEM_CODE_NAME, itemCode);
+						itemValues.put(DBase.FIELD_ITEM_DESCR_NAME, itemDescr);
+						itemValues.put(DBase.FIELD_ITEM_DESCR_FULL_NAME,
+								itemDescrFull);
+						itemValues.put(DBase.FIELD_ITEM_USE_SPECIF_NAME,
+								itemUseSpecif);
+						itemValues
+								.put(DBase.FIELD_SPECIF_CODE_NAME, specifCode);
+						itemValues.put(DBase.FIELD_SPECIF_DESCR_NAME,
+								specifDescr);
+						itemValues.put(DBase.FIELD_MEASUR_DESCR_NAME,
+								measurDescr);
+						itemValues.put(DBase.FIELD_PRICE_NAME, price);
+						itemValues.put(DBase.FIELD_QUANT_ACC_NAME, quantAcc);
+						itemValues.put(DBase.FIELD_QUANT_NAME, quant);
+
+						dBase.insert(sqliteDb, DBase.TABLE_ITEMS_NAME,
+								itemValues);
+
+						++rowsCounter;
+
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			} // if (Main.isDemoMode()) {
+
+			mp.start();
 
 			return null;
 		}
@@ -463,7 +798,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	 *            the rowsCounter to set
 	 */
 	public void setRowsCounter(int rowsCounter) {
-		this.rowsCounter = rowsCounter;
+		ItemsListLoader.rowsCounter = rowsCounter;
 	}
 
 	public int getRowsCounter() {
@@ -475,7 +810,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	 *            the rowsCounter to set
 	 */
 	public void incrementRowsCounter(int increment) {
-		this.rowsCounter += increment;
+		ItemsListLoader.rowsCounter += increment;
 	}
 
 	/**
@@ -483,11 +818,77 @@ public class ItemsListLoader extends FragmentActivity implements
 	 *            the rowsTotal to set
 	 */
 	public void setRowsTotal(int rowsTotal) {
-		this.rowsTotal = rowsTotal;
+		ItemsListLoader.rowsTotal = rowsTotal;
 	}
 
 	public int getRowsTotal() {
 		return rowsTotal;
 	}
 
+	/**
+	 * Возвращает дату, отформатированную для использования в URI.<br>
+	 * Например, из "01.02.2014" будет возвращено "20140201".
+	 * 
+	 * @param dateString
+	 * @param simpleDateFormat
+	 * @return
+	 */
+	static String getURIFormattedString(String dateString,
+			SimpleDateFormat simpleDateFormat) {
+
+		String yearString;
+		String monthOfYearString;
+		String dayOfMonthString;
+		String hoursString;
+		String minutesString;
+		String secondsString;
+
+		Date date;
+		try {
+
+			date = simpleDateFormat.parse(dateString);
+
+			int year = date.getYear() + 1900;
+			int monthOfYear = date.getMonth() + 1;
+			int dayOfMonth = date.getDate();
+			int hours = date.getHours();
+			int minutes = date.getMinutes();
+			int seconds = date.getSeconds();
+
+			yearString = Integer.toString(year);
+
+			monthOfYearString = Integer.toString(monthOfYear);
+			if (monthOfYearString.length() < 2) {
+				monthOfYearString = "0" + monthOfYearString;
+			}
+
+			dayOfMonthString = Integer.toString(dayOfMonth);
+			if (dayOfMonthString.length() < 2) {
+				dayOfMonthString = "0" + dayOfMonthString;
+			}
+
+			hoursString = Integer.toString(hours);
+			if (hoursString.length() < 2) {
+				hoursString = "0" + hoursString;
+			}
+
+			minutesString = Integer.toString(minutes);
+			if (minutesString.length() < 2) {
+				minutesString = "0" + minutesString;
+			}
+
+			secondsString = Integer.toString(seconds);
+			if (secondsString.length() < 2) {
+				secondsString = "0" + secondsString;
+			}
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return "";
+		}
+
+		return yearString.concat(monthOfYearString).concat(dayOfMonthString)
+				.concat(hoursString).concat(minutesString)
+				.concat(secondsString);
+	}
 }

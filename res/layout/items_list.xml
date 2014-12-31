@@ -10,8 +10,10 @@
         android:id="@+id/editTextFilter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusable="false"
-        android:focusableInTouchMode="false" >
+        android:background="@drawable/filter_field_background"
+        android:focusableInTouchMode="false"
+        android:hint="@string/enterFilterString"
+        android:textAppearance="?android:attr/textAppearanceLarge" >
 
         <requestFocus />
     </EditText>
@@ -20,7 +22,8 @@
         android:id="@+id/listViewItems"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:cacheColorHint="#00000000" >
+        android:cacheColorHint="#00000000"
+        android:dividerHeight="1dp" >
     </ListView>
 
 </LinearLayout>

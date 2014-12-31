@@ -4,9 +4,19 @@ import java.lang.ref.WeakReference;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import pro.got4.expressrevision.ProgressDialogFragment.DialogListener;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +24,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.telephony.TelephonyManager;
+import android.widget.Toast;
 
 /**
  * Асинхронный загрузчик, выводящий прогресс-диалог.
@@ -32,7 +44,23 @@ public class DocsListLoader extends FragmentActivity implements
 	private ProgressDialogFragment pDialog; // Используется в хэндлере.
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
-	private static final int SLEEP_TIME = 500;
+	private static final int DEMO_MODE_SLEEP_TIME = 20;
+
+	// Имя поля, которое в экстрах хранит строку соединения.
+	public static final String CONNECTION_STRING_FIELD_NAME = "connection_string";
+
+	// Поля XML-парсера.
+	private static final String DOC_TAG_NAME = "doc";
+	private static final String DOC_NUM_TAG_NAME = "num";
+	private static final String DOC_DATE_TAG_NAME = "date";
+
+	private static final String STORE_TAG_NAME = "store";
+	private static final String STORE_CODE_TAG_NAME = "code";
+	private static final String STORE_DESCR_TAG_NAME = "descr";
+
+	private static final String COMMENT_TAG_NAME = "comm";
+
+	private static String connectionString;
 
 	// Во избежание утечек (см. подсказку, которая появляется, если класс
 	// хэндлера не делать статическим).
@@ -89,7 +117,28 @@ public class DocsListLoader extends FragmentActivity implements
 
 		Message.show(this);
 
+		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this)) {
+			Toast.makeText(this, R.string.networkNotAvailable,
+					Toast.LENGTH_LONG).show();
+			finish();
+		}
+
 		super.onCreate(savedInstanceState);
+
+		Bundle extras = getIntent().getExtras();
+		if (extras == null) {
+			Toast.makeText(this, "Нет экстр у загрузчика документов!",
+					Toast.LENGTH_LONG).show();
+			finish();
+		}
+
+		connectionString = extras.getString(CONNECTION_STRING_FIELD_NAME);
+		if (connectionString == null) {
+			Toast.makeText(this,
+					"Не указана строка соединения у загрузчика документов!",
+					Toast.LENGTH_LONG).show();
+			finish();
+		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<DocsListLoader>(this);
 
@@ -212,73 +261,28 @@ public class DocsListLoader extends FragmentActivity implements
 			dBase = new DBase(context);
 			dBase.open();
 
-			mp = MediaPlayer.create(context, R.raw.zx);
-			mp.seekTo(18000);
-			mp.setLooping(true);
-			mp.start();
+			mp = MediaPlayer.create(context, R.raw.powerup);
+			mp.setLooping(false);
 
 			forceLoad();
 
 			super.onStartLoading();
 		}
 
-		// @Override
-		// public Void onLoadInBackground() {
-		//
-		// // Message.show(this);
-		//
-		// return super.onLoadInBackground();
-		// }
-
 		@Override
 		public Void loadInBackground() {
 
 			Message.show(this);
 
-			// try {
-			//
-			// for (int i = 0; i < DocsListLoader.DOCS; i++) {
-			//
-			// if (!isStarted() || isAbandoned() || isReset())
-			// break;
-			//
-			// TimeUnit.MILLISECONDS.sleep(500);
-			//
-			// Message.show("[hashCode = " + this.hashCode() + "], i = ["
-			// + i + "]");
-			//
-			// ProgressHandler progressHandler = WEAK_REF_ACTIVITY.get()
-			// .getProgressHandler();
-			//
-			// if (progressHandler != null)
-			// progressHandler.sendEmptyMessage(i);
-			// }
-			//
-			// } catch (InterruptedException e) {
-			// e.printStackTrace();
-			// }
+			if (Main.isDemoMode()) {
 
-			if (Main.isDemoMode() || !Main.isDemoMode()) { // TODO Источник
-															// загрузки.
+				// Загрузка из демонстрационных таблиц.
 
 				Cursor cursor = dBase.getAllRows(DBase.TABLE_DOCS_DEMO_NAME);
-
-				// Message.show("[hashCode = " + this.hashCode()
-				// + ", progressHandler = " + progressHandler);
-
 				rowsTotal = cursor.getCount();
 				rowsCounter = 0;
 				cursor.moveToFirst();
 				if (cursor.isFirst()) {
-
-					Message.show("[hashCode = " + this.hashCode()
-							+ "], isStarted() == " + isStarted());
-
-					Message.show("[hashCode = " + this.hashCode()
-							+ "], isAbandoned() == " + isAbandoned());
-
-					Message.show("[hashCode = " + this.hashCode()
-							+ "], isReset() == " + isReset());
 
 					if (!isStarted() || isAbandoned() || isReset())
 						return null;
@@ -289,45 +293,214 @@ public class DocsListLoader extends FragmentActivity implements
 					setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(),
 							rowsCounter, rowsTotal, 0);
 
-					Message.show("[hashCode = " + this.hashCode()
-							+ "], copyItemRow(" + rowsCounter + ")");
-
 					while (cursor.moveToNext()) {
 
 						try {
-							TimeUnit.MILLISECONDS.sleep(SLEEP_TIME);
+							TimeUnit.MILLISECONDS.sleep(DEMO_MODE_SLEEP_TIME);
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 
-						Message.show("[hashCode = " + this.hashCode()
-								+ "], isStarted() == " + isStarted());
-
-						Message.show("[hashCode = " + this.hashCode()
-								+ "], isAbandoned() == " + isAbandoned());
-
-						Message.show("[hashCode = " + this.hashCode()
-								+ "], isReset() == " + isReset());
-
 						if (!isStarted() || isAbandoned() || isReset())
-							break;
+							return null;
 
 						++rowsCounter;
 						dBase.copyDocRow(DBase.TABLE_DOCS_NAME, cursor);
+
 						setProgress(WEAK_REF_ACTIVITY.get()
 								.getProgressHandler(), rowsCounter, rowsTotal,
 								0);
-
-						Message.show("[hashCode = " + this.hashCode()
-								+ "], copyItemRow(" + rowsCounter + ")");
-
 					}
 				}
 
 			} else {
+
 				// Загрузка с сервера.
-			}
+
+				// Получение идентификатора устройства.
+				TelephonyManager tm = (TelephonyManager) context
+						.getSystemService(Context.TELEPHONY_SERVICE);
+				String deviceId = tm.getDeviceId();
+				String uriString = connectionString + "?deviceid=" + deviceId;
+				try {
+
+					DocumentBuilderFactory dbFactory = DocumentBuilderFactory
+							.newInstance();
+					DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+					
+					Document domDoc = dBuilder.parse(uriString);
+					domDoc.getDocumentElement().normalize();
+
+					// Получение всех узлов документов.
+					NodeList docNodes = domDoc
+							.getElementsByTagName(DOC_TAG_NAME);
+					rowsTotal = docNodes.getLength();
+					rowsCounter = 0;
+
+					SQLiteDatabase sqliteDb = dBase.getSQLiteDatabase();
+
+					// Перебор всех документов.
+					for (int docIdx = 0; docIdx < rowsTotal; docIdx++) {
+
+						if (!isStarted() || isAbandoned() || isReset())
+							return null;
+
+						Node docNode = docNodes.item(docIdx);
+
+						// Извлечение номера и даты документа.
+						NamedNodeMap docAttr = docNode.getAttributes();
+						Node docNumNode = docAttr
+								.getNamedItem(DOC_NUM_TAG_NAME);
+						Node docDateTimeNode = docAttr
+								.getNamedItem(DOC_DATE_TAG_NAME);
+
+						String docNumValue = docNumNode.getTextContent();
+						String docDateTimeValue = docDateTimeNode
+								.getTextContent();
+
+						// Извлечение комментария к документу и данных о складе.
+						String docComment = "";
+						String storeCode = "";
+						String storeDescription = "";
+
+						// Перебор всех полей документа.
+						NodeList docFields = docNode.getChildNodes();
+						int docFieldsTotal = docFields.getLength();
+						for (int docFieldIdx = 0; docFieldIdx < docFieldsTotal; docFieldIdx++) {
+
+							Node docFieldNode = docFields.item(docFieldIdx);
+							String docFieldName = docFieldNode.getNodeName();
+
+							if (docFieldName.equals(COMMENT_TAG_NAME)) {
+								// Извлечение комментария документа.
+								docComment = docFieldNode.getTextContent();
+							} else if (docFieldName.equals(STORE_TAG_NAME)) {
+
+								// Извлечение сведений о складе документа.
+								NamedNodeMap storeAttr = docFieldNode
+										.getAttributes();
+
+								// Извлечение кода склада.
+								Node storeCodeNode = storeAttr
+										.getNamedItem(STORE_CODE_TAG_NAME);
+								storeCode = storeCodeNode.getTextContent();
+
+								// Извлечение представления (наименования)
+								// склада.
+								NodeList storeFields = docFieldNode
+										.getChildNodes();
+								int storeFieldsTotal = storeFields.getLength();
+								for (int storeFieldIdx = 0; storeFieldIdx < storeFieldsTotal; storeFieldIdx++) {
+									Node storeFieldNode = storeFields
+											.item(storeFieldIdx);
+									String storeFieldName = storeFieldNode
+											.getNodeName();
+									if (storeFieldName
+											.equals(STORE_DESCR_TAG_NAME)) {
+										storeDescription = storeFieldNode
+												.getTextContent();
+									}
+								}
+							}
+						} // for (int docFieldIdx = 0; docFieldIdx <
+							// docFieldsTotal; docFieldIdx++) {
+
+						++rowsCounter;
+						ContentValues docsValues = new ContentValues();
+						docsValues.put(DBase.FIELD_DOC_NUM_NAME, docNumValue);
+						docsValues.put(DBase.FIELD_DOC_DATE_NAME,
+								docDateTimeValue);
+						docsValues
+								.put(DBase.FIELD_DOC_COMMENT_NAME, docComment);
+						docsValues.put(DBase.FIELD_STORE_CODE_NAME, storeCode);
+						docsValues.put(DBase.FIELD_STORE_DESCR_NAME,
+								storeDescription);
+
+						dBase.insert(sqliteDb, DBase.TABLE_DOCS_NAME,
+								docsValues);
+
+					}// for (int docIdx = 0; docIdx < rowsTotal; docIdx++) {
+
+					//
+					// if (Main.dbAdapter != null) {
+					//
+					// Main.dbAdapter.open();
+					// Main.dbAdapter.getDatabase().beginTransaction();
+					//
+					// for (int i = 0; i < length; i++) {
+					//
+					// if (isAbandoned())
+					// break;
+					//
+					// if (isReset())
+					// break;
+					//
+					// Node pointNode = pointNodes.item(i);
+					// if (pointNode.getNodeType() == Node.ELEMENT_NODE) {
+					//
+					// NamedNodeMap pointAttr = pointNode
+					// .getAttributes();
+					// Node dateNode = pointAttr
+					// .getNamedItem(DATE_ITEM_NAME);
+					//
+					// // Получение значений в виде строк.
+					// String dateValue = dateNode.getTextContent(); //
+					// 2014-01-01
+					// // 12:00:00
+					// String tempValue = pointNode.getTextContent(); // 10.5
+					//
+					// // Приведение значений.
+					// Date date;
+					// try {
+					// date = dateFormatter.parse(dateValue);
+					// } catch (Exception e) {
+					// e.printStackTrace();
+					// continue;
+					// }
+					//
+					// Float temperature;
+					// try {
+					// temperature = Float.valueOf(tempValue);
+					// } catch (Exception e) {
+					// e.printStackTrace();
+					// continue;
+					// }
+					//
+					// // Сохранение в БД.
+					// if (Main.dbAdapter != null) {
+					//
+					// // Log.d(Main.TAG,
+					// //
+					// "DataLoader.loadInBackground(): добавление записи: i == "
+					// // + i + ".");
+					//
+					// ContentValues contentValues = new ContentValues();
+					// contentValues.put(
+					// DatabaseAdapter.VALUE_FIELD_NAME,
+					// temperature);
+					// Main.dbAdapter.updateNote(date,
+					// contentValues);
+					// }
+					//
+					// }
+					// }
+					//
+					// // Log.d(Main.TAG,
+					// //
+					// "DataLoader.loadInBackground(): завершение транзакции.");
+					//
+					// Main.dbAdapter.getDatabase().setTransactionSuccessful();
+					// Main.dbAdapter.getDatabase().endTransaction();
+
+					// } else {
+					// }
+					//
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			} // if (Main.isDemoMode()) {
+
+			mp.start();
 
 			return null;
 		}
