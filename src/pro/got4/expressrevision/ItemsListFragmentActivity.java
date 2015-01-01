@@ -8,7 +8,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
@@ -31,7 +30,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	private ListView lvData;
 
-	private SimpleCursorAdapter scAdapter;
+	// private SimpleCursorAdapter scAdapter;
+	private ItemsListAdapter adapter;
 
 	public DBase db;
 
@@ -53,27 +53,28 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		// FIELD_QUANT_ACC_NAME
 		// FIELD_INDEX_NAME
 		// формируем столбцы сопоставления
-		String[] from = new String[] {
-				DBase.FIELD_ROW_NUM_NAME,
-				DBase.FIELD_ITEM_CODE_NAME,
-				// DBase.FIELD_ITEM_DESCR_NAME,
-				DBase.FIELD_ITEM_DESCR_FULL_NAME, DBase.FIELD_SPECIF_CODE_NAME,
-				DBase.FIELD_SPECIF_DESCR_NAME, DBase.FIELD_MEASUR_DESCR_NAME,
-				DBase.FIELD_PRICE_NAME, DBase.FIELD_QUANT_NAME };
-		int[] to = new int[] { R.id.row_num_textView,
-				R.id.item_code_textView,
-				// R.id.item_descr_textView,
-				R.id.item_descr_full_textView, R.id.specif_code_textView,
-				R.id.specif_descr_textView, R.id.measur_textView,
-				R.id.price_textView, R.id.quant_button };
+		// String[] from = new String[] {
+		// DBase.FIELD_ROW_NUM_NAME,
+		// DBase.FIELD_ITEM_CODE_NAME,
+		// // DBase.FIELD_ITEM_DESCR_NAME,
+		// DBase.FIELD_ITEM_DESCR_FULL_NAME, DBase.FIELD_SPECIF_CODE_NAME,
+		// DBase.FIELD_SPECIF_DESCR_NAME, DBase.FIELD_MEASUR_DESCR_NAME,
+		// DBase.FIELD_PRICE_NAME, DBase.FIELD_QUANT_NAME };
+		// int[] to = new int[] { R.id.row_num_textView,
+		// R.id.item_code_textView,
+		// // R.id.item_descr_textView,
+		// R.id.item_descr_full_textView, R.id.specif_code_textView,
+		// R.id.specif_descr_textView, R.id.measur_textView,
+		// R.id.price_textView, R.id.quant_button };
 
 		// создаем адаптер и настраиваем список
-		scAdapter = new SimpleCursorAdapter(this,
-				R.layout.items_list_item_specif_4, null, from, to,
-				SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+		// scAdapter = new SimpleCursorAdapter(this,
+		// R.layout.items_list_item_specif_4, null, from, to,
+		// SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
+		adapter = new ItemsListAdapter(this, null);
 		lvData = (ListView) findViewById(R.id.listViewItems);
-		lvData.setAdapter(scAdapter);
+		lvData.setAdapter(adapter);
 
 		lvData.setOnItemClickListener(new OnItemClickListener() {
 
@@ -90,9 +91,9 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		getSupportLoaderManager().initLoader(ITEMS_LIST_ID, null, this);
 
 		// Если указан флаг начала загрузки, то она начинается.
-		Message.show("[hashCode = " + this.hashCode()
-				+ "], getIntent().hashCode() = [" + getIntent().hashCode()
-				+ "]");
+		// Message.show("[hashCode = " + this.hashCode()
+		// + "], getIntent().hashCode() = [" + getIntent().hashCode()
+		// + "]");
 
 		if (getIntent().getExtras().getBoolean(START_ITEMS_LOADER) == true
 				&& savedInstanceState == null) {
@@ -186,7 +187,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
 
-		scAdapter.swapCursor(cursor);
+		adapter.swapCursor(cursor);
 	}
 
 	@Override
@@ -195,7 +196,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		// This is called when the last Cursor provided to onLoadFinished()
 		// above is about to be closed. We need to make sure we are no
 		// longer using it.
-		scAdapter.swapCursor(null);
+		adapter.swapCursor(null);
 	}
 
 	private static class MyCursorLoader extends CursorLoader {
