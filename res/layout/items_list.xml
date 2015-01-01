@@ -6,17 +6,31 @@
     android:orientation="vertical"
     tools:context=".Main" >
 
-    <EditText
-        android:id="@+id/editTextFilter"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/filter_field_background"
-        android:focusableInTouchMode="false"
-        android:hint="@string/enterFilterString"
-        android:textAppearance="?android:attr/textAppearanceLarge" >
+        android:background="@drawable/filter_field_background2"
+        android:orientation="horizontal" >
 
-        <requestFocus />
-    </EditText>
+        <EditText
+            android:id="@+id/itemsFilterEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="10"
+            android:ems="10"
+            android:hint="@string/enterFilterString"
+            android:textAppearance="?android:attr/textAppearanceLarge" >
+
+            <requestFocus />
+        </EditText>
+
+        <ImageButton
+            android:id="@+id/imageButton1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_delete" />
+    </LinearLayout>
 
     <ListView
         android:id="@+id/listViewItems"

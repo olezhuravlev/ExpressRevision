@@ -50,7 +50,7 @@
     <string name="rowsDeleted">Cтрок:</string>
     <string name="documentLoaded">Ревизия загружена.</string>
     <string name="rowsLoaded">Строк:</string>
-    <string name="enterFilterString">Введите строку для поиска...</string>
+    <string name="enterFilterString">Строка для поиска...</string>
     <string name="networkNotAvailable">Отсутствует подключение к сети!</string>
     <string name="docsListConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
     <string name="itemsListConnectionString">http://express.nsk.ru:9999/eritems.php</string>

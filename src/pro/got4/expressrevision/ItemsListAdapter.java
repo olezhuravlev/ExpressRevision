@@ -10,21 +10,63 @@ import android.widget.TextView;
 
 public class ItemsListAdapter extends ResourceCursorAdapter {
 
-	View layout;
-	View layoutSpecif;
-	Context context;
+	// »ндексы колонок.
+	private int docId_Idx, rowNum_Idx, itemCode_Idx, itemDescr_Idx,
+			itemDescrFull_Idx, itemUseSpecif_Idx, specifCode_Idx,
+			specifDescr_Idx, measurDescr_Idx, price_Idx, quantAcc_Idx,
+			quant_Idx, index_Idx;
 
 	public ItemsListAdapter(Context context, Cursor cursor) {
+
 		super(context, R.layout.items_list_item_specif, cursor, true);
-		this.context = context;
+
+		if (cursor != null) {
+
+			fillColumnIndices(cursor);
+		}
+	}
+
+	/*
+	 * »нициализаци€ значений индексов колонок.
+	 */
+	private void fillColumnIndices(Cursor cursor) {
+
+		docId_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_ID_NAME);
+		rowNum_Idx = cursor.getColumnIndex(DBase.FIELD_ROW_NUM_NAME);
+		itemCode_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_CODE_NAME);
+		itemDescr_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_DESCR_NAME);
+		itemDescrFull_Idx = cursor
+				.getColumnIndex(DBase.FIELD_ITEM_DESCR_FULL_NAME);
+		itemUseSpecif_Idx = cursor
+				.getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
+		specifCode_Idx = cursor.getColumnIndex(DBase.FIELD_SPECIF_CODE_NAME);
+		specifDescr_Idx = cursor.getColumnIndex(DBase.FIELD_SPECIF_DESCR_NAME);
+		measurDescr_Idx = cursor.getColumnIndex(DBase.FIELD_MEASUR_DESCR_NAME);
+		price_Idx = cursor.getColumnIndex(DBase.FIELD_PRICE_NAME);
+		quantAcc_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_ACC_NAME);
+		quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
+		index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
 	}
 
 	@Override
 	public int getItemViewType(int position) {
-		if (position < 3)
-			return 1; // — характеристикой.
-		else
-			return 0; // Ѕез характеристики.
+
+		Cursor cursor = (Cursor) getItem(position);
+
+		// ≈сли соседние индексы одинаковы, значит их вообще нет и нужно
+		// инициализировать.
+		if (docId_Idx == rowNum_Idx)
+			fillColumnIndices(cursor);
+		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
+
+		switch (itemUseSpecif) {
+		case 0: // ’арактеристика не используетс€.
+			return 0;
+		case 1: // ’арактеристика используетс€.
+			return 1;
+		default:
+			return 1;
+		}
 	}
 
 	@Override
@@ -32,76 +74,35 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 		return 2;
 	}
 
-	// @Override
-	// public View getView(int position, View convertView, ViewGroup parent) {
-	//
-	// Message.show();
-	// // int viewType = this.getItemViewType(position);
-	// // switch (viewType) {
-	// // case 0:
-	// //
-	// // LayoutInflater li = (LayoutInflater) context
-	// // .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-	// // layout = li.inflate(R.layout.items_list_item, parent, false);
-	// //
-	// // break;
-	// //
-	// // case 1:
-	// //
-	// // break;
-	// // }
-	// return super.getView(position, convertView, parent);
-	// }
-
 	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup parent) {
 
-		Message.show();
+		// ≈сли соседние индексы одинаковы, значит их вообще нет и нужно
+		// инициализировать.
+		if (docId_Idx == rowNum_Idx)
+			fillColumnIndices(cursor);
 
-		int itemUseSpecif_Idx = cursor
-				.getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
 		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
 		LayoutInflater li = LayoutInflater.from(context);
-
-		// Message.show("newView, itemUseSpecif = " + itemUseSpecif);
 
 		if (itemUseSpecif == 0) {
 			// ≈сли характеристика не используетс€, то разворачиваетс€ лайаут
 			// без пол€ характеристики.
-			layout = li.inflate(R.layout.items_list_item, parent, false);
-			return layout;
+			return li.inflate(R.layout.items_list_item, parent, false);
 		} else {
 			// ≈сли характеристика используетс€, то разворачиваетс€ лайаут с
 			// полем характеристики.
-			layoutSpecif = li.inflate(R.layout.items_list_item_specif, parent,
-					false);
-			return layoutSpecif;
+			return li.inflate(R.layout.items_list_item_specif, parent, false);
 		}
 	}
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 
-		Message.show();
-
-		int docId_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_ID_NAME);
-		int rowNum_Idx = cursor.getColumnIndex(DBase.FIELD_ROW_NUM_NAME);
-		int itemCode_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_CODE_NAME);
-		int itemDescr_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_DESCR_NAME);
-		int itemDescrFull_Idx = cursor
-				.getColumnIndex(DBase.FIELD_ITEM_DESCR_FULL_NAME);
-		int itemUseSpecif_Idx = cursor
-				.getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
-		int specifCode_Idx = cursor
-				.getColumnIndex(DBase.FIELD_SPECIF_CODE_NAME);
-		int specifDescr_Idx = cursor
-				.getColumnIndex(DBase.FIELD_SPECIF_DESCR_NAME);
-		int measurDescr_Idx = cursor
-				.getColumnIndex(DBase.FIELD_MEASUR_DESCR_NAME);
-		int price_Idx = cursor.getColumnIndex(DBase.FIELD_PRICE_NAME);
-		int quantAcc_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_ACC_NAME);
-		int quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
-		int index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
+		// ≈сли соседние индексы одинаковы, значит их вообще нет и нужно
+		// инициализировать.
+		if (docId_Idx == rowNum_Idx)
+			fillColumnIndices(cursor);
 
 		String docId = cursor.getString(docId_Idx);
 		int rowNum = cursor.getInt(rowNum_Idx);
@@ -141,11 +142,6 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 		item_code_textView.setText(itemCode);
 		item_descr_full_textView.setText(itemDescrFull);
 
-		Message.show("bindView, itemUseSpecif = " + itemUseSpecif);
-		// Message.show("bindView, specif_code_textView = " +
-		// specif_code_textView);
-		// Message.show("bindView, specif_descr_textView = "
-		// + specif_descr_textView);
 		if (itemUseSpecif != 0) {
 
 			if (specif_code_textView != null) {

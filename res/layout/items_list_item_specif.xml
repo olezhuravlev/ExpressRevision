@@ -45,7 +45,6 @@
             android:gravity="left|center_vertical"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textStyle="bold" />
-
     </LinearLayout>
 
     <LinearLayout
@@ -53,6 +52,7 @@
         android:layout_height="fill_parent"
         android:layout_gravity="center"
         android:layout_weight="6"
+        android:baselineAligned="false"
         android:orientation="horizontal" >
 
         <LinearLayout
@@ -81,7 +81,6 @@
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textColor="@color/BasicColor_green"
                 android:textStyle="bold" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -110,14 +109,13 @@
             <TextView
                 android:id="@+id/price_textView"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_height="0dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:gravity="right|center_vertical"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textColor="@color/BasicColor_red"
                 android:textSize="12sp" />
-
         </LinearLayout>
     </LinearLayout>
 

@@ -64,9 +64,9 @@ public class DBase {
 		sqliteDb.close();
 	}
 
-	public long insert(String tableName, ContentValues values) {
-		return sqliteDb.insert(tableName, null, values);
-	}
+	// public long insert(String tableName, ContentValues values) {
+	// return sqliteDb.insert(tableName, null, values);
+	// }
 
 	/**
 	 * Добавление записи в БД. В зависимости от таблицы используется разный
@@ -161,8 +161,9 @@ public class DBase {
 	}
 
 	/**
-	 * Дополняет коллекцию ContentValues индексным полем. Индексное поле
-	 * добавляется только в том случае, если его в коллекции еще нет.
+	 * Дополняет коллекцию ContentValues индексным полем.<br>
+	 * Индексное поле добавляется только в том случае, если его в коллекции еще
+	 * нет.
 	 * 
 	 * @param values
 	 * @return String, которой было заполнено индексное поле.
@@ -198,7 +199,8 @@ public class DBase {
 	}
 
 	/**
-	 * Возвращает содержимое коллекции ContentValues в виде строки.
+	 * Возвращает содержимое коллекции ContentValues в виде строки.<br>
+	 * Используется при создании поля поиска.
 	 * 
 	 * @param values
 	 * @param keys
@@ -521,6 +523,16 @@ public class DBase {
 	 */
 	public Cursor getAllRows(String tableName) {
 		return sqliteDb.query(tableName, null, null, null, null, null, null);
+	}
+
+	/*
+	 * Возвращает курсор на отфильтрованное содержимое таблицы.
+	 */
+	public Cursor getFilteredRows(String tableName, String filterString) {
+
+		String filter = FIELD_INDEX_NAME.concat(" LIKE '%")
+				.concat(filterString).concat("%'");
+		return sqliteDb.query(tableName, null, filter, null, null, null, null);
 	}
 
 	/**
