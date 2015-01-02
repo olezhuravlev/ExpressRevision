@@ -34,25 +34,29 @@ public final class R {
     }
     public static final class drawable {
         public static final int background=0x7f020000;
-        public static final int button_background=0x7f020001;
-        public static final int button_background_disabled=0x7f020002;
-        public static final int button_background_pressed=0x7f020003;
-        public static final int button_docs_list_background=0x7f020004;
-        public static final int button_docs_list_background_disabled=0x7f020005;
-        public static final int button_docs_list_background_pressed=0x7f020006;
-        public static final int button_docs_list_layout=0x7f020007;
-        public static final int button_docs_list_selector=0x7f020008;
-        public static final int button_selector=0x7f020009;
-        public static final int delimeter=0x7f02000a;
-        public static final int delimeter_texture=0x7f02000b;
-        public static final int demo_text_red_45=0x7f02000c;
-        public static final int demo_texture=0x7f02000d;
-        public static final int docs_list_item_background=0x7f02000e;
-        public static final int filter_field_background=0x7f02000f;
-        public static final int filter_field_background2=0x7f020010;
-        public static final int items_list_item_background=0x7f020011;
-        public static final int shop128=0x7f020012;
-        public static final int work_texture=0x7f020013;
+        public static final int button_big_background=0x7f020001;
+        public static final int button_big_background_disabled=0x7f020002;
+        public static final int button_big_background_pressed=0x7f020003;
+        public static final int button_big_selector=0x7f020004;
+        public static final int button_docs_list_background=0x7f020005;
+        public static final int button_docs_list_background_disabled=0x7f020006;
+        public static final int button_docs_list_background_pressed=0x7f020007;
+        public static final int button_docs_list_layout=0x7f020008;
+        public static final int button_docs_list_selector=0x7f020009;
+        public static final int button_small_background=0x7f02000a;
+        public static final int button_small_background_disabled=0x7f02000b;
+        public static final int button_small_background_pressed=0x7f02000c;
+        public static final int button_small_selector=0x7f02000d;
+        public static final int delimeter=0x7f02000e;
+        public static final int delimeter_texture=0x7f02000f;
+        public static final int demo_text_red_45=0x7f020010;
+        public static final int demo_texture=0x7f020011;
+        public static final int docs_list_item_background=0x7f020012;
+        public static final int filter_field_background=0x7f020013;
+        public static final int filter_field_background2=0x7f020014;
+        public static final int items_list_item_background=0x7f020015;
+        public static final int shop128=0x7f020016;
+        public static final int work_texture=0x7f020017;
     }
     public static final class id {
         public static final int backgroundLayout=0x7f0a0006;
@@ -64,11 +68,11 @@ public final class R {
         public static final int buttonNo=0x7f0a0005;
         public static final int buttonStart=0x7f0a001c;
         public static final int buttonYes=0x7f0a0004;
+        public static final int clearFilterButton=0x7f0a0010;
         public static final int commentTextView=0x7f0a000c;
         public static final int dateTextView=0x7f0a000a;
         public static final int docsListView=0x7f0a0008;
         public static final int documentFragment=0x7f0a000e;
-        public static final int imageButton1=0x7f0a0010;
         public static final int item_code_textView=0x7f0a0013;
         public static final int item_descr_full_textView=0x7f0a0014;
         public static final int itemsFilterEditText=0x7f0a000f;
@@ -126,6 +130,7 @@ public final class R {
         public static final int btnStartPresentation=0x7f070005;
         public static final int cancel=0x7f07000a;
         public static final int clearTables=0x7f07001c;
+        public static final int clearValue=0x7f07002b;
         public static final int connectPrefs=0x7f070019;
         public static final int connectionString=0x7f07001a;
         public static final int currency=0x7f07002a;

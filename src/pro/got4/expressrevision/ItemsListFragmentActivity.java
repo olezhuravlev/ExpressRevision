@@ -15,14 +15,17 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
 
 public class ItemsListFragmentActivity extends FragmentActivity implements
-		LoaderCallbacks<Cursor>, TextWatcher, OnKeyListener {
+		LoaderCallbacks<Cursor>, TextWatcher, OnKeyListener, OnClickListener {
 
 	public static final int ITEMS_LIST_ID = 2;
 
@@ -32,6 +35,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	public static final String START_ITEMS_LOADER = "start_items_loader";
 
 	private EditText itemsFilterEditText;
+	private ImageButton clearFilterButton;
 	private ListView lvData;
 
 	private ItemsListAdapter adapter;
@@ -66,6 +70,9 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		itemsFilterEditText = (EditText) findViewById(R.id.itemsFilterEditText);
 		itemsFilterEditText.addTextChangedListener(this);
 		itemsFilterEditText.setOnKeyListener(this);
+
+		clearFilterButton = (ImageButton) findViewById(R.id.clearFilterButton);
+		clearFilterButton.setOnClickListener(this);
 
 		Message.show("OnCreate, itemsFilterEditText == " + itemsFilterEditText
 				+ ", text ==" + itemsFilterEditText.getText().toString());
@@ -287,25 +294,33 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		boolean returnCode = false;
 
-		// switch (v.getId()) {
-		//
-		// case R.id.itemsFilterEditText:
-		//
-		// // Отлавливаем нажатие ENTER на софт-клавиатуре.
-		// if (event.getAction() == KeyEvent.ACTION_UP
-		// && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-		//
-		// EditText editText = getItemsFilterEditText();
-		// editText.clearFocus();
-		// InputMethodManager imm = (InputMethodManager)
-		// getSystemService(Context.INPUT_METHOD_SERVICE);
-		// imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-		// // imm.hideSoftInputFromWindow(editText.getWindowToken(),
-		// // InputMethodManager.HIDE_IMPLICIT_ONLY);
-		//
-		// returnCode = true; // Сообщение обработано.
-		// }
-		// }
+		switch (v.getId()) {
+
+		case R.id.itemsFilterEditText:
+
+			// Отлавливаем нажатие ENTER на софт-клавиатуре.
+			if (event.getAction() == KeyEvent.ACTION_DOWN
+					&& event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+
+				Message.show("onKey(), ACTION_DOWN && KEYCODE_ENTER");
+
+				itemsFilterEditText.clearFocus();
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(
+						itemsFilterEditText.getWindowToken(), 0);
+
+				returnCode = true; // Сообщение обработано.
+			}
+		}
 		return returnCode;
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.clearFilterButton:
+			itemsFilterEditText.setText("");
+			break;
+		}
 	}
 }

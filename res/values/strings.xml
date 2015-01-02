@@ -55,5 +55,6 @@
     <string name="docsListConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
     <string name="itemsListConnectionString">http://express.nsk.ru:9999/eritems.php</string>
     <string name="currency">руб.</string>
+    <string name="clearValue">Очистить</string>
 
 </resources>
