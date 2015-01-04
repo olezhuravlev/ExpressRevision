@@ -2,6 +2,7 @@ package pro.got4.expressrevision;
 
 import pro.got4.expressrevision.ItemsListAdapter.OnItemButtonClickListener;
 import pro.got4.expressrevision.dialogs.NumberInputDialogFragment;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -80,8 +81,10 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		clearFilterButton = (ImageButton) findViewById(R.id.clearFilterButton);
 		clearFilterButton.setOnClickListener(this);
 
-		Message.show("OnCreate, itemsFilterEditText == " + itemsFilterEditText
-				+ ", text ==" + itemsFilterEditText.getText().toString());
+		Message.show();
+		// Message.show("OnCreate, itemsFilterEditText == " +
+		// itemsFilterEditText
+		// + ", text ==" + itemsFilterEditText.getText().toString());
 
 		// Добавляем контекстное меню к списку.
 		// registerForContextMenu(lvData);
@@ -217,7 +220,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		public Cursor loadInBackground() {
 
 			String filter = parentalActivity.getFilter();
-			Message.show("loadInBackground(), filter = " + filter);
+			// Message.show("loadInBackground(), filter = " + filter);
 			// Cursor cursor = db.getAllRows(DBase.TABLE_ITEMS_NAME);
 			Cursor cursor = db.getFilteredRows(DBase.TABLE_ITEMS_NAME, filter);
 			return cursor;
@@ -285,16 +288,15 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		Message.show("onTextChanged(), CharSequence = " + s + ", start = "
-				+ start + ", before = " + before + ", count = " + count);
+		// Message.show("onTextChanged(), CharSequence = " + s + ", start = "
+		// + start + ", before = " + before + ", count = " + count);
 	}
 
 	@Override
 	public void afterTextChanged(Editable s) {
 
-		String filter = itemsFilterEditText.getText().toString();
-
-		Message.show("afterTextChanged(), filter ==" + filter);
+		// String filter = itemsFilterEditText.getText().toString();
+		// Message.show("afterTextChanged(), filter ==" + filter);
 
 		// Чтобы обновить список.
 		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
@@ -345,12 +347,15 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		case R.id.clearFilterButton:
 			itemsFilterEditText.setText("");
 			break;
+		case R.id.quant_button:
+			break;
 		}
 	}
 
 	@Override
 	public void onItemButtonClick(View v, Cursor cursor) {
 
+		int row_id_Idx = cursor.getColumnIndex("_id");
 		int itemDescrFull_Idx = cursor
 				.getColumnIndex(DBase.FIELD_ITEM_DESCR_FULL_NAME);
 		int itemUseSpecif_Idx = cursor
@@ -362,6 +367,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		int price_Idx = cursor.getColumnIndex(DBase.FIELD_PRICE_NAME);
 		int quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
 
+		int row_id = cursor.getInt(row_id_Idx);
 		String itemDescrFull = cursor.getString(itemDescrFull_Idx);
 		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
 		String specifDescr = cursor.getString(specifDescr_Idx);
@@ -370,6 +376,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		float quant = cursor.getFloat(quant_Idx);
 
 		Bundle args = new Bundle();
+		args.putInt(NumberInputDialogFragment.ROW_ID_FIELD_NAME, row_id);
 		args.putString(NumberInputDialogFragment.TITLE_FIELD_NAME,
 				getString(R.string.setQuantity) + " (" + measurDescr + "):");
 
@@ -396,8 +403,14 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	 * 
 	 * @param quantity
 	 */
-	public void setCurrentQuantity(float quantity) {
-		Toast.makeText(this, "Количество " + quantity, Toast.LENGTH_LONG)
-				.show();
+	public void setCurrentQuantity(int row_id, float quantity) {
+
+		ContentValues values = new ContentValues();
+		values.put(DBase.FIELD_QUANT_NAME, quantity);
+		db.update(db.getSQLiteDatabase(), DBase.TABLE_ITEMS_NAME, row_id,
+				values);
+
+		// Чтобы обновить список.
+		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
 	}
 }

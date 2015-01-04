@@ -17,10 +17,12 @@ import android.widget.TextView;
 public class NumberInputDialogFragment extends DialogFragment implements
 		OnClickListener {
 
+	public static final String ROW_ID_FIELD_NAME = "row_id";
 	public static final String TITLE_FIELD_NAME = "title_field";
 	public static final String MESSAGE_FIELD_NAME = "message_field";
 	public static final String INITIAL_VALUE_FIELD_NAME = "initial_value_field";
 
+	private int row_id;
 	private TextView message_TextView;
 	private ImageButton up_ImageButton;
 	private ImageButton down_ImageButton;
@@ -55,6 +57,8 @@ public class NumberInputDialogFragment extends DialogFragment implements
 
 		Bundle args = getArguments();
 		if (args != null) {
+
+			row_id = args.getInt(ROW_ID_FIELD_NAME);
 
 			String title = args.getString(TITLE_FIELD_NAME);
 			if (title != null) {
@@ -105,8 +109,8 @@ public class NumberInputDialogFragment extends DialogFragment implements
 			} catch (NumberFormatException e) {
 				value = 0f;
 			}
-			((ItemsListFragmentActivity) getActivity())
-					.setCurrentQuantity(value);
+			((ItemsListFragmentActivity) getActivity()).setCurrentQuantity(
+					row_id, value);
 			dismiss();
 			break;
 

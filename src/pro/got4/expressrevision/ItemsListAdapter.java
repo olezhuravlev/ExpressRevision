@@ -16,14 +16,14 @@ import android.widget.TextView;
 public class ItemsListAdapter extends ResourceCursorAdapter implements
 		OnClickListener {
 
-	private Context context;
+	// private Context context;
 	private OnItemButtonClickListener listener;
 
 	// Индексы колонок.
-	private int docId_Idx, rowNum_Idx, itemCode_Idx, itemDescr_Idx,
-			itemDescrFull_Idx, itemUseSpecif_Idx, specifCode_Idx,
-			specifDescr_Idx, measurDescr_Idx, price_Idx, quantAcc_Idx,
-			quant_Idx, index_Idx;
+	private int docId_Idx, rowNum_Idx, itemCode_Idx, /* itemDescr_Idx, */
+	itemDescrFull_Idx, itemUseSpecif_Idx, specifCode_Idx, specifDescr_Idx,
+			measurDescr_Idx, price_Idx, /* quantAcc_Idx, */
+			quant_Idx/* , index_Idx */;
 
 	// Формат чисел, отображающих количество.
 	private DecimalFormat decimalFormat;
@@ -38,7 +38,7 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 
 		super(context, R.layout.items_list_item_specif, cursor, true);
 
-		this.context = context;
+		// this.context = context;
 		this.listener = (OnItemButtonClickListener) context;
 
 		if (cursor != null)
@@ -61,7 +61,7 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		docId_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_ID_NAME);
 		rowNum_Idx = cursor.getColumnIndex(DBase.FIELD_ROW_NUM_NAME);
 		itemCode_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_CODE_NAME);
-		itemDescr_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_DESCR_NAME);
+		// itemDescr_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_DESCR_NAME);
 		itemDescrFull_Idx = cursor
 				.getColumnIndex(DBase.FIELD_ITEM_DESCR_FULL_NAME);
 		itemUseSpecif_Idx = cursor
@@ -70,9 +70,9 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		specifDescr_Idx = cursor.getColumnIndex(DBase.FIELD_SPECIF_DESCR_NAME);
 		measurDescr_Idx = cursor.getColumnIndex(DBase.FIELD_MEASUR_DESCR_NAME);
 		price_Idx = cursor.getColumnIndex(DBase.FIELD_PRICE_NAME);
-		quantAcc_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_ACC_NAME);
+		// quantAcc_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_ACC_NAME);
 		quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
-		index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
+		// index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
 	}
 
 	@Override

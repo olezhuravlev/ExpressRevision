@@ -16,8 +16,8 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 			"dd.MM.yyyy HH:mm:ss", Locale.getDefault());
 
 	// Индексы колонок.
-	private int docNum_Idx, docDate_Idx, docComment_Idx, storeCode_Idx,
-			storeDescr_Idx, index_Idx;
+	private int docNum_Idx, docDate_Idx, docComment_Idx, /* storeCode_Idx, */
+	storeDescr_Idx/* , index_Idx */;
 
 	public DocsListAdapter(Context context, Cursor cursor) {
 
@@ -36,9 +36,9 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 		docNum_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_NUM_NAME);
 		docDate_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_DATE_NAME);
 		docComment_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_COMMENT_NAME);
-		storeCode_Idx = cursor.getColumnIndex(DBase.FIELD_STORE_CODE_NAME);
+		// storeCode_Idx = cursor.getColumnIndex(DBase.FIELD_STORE_CODE_NAME);
 		storeDescr_Idx = cursor.getColumnIndex(DBase.FIELD_STORE_DESCR_NAME);
-		index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
+		// index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
 	}
 
 	@Override

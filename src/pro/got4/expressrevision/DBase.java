@@ -1,8 +1,6 @@
 package pro.got4.expressrevision;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 import android.content.ContentValues;
@@ -49,6 +47,10 @@ public class DBase {
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(
 			"dd.MM.yyyy HH:mm:ss", Locale.getDefault());
 
+	// Индексное поле, используемое адаптерами для идентификации строки.
+	// ИЗМЕНЯТЬ ЕГО ИМЯ НЕЛЬЗЯ!!!
+	public static final String FIELD_ID_NAME = "_id";
+
 	// Индексное поле, используемое для поиска в таблицах.
 	public static final String FIELD_INDEX_NAME = "idx";
 
@@ -90,6 +92,25 @@ public class DBase {
 		return dataBase.insert(tableName, null, values);
 	}
 
+	/**
+	 * Обновляет поля строки с указанным идентификатором.
+	 * 
+	 * @param dataBase
+	 * @param tableName
+	 * @param row_id
+	 * @param values
+	 * @return
+	 */
+	public long update(SQLiteDatabase dataBase, String tableName, int row_id,
+			ContentValues values) {
+
+		String[] whereArgs = { String.valueOf(row_id) };
+		int rowsAffected = dataBase.update(tableName, values, FIELD_ID_NAME
+				+ " = ?", whereArgs);
+
+		return rowsAffected;
+	}
+
 	public SQLiteDatabase getSQLiteDatabase() {
 		return sqliteDb;
 	}
@@ -105,8 +126,8 @@ public class DBase {
 
 			// Создание таблиц списка документов.
 			// Таблица, хранящая набор документов для демо-режима.
-			db.execSQL("CREATE TABLE " + TABLE_DOCS_DEMO_NAME
-					+ " (_id integer primary key autoincrement, "
+			db.execSQL("CREATE TABLE " + TABLE_DOCS_DEMO_NAME + " ("
+					+ FIELD_ID_NAME + " integer primary key autoincrement, "
 					+ FIELD_DOC_NUM_NAME + " text, " + FIELD_DOC_DATE_NAME
 					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
 					+ FIELD_STORE_CODE_NAME + " text, "
@@ -114,8 +135,8 @@ public class DBase {
 					+ " text);");
 
 			// Таблица, хранящая реальный набор документов.
-			db.execSQL("CREATE TABLE " + TABLE_DOCS_NAME
-					+ " (_id integer primary key autoincrement, "
+			db.execSQL("CREATE TABLE " + TABLE_DOCS_NAME + " (" + FIELD_ID_NAME
+					+ " integer primary key autoincrement, "
 					+ FIELD_DOC_NUM_NAME + " text, " + FIELD_DOC_DATE_NAME
 					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
 					+ FIELD_STORE_CODE_NAME + " text, "
@@ -125,8 +146,8 @@ public class DBase {
 			// Создание таблиц номенклатуры загруженных документов.
 			// Таблица, хранящая набор номенклатуры для демонстрационных
 			// документов.
-			db.execSQL("CREATE TABLE " + TABLE_ITEMS_DEMO_NAME
-					+ " (_id integer primary key autoincrement, "
+			db.execSQL("CREATE TABLE " + TABLE_ITEMS_DEMO_NAME + " ("
+					+ FIELD_ID_NAME + " integer primary key autoincrement, "
 					+ FIELD_DOC_ID_NAME + " text," + FIELD_ROW_NUM_NAME
 					+ " integer, " + FIELD_ITEM_CODE_NAME + " text, "
 					+ FIELD_ITEM_DESCR_NAME + " text, "
@@ -140,8 +161,8 @@ public class DBase {
 					+ " text);");
 
 			// Таблица, хранящая набор номенклатуры для реальных документов.
-			db.execSQL("CREATE TABLE " + TABLE_ITEMS_NAME
-					+ " (_id integer primary key autoincrement, "
+			db.execSQL("CREATE TABLE " + TABLE_ITEMS_NAME + " ("
+					+ FIELD_ID_NAME + " integer primary key autoincrement, "
 					+ FIELD_DOC_ID_NAME + " text," + FIELD_ROW_NUM_NAME
 					+ " integer, " + FIELD_ITEM_CODE_NAME + " text, "
 					+ FIELD_ITEM_DESCR_NAME + " text, "
@@ -254,16 +275,15 @@ public class DBase {
 		// Таблица списка документов.
 		ContentValues docsValues = new ContentValues();
 
-		SimpleDateFormat formatter = new SimpleDateFormat(
-				"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-		try {
-			Date gmt = formatter.parse("2014-10-05 13:28:15");
-			long millisecondsSinceEpoch = gmt.getTime();
-			String asString = formatter.format(gmt);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// SimpleDateFormat formatter = new SimpleDateFormat(
+		// "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+		// try {
+		// Date gmt = formatter.parse("2014-10-05 13:28:15");
+		// long millisecondsSinceEpoch = gmt.getTime();
+		// String asString = formatter.format(gmt);
+		// } catch (ParseException e) {
+		// e.printStackTrace();
+		// }
 
 		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005264");
 		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-05 13:28:15");

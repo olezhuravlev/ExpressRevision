@@ -2,8 +2,6 @@ package pro.got4.expressrevision.dialogs;
 
 import pro.got4.expressrevision.Message;
 import pro.got4.expressrevision.R;
-import pro.got4.expressrevision.R.id;
-import pro.got4.expressrevision.R.layout;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -241,8 +239,6 @@ public class ProgressDialogFragment extends DialogFragment {
 	 *            the currentValue to set
 	 */
 	public void setProgress(int progress) {
-
-		// Message.show(this);
 
 		this.progress = progress;
 
