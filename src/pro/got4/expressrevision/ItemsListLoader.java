@@ -397,7 +397,7 @@ public class ItemsListLoader extends FragmentActivity implements
 				// Дата в БД имеет вид миллисекунд с начала Юникс-эпохи,
 				// и её следует преобразовать к виду "20140101000000".
 				SimpleDateFormat dateFormatter = new SimpleDateFormat(
-						"yyyyMMddHms", Locale.getDefault());
+						"yyyyMMddHHmmss", Locale.getDefault());
 				Long docDateEpoch = Long.parseLong(docDate);
 				String dateURIFormattedString = dateFormatter
 						.format(docDateEpoch);
