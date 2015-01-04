@@ -1,5 +1,9 @@
-package pro.got4.expressrevision;
+package pro.got4.expressrevision.dialogs;
 
+import pro.got4.expressrevision.Message;
+import pro.got4.expressrevision.R;
+import pro.got4.expressrevision.R.id;
+import pro.got4.expressrevision.R.layout;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;

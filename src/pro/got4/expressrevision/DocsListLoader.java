@@ -1,7 +1,10 @@
 package pro.got4.expressrevision;
 
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -12,7 +15,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import pro.got4.expressrevision.ProgressDialogFragment.DialogListener;
+import pro.got4.expressrevision.dialogs.ProgressDialogFragment;
+import pro.got4.expressrevision.dialogs.ProgressDialogFragment.DialogListener;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -61,6 +65,10 @@ public class DocsListLoader extends FragmentActivity implements
 	private static final String COMMENT_TAG_NAME = "comm";
 
 	private static String connectionString;
+
+	// Форматтер даты для преобразования из входного формата.
+	private static SimpleDateFormat dateFormatter = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
 	// Во избежание утечек (см. подсказку, которая появляется, если класс
 	// хэндлера не делать статическим).
@@ -327,7 +335,7 @@ public class DocsListLoader extends FragmentActivity implements
 					DocumentBuilderFactory dbFactory = DocumentBuilderFactory
 							.newInstance();
 					DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-					
+
 					Document domDoc = dBuilder.parse(uriString);
 					domDoc.getDocumentElement().normalize();
 
@@ -357,6 +365,12 @@ public class DocsListLoader extends FragmentActivity implements
 						String docNumValue = docNumNode.getTextContent();
 						String docDateTimeValue = docDateTimeNode
 								.getTextContent();
+
+						// Преобразование даты документа из строкового вида к
+						// времени с начала эпохи.
+						Date gmt = DocsListLoader.dateFormatter
+								.parse(docDateTimeValue);
+						long docDateTimeEpochValue = gmt.getTime();
 
 						// Извлечение комментария к документу и данных о складе.
 						String docComment = "";
@@ -409,7 +423,7 @@ public class DocsListLoader extends FragmentActivity implements
 						ContentValues docsValues = new ContentValues();
 						docsValues.put(DBase.FIELD_DOC_NUM_NAME, docNumValue);
 						docsValues.put(DBase.FIELD_DOC_DATE_NAME,
-								docDateTimeValue);
+								docDateTimeEpochValue);
 						docsValues
 								.put(DBase.FIELD_DOC_COMMENT_NAME, docComment);
 						docsValues.put(DBase.FIELD_STORE_CODE_NAME, storeCode);
@@ -497,6 +511,8 @@ public class DocsListLoader extends FragmentActivity implements
 					//
 				} catch (Exception e) {
 					e.printStackTrace();
+					// Toast.makeText(context, e.toString(), Toast.LENGTH_LONG)
+					// .show();
 				}
 			} // if (Main.isDemoMode()) {
 

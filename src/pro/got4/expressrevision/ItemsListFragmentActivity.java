@@ -1,9 +1,12 @@
 package pro.got4.expressrevision;
 
+import pro.got4.expressrevision.ItemsListAdapter.OnItemButtonClickListener;
+import pro.got4.expressrevision.dialogs.NumberInputDialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -25,12 +28,15 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class ItemsListFragmentActivity extends FragmentActivity implements
-		LoaderCallbacks<Cursor>, TextWatcher, OnKeyListener, OnClickListener {
+		LoaderCallbacks<Cursor>, TextWatcher, OnKeyListener, OnClickListener,
+		OnItemButtonClickListener {
 
 	public static final int ITEMS_LIST_ID = 2;
 
 	public static final int CONTEXTMENU_LOAD_BUTTON_ID = 1;
 	public static final int CONTEXTMENU_LOAD_CANCEL_BUTTON_ID = 2;
+
+	private static final String NUMBER_INPUT_DIALOG_TAG = "number_input_dialog";
 
 	public static final String START_ITEMS_LOADER = "start_items_loader";
 
@@ -42,7 +48,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	public DBase db;
 
-	private Cursor currentCursor;
+	// private Cursor currentCursor;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -107,12 +113,30 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	}
 
 	@Override
+	public void onStart() {
+		super.onStart();
+		Message.show();
+	}
+
+	@Override
 	public void onResume() {
 
 		super.onResume();
-
+		Message.show();
 		// Стиль, зависящий от режима.
 		Main.setStyle(this);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		Message.show();
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		Message.show();
 	}
 
 	@Override
@@ -161,8 +185,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
 
-		currentCursor = cursor;
-		adapter.swapCursor(currentCursor);
+		// currentCursor = cursor;
+		adapter.swapCursor(cursor);
 	}
 
 	@Override
@@ -322,5 +346,58 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			itemsFilterEditText.setText("");
 			break;
 		}
+	}
+
+	@Override
+	public void onItemButtonClick(View v, Cursor cursor) {
+
+		int itemDescrFull_Idx = cursor
+				.getColumnIndex(DBase.FIELD_ITEM_DESCR_FULL_NAME);
+		int itemUseSpecif_Idx = cursor
+				.getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
+		int specifDescr_Idx = cursor
+				.getColumnIndex(DBase.FIELD_SPECIF_DESCR_NAME);
+		int measurDescr_Idx = cursor
+				.getColumnIndex(DBase.FIELD_MEASUR_DESCR_NAME);
+		int price_Idx = cursor.getColumnIndex(DBase.FIELD_PRICE_NAME);
+		int quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
+
+		String itemDescrFull = cursor.getString(itemDescrFull_Idx);
+		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
+		String specifDescr = cursor.getString(specifDescr_Idx);
+		String measurDescr = cursor.getString(measurDescr_Idx);
+		float price = cursor.getFloat(price_Idx);
+		float quant = cursor.getFloat(quant_Idx);
+
+		Bundle args = new Bundle();
+		args.putString(NumberInputDialogFragment.TITLE_FIELD_NAME,
+				getString(R.string.setQuantity) + " (" + measurDescr + "):");
+
+		String itemDescription = itemDescrFull;
+		if (itemUseSpecif != 0) {
+			itemDescription = itemDescrFull.concat(" [").concat(specifDescr)
+					.concat("]");
+		}
+
+		itemDescription = itemDescription.concat(", ")
+				.concat(String.valueOf(price)).concat(" ")
+				.concat(getString(R.string.currency));
+
+		args.putString(NumberInputDialogFragment.MESSAGE_FIELD_NAME,
+				itemDescription);
+		args.putFloat(NumberInputDialogFragment.INITIAL_VALUE_FIELD_NAME, quant);
+
+		DialogFragment d = NumberInputDialogFragment.newInstance(args);
+		d.show(getSupportFragmentManager(), NUMBER_INPUT_DIALOG_TAG);
+	}
+
+	/**
+	 * Вызывается из диалога для установки значения количества.
+	 * 
+	 * @param quantity
+	 */
+	public void setCurrentQuantity(float quantity) {
+		Toast.makeText(this, "Количество " + quantity, Toast.LENGTH_LONG)
+				.show();
 	}
 }

@@ -9,14 +9,12 @@
         android:id="@+id/textViewTitle"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Large Text"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
         android:id="@+id/textViewMessage"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Medium Text"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <LinearLayout

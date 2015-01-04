@@ -3,9 +3,7 @@ package pro.got4.expressrevision;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +17,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import pro.got4.expressrevision.ProgressDialogFragment.DialogListener;
+import pro.got4.expressrevision.dialogs.ProgressDialogFragment;
+import pro.got4.expressrevision.dialogs.ProgressDialogFragment.DialogListener;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -395,12 +394,13 @@ public class ItemsListLoader extends FragmentActivity implements
 
 				// Итоговая строка должна иметь вид:
 				// http://express.nsk.ru:9999/eritems.php?deviceid=12345&docdate=20141223120310&docnum="ЭКС00000001"
-				// Дата в строковом типе имеет вид "2014-01-01 00:00:00",
-				// следует преобразовать его к виду "20140101000000".
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-						"yyyy-MM-dd H:m:s", Locale.US);
-				String dateURIFormattedString = getURIFormattedString(docDate,
-						simpleDateFormat);
+				// Дата в БД имеет вид миллисекунд с начала Юникс-эпохи,
+				// и её следует преобразовать к виду "20140101000000".
+				SimpleDateFormat dateFormatter = new SimpleDateFormat(
+						"yyyyMMddHms", Locale.getDefault());
+				Long docDateEpoch = Long.parseLong(docDate);
+				String dateURIFormattedString = dateFormatter
+						.format(docDateEpoch);
 				String query = "?deviceid=" + deviceId + "&docdate="
 						+ dateURIFormattedString + "&docnum='";
 
@@ -833,62 +833,62 @@ public class ItemsListLoader extends FragmentActivity implements
 	 * @param simpleDateFormat
 	 * @return
 	 */
-	static String getURIFormattedString(String dateString,
-			SimpleDateFormat simpleDateFormat) {
-
-		String yearString;
-		String monthOfYearString;
-		String dayOfMonthString;
-		String hoursString;
-		String minutesString;
-		String secondsString;
-
-		Date date;
-		try {
-
-			date = simpleDateFormat.parse(dateString);
-
-			int year = date.getYear() + 1900;
-			int monthOfYear = date.getMonth() + 1;
-			int dayOfMonth = date.getDate();
-			int hours = date.getHours();
-			int minutes = date.getMinutes();
-			int seconds = date.getSeconds();
-
-			yearString = Integer.toString(year);
-
-			monthOfYearString = Integer.toString(monthOfYear);
-			if (monthOfYearString.length() < 2) {
-				monthOfYearString = "0" + monthOfYearString;
-			}
-
-			dayOfMonthString = Integer.toString(dayOfMonth);
-			if (dayOfMonthString.length() < 2) {
-				dayOfMonthString = "0" + dayOfMonthString;
-			}
-
-			hoursString = Integer.toString(hours);
-			if (hoursString.length() < 2) {
-				hoursString = "0" + hoursString;
-			}
-
-			minutesString = Integer.toString(minutes);
-			if (minutesString.length() < 2) {
-				minutesString = "0" + minutesString;
-			}
-
-			secondsString = Integer.toString(seconds);
-			if (secondsString.length() < 2) {
-				secondsString = "0" + secondsString;
-			}
-
-		} catch (ParseException e) {
-			e.printStackTrace();
-			return "";
-		}
-
-		return yearString.concat(monthOfYearString).concat(dayOfMonthString)
-				.concat(hoursString).concat(minutesString)
-				.concat(secondsString);
-	}
+	// static String getURIFormattedString(String dateString,
+	// SimpleDateFormat simpleDateFormat) {
+	//
+	// String yearString;
+	// String monthOfYearString;
+	// String dayOfMonthString;
+	// String hoursString;
+	// String minutesString;
+	// String secondsString;
+	//
+	// Date date;
+	// try {
+	//
+	// date = simpleDateFormat.parse(dateString);
+	//
+	// int year = date.getYear() + 1900;
+	// int monthOfYear = date.getMonth() + 1;
+	// int dayOfMonth = date.getDate();
+	// int hours = date.getHours();
+	// int minutes = date.getMinutes();
+	// int seconds = date.getSeconds();
+	//
+	// yearString = Integer.toString(year);
+	//
+	// monthOfYearString = Integer.toString(monthOfYear);
+	// if (monthOfYearString.length() < 2) {
+	// monthOfYearString = "0" + monthOfYearString;
+	// }
+	//
+	// dayOfMonthString = Integer.toString(dayOfMonth);
+	// if (dayOfMonthString.length() < 2) {
+	// dayOfMonthString = "0" + dayOfMonthString;
+	// }
+	//
+	// hoursString = Integer.toString(hours);
+	// if (hoursString.length() < 2) {
+	// hoursString = "0" + hoursString;
+	// }
+	//
+	// minutesString = Integer.toString(minutes);
+	// if (minutesString.length() < 2) {
+	// minutesString = "0" + minutesString;
+	// }
+	//
+	// secondsString = Integer.toString(seconds);
+	// if (secondsString.length() < 2) {
+	// secondsString = "0" + secondsString;
+	// }
+	//
+	// } catch (ParseException e) {
+	// e.printStackTrace();
+	// return "";
+	// }
+	//
+	// return yearString.concat(monthOfYearString).concat(dayOfMonthString)
+	// .concat(hoursString).concat(minutesString)
+	// .concat(secondsString);
+	// }
 }

@@ -1,14 +1,23 @@
 package pro.got4.expressrevision;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.ResourceCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
-public class ItemsListAdapter extends ResourceCursorAdapter {
+public class ItemsListAdapter extends ResourceCursorAdapter implements
+		OnClickListener {
+
+	private Context context;
+	private OnItemButtonClickListener listener;
 
 	// Индексы колонок.
 	private int docId_Idx, rowNum_Idx, itemCode_Idx, itemDescr_Idx,
@@ -16,14 +25,32 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 			specifDescr_Idx, measurDescr_Idx, price_Idx, quantAcc_Idx,
 			quant_Idx, index_Idx;
 
+	// Формат чисел, отображающих количество.
+	private DecimalFormat decimalFormat;
+
+	// Интерфейс, который должна реализовывать родительская активность для того,
+	// чтобы принимать нажатия кнопок на элементах списка.
+	interface OnItemButtonClickListener {
+		public void onItemButtonClick(View v, Cursor cursor);
+	}
+
 	public ItemsListAdapter(Context context, Cursor cursor) {
 
 		super(context, R.layout.items_list_item_specif, cursor, true);
 
-		if (cursor != null) {
+		this.context = context;
+		this.listener = (OnItemButtonClickListener) context;
 
+		if (cursor != null)
 			fillColumnIndices(cursor);
-		}
+
+		// Формат чисел, отображающих количество.
+		String pattern = "###,###.######";
+		// Locale locale = new Locale("en", "UK");
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+		symbols.setDecimalSeparator('.');
+		symbols.setGroupingSeparator('\'');
+		decimalFormat = new DecimalFormat(pattern, symbols);
 	}
 
 	/*
@@ -53,10 +80,11 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 
 		Cursor cursor = (Cursor) getItem(position);
 
-		// Если соседние индексы одинаковы, значит их вообще нет и нужно
+		// Если соседние индексы одинаковы, значит их вообще еще нет и нужно
 		// инициализировать.
 		if (docId_Idx == rowNum_Idx)
 			fillColumnIndices(cursor);
+
 		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
 
 		switch (itemUseSpecif) {
@@ -104,19 +132,19 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 		if (docId_Idx == rowNum_Idx)
 			fillColumnIndices(cursor);
 
-		String docId = cursor.getString(docId_Idx);
+		// String docId = cursor.getString(docId_Idx);
 		int rowNum = cursor.getInt(rowNum_Idx);
 		String itemCode = cursor.getString(itemCode_Idx);
-		String itemDescr = cursor.getString(itemDescr_Idx);
+		// String itemDescr = cursor.getString(itemDescr_Idx);
 		String itemDescrFull = cursor.getString(itemDescrFull_Idx);
 		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
 		String specifCode = cursor.getString(specifCode_Idx);
 		String specifDescr = cursor.getString(specifDescr_Idx);
 		String measurDescr = cursor.getString(measurDescr_Idx);
 		float price = cursor.getFloat(price_Idx);
-		float quantAcc = cursor.getFloat(quantAcc_Idx);
+		// float quantAcc = cursor.getFloat(quantAcc_Idx);
 		float quant = cursor.getFloat(quant_Idx);
-		String index = cursor.getString(index_Idx);
+		// String index = cursor.getString(index_Idx);
 
 		TextView row_num_textView = (TextView) view
 				.findViewById(R.id.row_num_textView);
@@ -130,7 +158,7 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 				.findViewById(R.id.specif_code_textView);
 		TextView specif_descr_textView = (TextView) view
 				.findViewById(R.id.specif_descr_textView);
-		TextView quant_button = (TextView) view.findViewById(R.id.quant_button);
+		Button quant_button = (Button) view.findViewById(R.id.quant_button);
 		// TextView measur_textView = (TextView) view
 		// .findViewById(R.id.measur_textView);
 		TextView price_textView = (TextView) view
@@ -162,10 +190,29 @@ public class ItemsListAdapter extends ResourceCursorAdapter {
 			}
 		}
 
-		quant_button.setText(String.valueOf(quant).concat(" ")
+		quant_button.setText(decimalFormat.format(quant).concat(" ")
 				.concat(measurDescr));
-		// measur_textView.setText(measurDescr);
 		price_textView.setText(String.valueOf(price).concat(" ")
 				.concat(context.getString(R.string.currency)));
+
+		// В теге кнопки хранится номер позиции для последующей идентификации
+		// строки данных, к которым относится нажатая кнопка.
+		quant_button.setTag(cursor.getPosition());
+		quant_button.setOnClickListener(this);
+
+	}
+
+	@Override
+	public void onClick(View v) {
+
+		switch (v.getId()) {
+		case R.id.quant_button:
+
+			// В теге хранится номер позиции строки нажатой кнопки.
+			// По этому номеру происходит идентификация данных.
+			int position = (Integer) v.getTag();
+			Cursor cursor = (Cursor) getItem(position);
+			listener.onItemButtonClick(v, cursor);
+		}
 	}
 }

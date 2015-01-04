@@ -1,5 +1,8 @@
 package pro.got4.expressrevision;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 import android.content.ContentValues;
@@ -42,6 +45,10 @@ public class DBase {
 	public static final String FIELD_QUANT_ACC_NAME = "quant_acc";
 	public static final String FIELD_QUANT_NAME = "quant";
 
+	// Форматтер даты для преобразования в формат, понятный пользователю.
+	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(
+			"dd.MM.yyyy HH:mm:ss", Locale.getDefault());
+
 	// Индексное поле, используемое для поиска в таблицах.
 	public static final String FIELD_INDEX_NAME = "idx";
 
@@ -63,10 +70,6 @@ public class DBase {
 	public void close() {
 		sqliteDb.close();
 	}
-
-	// public long insert(String tableName, ContentValues values) {
-	// return sqliteDb.insert(tableName, null, values);
-	// }
 
 	/**
 	 * Добавление записи в БД. В зависимости от таблицы используется разный
@@ -105,7 +108,7 @@ public class DBase {
 			db.execSQL("CREATE TABLE " + TABLE_DOCS_DEMO_NAME
 					+ " (_id integer primary key autoincrement, "
 					+ FIELD_DOC_NUM_NAME + " text, " + FIELD_DOC_DATE_NAME
-					+ " text, " + FIELD_DOC_COMMENT_NAME + " text, "
+					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
 					+ FIELD_STORE_CODE_NAME + " text, "
 					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_INDEX_NAME
 					+ " text);");
@@ -114,7 +117,7 @@ public class DBase {
 			db.execSQL("CREATE TABLE " + TABLE_DOCS_NAME
 					+ " (_id integer primary key autoincrement, "
 					+ FIELD_DOC_NUM_NAME + " text, " + FIELD_DOC_DATE_NAME
-					+ " text, " + FIELD_DOC_COMMENT_NAME + " text, "
+					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
 					+ FIELD_STORE_CODE_NAME + " text, "
 					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_INDEX_NAME
 					+ " text);");
@@ -172,7 +175,7 @@ public class DBase {
 
 		String indexValue = (String) values.get(FIELD_INDEX_NAME);
 
-		if (indexValue != null) // TODO Проверить, что работает!
+		if (indexValue != null)
 			return indexValue;
 
 		String[] indexFields = null;
@@ -186,7 +189,7 @@ public class DBase {
 
 			indexFields = new String[] { FIELD_ITEM_CODE_NAME,
 					FIELD_ITEM_DESCR_NAME, FIELD_ITEM_DESCR_FULL_NAME,
-					FIELD_SPECIF_DESCR_NAME };
+					FIELD_SPECIF_CODE_NAME, FIELD_SPECIF_DESCR_NAME };
 
 		}
 
@@ -200,7 +203,7 @@ public class DBase {
 
 	/**
 	 * Возвращает содержимое коллекции ContentValues в виде строки.<br>
-	 * Используется при создании поля поиска.
+	 * Используется при заполнении поля поиска.
 	 * 
 	 * @param values
 	 * @param keys
@@ -219,13 +222,23 @@ public class DBase {
 
 		for (int i = 0; i < keys.length; i++) {
 
-			String current = values.getAsString(keys[i]);
+			String fieldName = keys[i];
+			String currentValue = "";
+
+			// Преобразование даты документа в читаемый формат.
+			if (fieldName.equals(FIELD_DOC_DATE_NAME)) {
+				long gmt = values.getAsLong(fieldName);
+				currentValue = dateFormatter.format(gmt);
+			} else {
+				currentValue = values.getAsString(fieldName);
+			}
+
 			if (uniqueOnly) {
-				if (result.indexOf(current) == -1) {
-					result += current;
+				if (result.indexOf(currentValue) == -1) {
+					result += currentValue;
 				}
 			} else {
-				result += current;
+				result += currentValue;
 			}
 		}
 
@@ -240,6 +253,17 @@ public class DBase {
 		// ///////////////////////////////////////
 		// Таблица списка документов.
 		ContentValues docsValues = new ContentValues();
+
+		SimpleDateFormat formatter = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+		try {
+			Date gmt = formatter.parse("2014-10-05 13:28:15");
+			long millisecondsSinceEpoch = gmt.getTime();
+			String asString = formatter.format(gmt);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005264");
 		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-05 13:28:15");

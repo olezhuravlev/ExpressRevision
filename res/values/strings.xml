@@ -22,6 +22,7 @@
     <string name="btnEditDocument">Редактировать ревизию</string>
     <string name="yes">Да</string>
     <string name="no">Нет</string>
+    <string name="ok">ОК</string>
     <string name="cancel">Отмена</string>
     <string name="demoModeOnConfirmation">Включить демо-режим?</string>
     <string name="demoModeOnWarning">Внимание!\nВсе данные текущей ревизии будут уничтожены!\nПродолжить?</string>
@@ -56,5 +57,6 @@
     <string name="itemsListConnectionString">http://express.nsk.ru:9999/eritems.php</string>
     <string name="currency">руб.</string>
     <string name="clearValue">Очистить</string>
+    <string name="setQuantity">Укажите количество</string>
 
 </resources>

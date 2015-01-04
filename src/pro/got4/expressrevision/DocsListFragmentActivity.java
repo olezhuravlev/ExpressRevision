@@ -8,7 +8,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
@@ -29,7 +28,8 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	private ListView lvData;
 
-	private SimpleCursorAdapter scAdapter;
+	// private SimpleCursorAdapter scAdapter;
+	private DocsListAdapter adapter;
 
 	private Button buttonLoad;
 
@@ -53,19 +53,20 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		buttonLoad.setOnClickListener(this);
 
 		// формируем столбцы сопоставления
-		String[] from = new String[] { DBase.FIELD_STORE_DESCR_NAME,
-				DBase.FIELD_DOC_DATE_NAME, DBase.FIELD_DOC_NUM_NAME,
-				DBase.FIELD_DOC_COMMENT_NAME };
-		int[] to = new int[] { R.id.storeTextView, R.id.dateTextView,
-				R.id.numberTextView, R.id.commentTextView };
+		// String[] from = new String[] { DBase.FIELD_STORE_DESCR_NAME,
+		// DBase.FIELD_DOC_DATE_NAME, DBase.FIELD_DOC_NUM_NAME,
+		// DBase.FIELD_DOC_COMMENT_NAME };
+		// int[] to = new int[] { R.id.storeTextView, R.id.dateTextView,
+		// R.id.numberTextView, R.id.commentTextView };
 
 		// создаем адаптер и настраиваем список
-		scAdapter = new SimpleCursorAdapter(this, R.layout.docs_list_item,
-				null, from, to,
-				SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+		// scAdapter = new SimpleCursorAdapter(this, R.layout.docs_list_item,
+		// null, from, to,
+		// SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
+		adapter = new DocsListAdapter(this, null);
 		lvData = (ListView) findViewById(R.id.docsListView);
-		lvData.setAdapter(scAdapter);
+		lvData.setAdapter(adapter);
 
 		lvData.setOnItemLongClickListener(new OnItemLongClickListener() {
 
@@ -180,7 +181,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		if (item.getItemId() == CONTEXTMENU_LOAD_BUTTON_ID) {
 
 			// Загрузка списка документов.
-			Cursor cursor = (Cursor) scAdapter
+			Cursor cursor = (Cursor) adapter
 					.getItem(lastLongClickedItemPosition);
 
 			int numIdx = cursor.getColumnIndex(DBase.FIELD_DOC_NUM_NAME);
@@ -227,8 +228,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-
-		scAdapter.swapCursor(cursor);
+		adapter.swapCursor(cursor);
 	}
 
 	@Override
@@ -237,7 +237,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		// This is called when the last Cursor provided to onLoadFinished()
 		// above is about to be closed. We need to make sure we are no
 		// longer using it.
-		scAdapter.swapCursor(null);
+		adapter.swapCursor(null);
 	}
 
 	private static class MyCursorLoader extends CursorLoader {

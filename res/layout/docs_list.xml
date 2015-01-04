@@ -13,11 +13,11 @@
 
         <Button
             android:id="@+id/buttonLoad"
-            android:layout_width="fill_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:layout_weight="1"
-            android:background="@drawable/button_docs_list_selector"
+            android:background="@drawable/button_small_selector"
             android:padding="10dp"
             android:text="@string/loadDocuments" />
     </LinearLayout>
