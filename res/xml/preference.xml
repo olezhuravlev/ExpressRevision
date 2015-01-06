@@ -3,7 +3,7 @@
 
     <EditTextPreference
         android:defaultValue="0"
-        android:key="refreshDocListOnOpening"
+        android:key="docListOnOpeningTimeDelay"
         android:summary="@string/refreshDocListOnOpening_Summary"
         android:title="@string/refreshDocListOnOpening" />
 

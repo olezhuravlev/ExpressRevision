@@ -253,7 +253,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		@Override
 		public Cursor loadInBackground() {
 
-			Cursor cursor = db.getAllRows(DBase.TABLE_DOCS_NAME);
+			Cursor cursor = db.getRowsAll(DBase.TABLE_DOCS_NAME, null);
 
 			return cursor;
 		}

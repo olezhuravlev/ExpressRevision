@@ -60,7 +60,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	public static final String CONNECTION_STRING_FIELD_NAME = "connection_string";
 
 	private static String connectionString;
-	private static String docDate = "";
+	private static Long docDate = Long.valueOf(0);
 	private static String docNum = "";
 
 	private static int rowsCounter;
@@ -90,6 +90,11 @@ public class ItemsListLoader extends FragmentActivity implements
 	private static final String PRICE_TAG_NAME = "price";
 	private static final String QUANT_ACC_TAG_NAME = "quant_acc";
 	private static final String QUANT_TAG_NAME = "quant";
+
+	// Форматтер даты для преобразования в формат, используемый для формирования
+	// идентификатора документа.
+	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
 	// Во избежание утечек (см. подсказку, которая появляется, если класс
 	// хэндлера не делать статическим).
@@ -171,7 +176,9 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		if (extras != null) {
 			docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
-			docDate = (String) extras.get(DBase.FIELD_DOC_DATE_NAME);
+			String docDateString = (String) extras
+					.get(DBase.FIELD_DOC_DATE_NAME);
+			docDate = Long.valueOf(docDateString);
 		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<ItemsListLoader>(this);
@@ -317,14 +324,6 @@ public class ItemsListLoader extends FragmentActivity implements
 			super.onStartLoading();
 		}
 
-		// @Override
-		// public Void onLoadInBackground() {
-		//
-		// // Message.show(this);
-		//
-		// return super.onLoadInBackground();
-		// }
-
 		@Override
 		public Void loadInBackground() {
 
@@ -332,7 +331,11 @@ public class ItemsListLoader extends FragmentActivity implements
 
 			if (Main.isDemoMode()) {
 
-				Cursor cursor = dBase.getAllRows(DBase.TABLE_ITEMS_DEMO_NAME);
+				String docDateString = dateFormatter.format(docDate);
+				String docId = docDateString.concat(docNum);
+				Cursor cursor = dBase.getRowsSelected(
+						DBase.TABLE_ITEMS_DEMO_NAME, DBase.FIELD_DOC_ID_NAME
+								+ " = ?", docId, DBase.FIELD_ROW_NUM_NAME);
 
 				// Приходится хранить значения счетчиков в родительской
 				// активности, т.к. их нужно будет проверять в событии
@@ -398,9 +401,7 @@ public class ItemsListLoader extends FragmentActivity implements
 				// и её следует преобразовать к виду "20140101000000".
 				SimpleDateFormat dateFormatter = new SimpleDateFormat(
 						"yyyyMMddHHmmss", Locale.getDefault());
-				Long docDateEpoch = Long.parseLong(docDate);
-				String dateURIFormattedString = dateFormatter
-						.format(docDateEpoch);
+				String dateURIFormattedString = dateFormatter.format(docDate);
 				String query = "?deviceid=" + deviceId + "&docdate="
 						+ dateURIFormattedString + "&docnum='";
 

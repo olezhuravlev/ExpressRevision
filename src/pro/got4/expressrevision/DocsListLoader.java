@@ -286,7 +286,8 @@ public class DocsListLoader extends FragmentActivity implements
 
 				// Загрузка из демонстрационных таблиц.
 
-				Cursor cursor = dBase.getAllRows(DBase.TABLE_DOCS_DEMO_NAME);
+				Cursor cursor = dBase.getRowsAll(DBase.TABLE_DOCS_DEMO_NAME,
+						DBase.FIELD_STORE_CODE_NAME);
 				rowsTotal = cursor.getCount();
 				rowsCounter = 0;
 				cursor.moveToFirst();
@@ -433,82 +434,7 @@ public class DocsListLoader extends FragmentActivity implements
 						dBase.insert(sqliteDb, DBase.TABLE_DOCS_NAME,
 								docsValues);
 
-					}// for (int docIdx = 0; docIdx < rowsTotal; docIdx++) {
-
-					//
-					// if (Main.dbAdapter != null) {
-					//
-					// Main.dbAdapter.open();
-					// Main.dbAdapter.getDatabase().beginTransaction();
-					//
-					// for (int i = 0; i < length; i++) {
-					//
-					// if (isAbandoned())
-					// break;
-					//
-					// if (isReset())
-					// break;
-					//
-					// Node pointNode = pointNodes.item(i);
-					// if (pointNode.getNodeType() == Node.ELEMENT_NODE) {
-					//
-					// NamedNodeMap pointAttr = pointNode
-					// .getAttributes();
-					// Node dateNode = pointAttr
-					// .getNamedItem(DATE_ITEM_NAME);
-					//
-					// // Получение значений в виде строк.
-					// String dateValue = dateNode.getTextContent(); //
-					// 2014-01-01
-					// // 12:00:00
-					// String tempValue = pointNode.getTextContent(); // 10.5
-					//
-					// // Приведение значений.
-					// Date date;
-					// try {
-					// date = dateFormatter.parse(dateValue);
-					// } catch (Exception e) {
-					// e.printStackTrace();
-					// continue;
-					// }
-					//
-					// Float temperature;
-					// try {
-					// temperature = Float.valueOf(tempValue);
-					// } catch (Exception e) {
-					// e.printStackTrace();
-					// continue;
-					// }
-					//
-					// // Сохранение в БД.
-					// if (Main.dbAdapter != null) {
-					//
-					// // Log.d(Main.TAG,
-					// //
-					// "DataLoader.loadInBackground(): добавление записи: i == "
-					// // + i + ".");
-					//
-					// ContentValues contentValues = new ContentValues();
-					// contentValues.put(
-					// DatabaseAdapter.VALUE_FIELD_NAME,
-					// temperature);
-					// Main.dbAdapter.updateNote(date,
-					// contentValues);
-					// }
-					//
-					// }
-					// }
-					//
-					// // Log.d(Main.TAG,
-					// //
-					// "DataLoader.loadInBackground(): завершение транзакции.");
-					//
-					// Main.dbAdapter.getDatabase().setTransactionSuccessful();
-					// Main.dbAdapter.getDatabase().endTransaction();
-
-					// } else {
-					// }
-					//
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					// Toast.makeText(context, e.toString(), Toast.LENGTH_LONG)

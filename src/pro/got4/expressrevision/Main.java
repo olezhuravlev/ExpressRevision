@@ -366,20 +366,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 				// В контекстном меню списка документов была нажата кнопка
 				// загрузки документа.
 
-				// Bundle extras = data.getExtras();
-				// String docNum = "";
-				// String docDate = "";
-				// if (extras != null) {
-				// docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
-				//
-				// docDate = (String) extras.get(DBase.FIELD_DOC_DATE_NAME);
-				// }
-				//
-				// Message.show("Номер = " + docNum + ", Дата = " + docDate);
-				// Toast.makeText(this,
-				// "Номер = " + docNum + ", Дата = " + docDate,
-				// Toast.LENGTH_LONG).show();
-
 				// Загрузка содержимого демо- или нормального документа (в
 				// зависимости от того, в каком режиме находится приложение).
 				Intent intent = new Intent(this,
@@ -538,13 +524,13 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 */
 	public static boolean docsListNeedsToBeFetched() {
 
-		String refreshDocListOnOpening = PreferenceManager
+		String docListOnOpeningTimeDelay = PreferenceManager
 				.getDefaultSharedPreferences(Main.main).getString(
-						"refreshDocListOnOpening", "0");
+						"docListOnOpeningTimeDelay", "0");
 
 		Integer timeDelay = Integer.valueOf(0);
-		if (!refreshDocListOnOpening.isEmpty())
-			timeDelay = Integer.parseInt(refreshDocListOnOpening);
+		if (!docListOnOpeningTimeDelay.isEmpty())
+			timeDelay = Integer.parseInt(docListOnOpeningTimeDelay);
 
 		GregorianCalendar expiryTime = Main.getLastDocsListFetchingTime();
 		expiryTime.add(GregorianCalendar.SECOND, timeDelay.intValue());
@@ -566,7 +552,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * документа с сервера.
 	 */
 	public static boolean itemsListNeedsToBeFetched() {
-
 		return true;
 	}
 

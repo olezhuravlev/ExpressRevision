@@ -1,5 +1,6 @@
 package pro.got4.expressrevision;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
@@ -200,13 +201,15 @@ public class DBase {
 			return indexValue;
 
 		String[] indexFields = null;
-		if (tableName == TABLE_DOCS_NAME) {
+		if (tableName.equals(TABLE_DOCS_NAME)
+		/* || tableName.equals(TABLE_DOCS_DEMO_NAME) */) {
 
 			indexFields = new String[] { FIELD_DOC_NUM_NAME,
 					FIELD_DOC_DATE_NAME, FIELD_DOC_COMMENT_NAME,
 					FIELD_STORE_DESCR_NAME };
 
-		} else if (tableName == TABLE_ITEMS_NAME) {
+		} else if (tableName.equals(TABLE_ITEMS_NAME)
+		/* || tableName.equals(TABLE_ITEMS_DEMO_NAME) */) {
 
 			indexFields = new String[] { FIELD_ITEM_CODE_NAME,
 					FIELD_ITEM_DESCR_NAME, FIELD_ITEM_DESCR_FULL_NAME,
@@ -254,12 +257,14 @@ public class DBase {
 				currentValue = values.getAsString(fieldName);
 			}
 
-			if (uniqueOnly) {
-				if (result.indexOf(currentValue) == -1) {
+			if (currentValue != null) {
+				if (uniqueOnly) {
+					if (result.indexOf(currentValue) == -1) {
+						result += currentValue;
+					}
+				} else {
 					result += currentValue;
 				}
-			} else {
-				result += currentValue;
 			}
 		}
 
@@ -267,315 +272,36 @@ public class DBase {
 	}
 
 	/**
-	 * Заполняет БД демонстрационным набором номенклатуры.
-	 */
-	public void insertDemoItems(SQLiteDatabase dataBase) {
-
-		// ///////////////////////////////////////
-		// Таблица списка документов.
-		ContentValues docsValues = new ContentValues();
-
-		// SimpleDateFormat formatter = new SimpleDateFormat(
-		// "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-		// try {
-		// Date gmt = formatter.parse("2014-10-05 13:28:15");
-		// long millisecondsSinceEpoch = gmt.getTime();
-		// String asString = formatter.format(gmt);
-		// } catch (ParseException e) {
-		// e.printStackTrace();
-		// }
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005264");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-05 13:28:15");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "Для Гули.");
-		docsValues.put(FIELD_STORE_CODE_NAME, "1");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "1 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005325");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-05 09:08:22");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "2 киоск");
-		docsValues.put(FIELD_STORE_CODE_NAME, "2");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "Настя можно делать!");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005368");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-06");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "135");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "135 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005369");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "Возьмите расписку с киоскера!");
-		docsValues.put(FIELD_STORE_CODE_NAME, "95");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "95 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005401");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME,
-				"Маша, не разбавляй сметану, я уже разбавила.");
-		docsValues.put(FIELD_STORE_CODE_NAME, "151");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "151 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005402");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "152");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "152 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005403");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "153");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "153 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005404");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "154");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "154 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005405");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "Срочно!");
-		docsValues.put(FIELD_STORE_CODE_NAME, "155");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "155 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005406");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "156");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "156 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005407");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "157");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "157 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005408");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "158");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "158 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005409");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "159");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "159 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005410");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "160");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "160 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005411");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "161");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "161 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС0005412");
-		docsValues.put(FIELD_DOC_DATE_NAME, "2014-10-07");
-		docsValues.put(FIELD_DOC_COMMENT_NAME, "");
-		docsValues.put(FIELD_STORE_CODE_NAME, "162");
-		docsValues.put(FIELD_STORE_DESCR_NAME, "162 киоск");
-
-		insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
-
-		// ///////////////////////////////////////
-		// Таблицы загруженных документов.
-		// ContentValues loadedDocsValues = new ContentValues();
-		// loadedDocsValues.put(FIELD_CODE_NAME, 1);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Натс");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "шоколадный батончик Nuts");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 2);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "гор.шок.Бабай 75");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "горький шоколад Бабаевский 75%");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 3);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "сиг.Друг");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME, "сигареты Друг");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 4);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ. Кр.Зв.");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME, "газета Красная Звезда");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 5);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ. Мол.Сиб.");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME, "газета Молодость Сибири");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 6);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ. Комс.Прав.");
-		// loadedDocsValues
-		// .put(FIELD_NAMEFULL_NAME, "газета Комсомольская Правда");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 7);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "жур. НиЖ");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME, "журнал Наука и жизнь");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, "ж");
-		// loadedDocsValues.put(FIELD_NAME_NAME, "жур. Mens Health");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME, "журнал Mens Health");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, "Б97");
-		// loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Сникрс 125");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "шоколадный батончик Сникерс, 125 гр.");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, "Б101");
-		// loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Баунти 125");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "шоколадный батончик Баунти, 125 гр.");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 8);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ.нап.Фанта");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "газированный напиток Фанта");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 9);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ.нап.Тархун");
-		// loadedDocsValues
-		// .put(FIELD_NAMEFULL_NAME, "газированный напиток Тархун");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 1001);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Сникрс 200");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "шоколадный батончик Сникерс, 200 гр.");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, ".Бат");
-		// loadedDocsValues.put(FIELD_NAME_NAME, "ж.р.Дирол");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "жевательная резинка Дирол");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 45006);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ.Веч.Нск.");
-		// loadedDocsValues
-		// .put(FIELD_NAMEFULL_NAME, "газета Вечерний Новосибирск");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 630005);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "жур. Поп.Мех.");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "журнал Популярная Механика");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 11);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "стир.рез.Кохинор");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "стирательная резинка Kohinoor");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 12);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "шок.бат.Баунти 200");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "шоколадный батончик Баунти, 200 гр.");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, 14);
-		// loadedDocsValues.put(FIELD_NAME_NAME, "газ.нап.К-Кола 330 ж/б");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "газированный напиток Кока-кола, 330гр. жест.б.");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, "_ш07");
-		// loadedDocsValues.put(FIELD_NAME_NAME, "шок.нап.Nesquick");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME,
-		// "шоколадный напиток Несквик");
-		//
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-		//
-		// loadedDocsValues.put(FIELD_CODE_NAME, "995");
-		// loadedDocsValues.put(FIELD_NAME_NAME, "ватн.палочки Идеал");
-		// loadedDocsValues.put(FIELD_NAMEFULL_NAME, "ватные палочки Идеал");
-
-		// DBase.this.insert(dataBase, TABLE_ITEMS_DEMO_NAME, loadedDocsValues);
-
-	}
-
-	/**
 	 * Возвращает курсор на всё содержимое таблицы.
 	 * 
 	 * @return
 	 */
-	public Cursor getAllRows(String tableName) {
-		return sqliteDb.query(tableName, null, null, null, null, null, null);
+	public Cursor getRowsAll(String tableName, String orderBy) {
+		return sqliteDb.query(tableName, null, null, null, null, null, orderBy);
 	}
 
-	/*
-	 * Возвращает курсор на отфильтрованное содержимое таблицы.
+	/**
+	 * Возвращает курсор на содержимое таблицы, отобранное по условию.
+	 * 
+	 * @return
 	 */
-	public Cursor getFilteredRows(String tableName, String filterString) {
+	public Cursor getRowsSelected(String tableName, String selection,
+			String selectionArg, String orderBy) {
+
+		String[] selectionArgs = { selectionArg };
+
+		return sqliteDb.query(tableName, null, selection, selectionArgs, null,
+				null, orderBy);
+	}
+
+	/**
+	 * Возвращает курсор на содержимое таблицы, отобранное по оператору LIKE.
+	 */
+	public Cursor getRowsLikeFiltered(String tableName, String filterString) {
 
 		String filter = FIELD_INDEX_NAME.concat(" LIKE '%")
 				.concat(filterString).concat("%'");
+
 		return sqliteDb.query(tableName, null, filter, null, null, null, null);
 	}
 
@@ -630,8 +356,12 @@ public class DBase {
 		docValues.put(FIELD_STORE_CODE_NAME, storeCode);
 		docValues.put(FIELD_STORE_DESCR_NAME, store);
 
-		long rowId = insert(sqliteDb, receiverTableName, docValues);
-
+		long rowId = 0;
+		try {
+			rowId = insert(sqliteDb, receiverTableName, docValues);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return rowId;
 	}
 
@@ -688,8 +418,955 @@ public class DBase {
 		itemValues.put(FIELD_QUANT_ACC_NAME, quantAcc);
 		itemValues.put(FIELD_QUANT_NAME, quant);
 
-		long rowId = insert(sqliteDb, receiverTableName, itemValues);
-
+		long rowId = 0;
+		try {
+			rowId = insert(sqliteDb, receiverTableName, itemValues);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return rowId;
+	}
+
+	/**
+	 * Заполняет БД демонстрационным набором номенклатуры.
+	 * 
+	 * @throws ParseException
+	 */
+	public void insertDemoItems(SQLiteDatabase dataBase) {
+
+		// ///////////////////////////////////////
+		// Таблица демо-документов.
+		ContentValues docsValues = new ContentValues();
+
+		SimpleDateFormat formatter = new SimpleDateFormat(
+				"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+		try {
+
+			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000010");
+			docsValues.put(FIELD_DOC_DATE_NAME,
+					formatter.parse("2014-12-30 12:06:41").getTime());
+			docsValues.put(FIELD_STORE_CODE_NAME, "1");
+			docsValues.put(FIELD_STORE_DESCR_NAME, "1 киоск");
+			docsValues.put(FIELD_DOC_COMMENT_NAME, "Товары без характеристик.");
+
+			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
+
+			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000152");
+			docsValues.put(FIELD_DOC_DATE_NAME,
+					formatter.parse("2014-12-31 09:03:11").getTime());
+			docsValues.put(FIELD_STORE_CODE_NAME, "25");
+			docsValues.put(FIELD_STORE_DESCR_NAME, "25 киоск");
+			docsValues
+					.put(FIELD_DOC_COMMENT_NAME, "Товары с характеристиками.");
+
+			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
+
+			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000003");
+			docsValues.put(FIELD_DOC_DATE_NAME,
+					formatter.parse("2015-01-04 18:25:39").getTime());
+			docsValues.put(FIELD_STORE_DESCR_NAME, "106 киоск");
+			docsValues.put(FIELD_STORE_CODE_NAME, "106");
+			docsValues.put(FIELD_DOC_COMMENT_NAME,
+					"Товары с характеристиками и без.");
+
+			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
+
+			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000004");
+			docsValues.put(FIELD_DOC_DATE_NAME,
+					formatter.parse("2015-01-05 01:00:01").getTime());
+			docsValues.put(FIELD_STORE_CODE_NAME, "204");
+			docsValues.put(FIELD_STORE_DESCR_NAME, "204 киоск");
+			docsValues.put(FIELD_DOC_COMMENT_NAME, "Кола.");
+
+			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		// ///////////////////////////////////////
+		// Таблица номенклатуры демо-документов.
+		ContentValues itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 1);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я7032");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "*бланк Доверенность А5 №М2");
+		itemValues
+				.put(FIELD_ITEM_DESCR_FULL_NAME, "*бланк Доверенность А5 №М2");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 10);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 2);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я1118");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Автодокументы иск. кожа РП");
+		itemValues
+				.put(FIELD_ITEM_DESCR_FULL_NAME, "Автодокументы иск. кожа РП");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 62);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 3);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я5418");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Альбом д/рисов 16л");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Альбом д/рисов 16л");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 23);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 4);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27522");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"жр Орбит белоснежный фруктовый коктейль *600");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Орбит белоснежн. фр.коктейль");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 18.5);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 60);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 5);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27522");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"жр Орбит белоснежный фруктовый коктейль *600");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Орбит белоснежн. фр.коктейль");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 20);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 120);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 6);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27522");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"жр Орбит белоснежный фруктовый коктейль *600");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Орбит белоснежн. фр.коктейль");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 21);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 30);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 7);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я2554");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Кисть белка №1/2 кругл.");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Кисть белка");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 15);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 5);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 8);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я5799");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Н14 Украшение Бабочка на клипе");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Н14 Украшение Бабочка на клипе");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 22);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 11);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 9);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "яа0179");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Н15 Гирлянда свечки эл. 100 ламп (белый)");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Гирлянда эл. 100 ламп (белый)");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 150);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 10);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я8687");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Эл. Испаритель Понс Ароматный кофе");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Эл. Испаритель Понс");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 117);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 5);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 11);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я7726");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Эл.Испаритель Понс Дикая вишня");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Эл. Испаритель Понс");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 117);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 5);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 12);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я7727");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Эл.Испаритель Понс Классик");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Эл. Испаритель Понс");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 117);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 5);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 13);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я6595");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "эл.сиг.Вишня Low");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "эл.сиг.Вишня Low");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 90);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 2);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 14);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я6592");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "эл.сиг.Табак High");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "эл.сиг.Табак High");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 90);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 2);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-30 12:06:41ЭКС00000010");
+		itemValues.put(FIELD_ROW_NUM_NAME, 15);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "я6590");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "эл.сиг.Табак Med");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "эл.сиг.Табак Med");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 90);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 1);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0795");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Дарья БИОГРАФИЯ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Дарья БИОГРАФИЯ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 52081);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "6/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 25);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 5);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 2);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0795");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Дарья БИОГРАФИЯ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Дарья БИОГРАФИЯ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 53635);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "7/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 25);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 3);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0795");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Дарья БИОГРАФИЯ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Дарья БИОГРАФИЯ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 55092);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "8/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 25);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 9);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 4);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0797");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "Жизнь и любовь");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "Жизнь и любовь");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 55898);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "8/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 19);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 5);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0718");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 41519);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "1/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 23);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 6);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0718");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 55908);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "4/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 23);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 7);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0718");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 51231);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "3/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 23);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 8);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0725");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 44079);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "5/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 35);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 2);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 9);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0725");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 55185);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "15/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 37);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 10);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0725");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 56245);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "16/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 37);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 11);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "Ж0725");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"ОБЕРЕГИ и ТАЛИСМАНЫ Спецвыпуск газеты");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 42999);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "4/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 33);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 12);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "6294");
+		itemValues
+				.put(FIELD_ITEM_DESCR_NAME, "Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 39501);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "1/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 13);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "6294");
+		itemValues
+				.put(FIELD_ITEM_DESCR_NAME, "Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 16792);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "4/12");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 20);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 14);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "6294");
+		itemValues
+				.put(FIELD_ITEM_DESCR_NAME, "Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 13375);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "3/12");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 20);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 6);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2014-12-31 09:03:11ЭКС00000152");
+		itemValues.put(FIELD_ROW_NUM_NAME, 15);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "6294");
+		itemValues
+				.put(FIELD_ITEM_DESCR_NAME, "Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Садовод и огородник. Спецвыпуск");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 31924);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "3/13");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 1);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "1623");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 22152);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "3/13");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 4);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 2);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "1623");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 52847);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "19/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 4);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 3);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "1623");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 25134);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "7/13");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 4);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 4);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "1623");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 38988);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "26/13");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 4);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 5);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "1623");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1000 СЕКРЕТОВ");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 41654);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "4/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 16);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 4);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 6);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "28301");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"ав драже Виталайф Калинка витаминизирован.50г");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"ав драже Виталайф Калинка витаминизирован.50г");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 55);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 2);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 7);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "28307");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"ав напиток Виталайф черноплодноря витамин  сухой30");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"ав напиток Виталайф черноплоднорябиновый витамин  сухой30");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 120);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 8);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "28555");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Арахис холодец с хреном 70гр 10шт *20");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Арахис холодец с хреном 70гр");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 24);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 35);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 9);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "28555");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Арахис холодец с хреном 70гр 10шт *20");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Арахис холодец с хреном 70гр");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 23);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 9);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 10);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "28130");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"бат КИНГ сайз Кит Кат 68г 4*24=96  М");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "бат.Кит Кат кинг сайз 68г");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 34);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 831);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 11);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "8596");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 41778);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "8/14");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 32);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 12);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "8596");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 3714);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "6/12");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 32);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 13);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "8596");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 39098);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "52/13");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 32);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 14);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "8596");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 36448);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "45/13");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 32);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-04 18:25:39ЭКС00000003");
+		itemValues.put(FIELD_ROW_NUM_NAME, 15);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "8596");
+		itemValues.put(FIELD_ITEM_DESCR_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
+				"Экспресс газета                        (Роспечать)");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 1637);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "3/12");
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 32);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 1);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27117");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 33.5);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 24);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 2);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27117");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 34.5);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 495);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 3);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27117");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 35.5);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 48);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 4);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27117");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 44);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 120);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 5);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27117");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 48);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 9);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 6);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27117");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "0,5 спрайт бутылка  *24");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 49);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 36);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 7);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "26997");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л кока  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л кока-кола");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 44);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 149);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 8);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "26997");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л кока  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л кока-кола");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 53);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 258);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 9);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "26997");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л кока  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л кока-кола");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 56);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 300);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 10);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "26997");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л кока  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л кока-кола");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 60);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 96);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 11);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "26997");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л кока  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л кока-кола");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 61);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 72);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 12);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27114");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л спрайт  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л спрайт");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 44);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 24);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 13);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27114");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л спрайт  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л спрайт");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 56);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 132);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 14);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27114");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л спрайт  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л спрайт");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 60);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 24);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
+
+		itemValues = new ContentValues();
+		itemValues.put(FIELD_DOC_ID_NAME, "2015-01-05 01:00:01ЭКС00000004");
+		itemValues.put(FIELD_ROW_NUM_NAME, 15);
+		itemValues.put(FIELD_ITEM_CODE_NAME, "27114");
+		itemValues.put(FIELD_ITEM_DESCR_NAME, "1л спрайт  бутылка  *12");
+		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1л спрайт");
+		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 0);
+		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
+		itemValues.put(FIELD_PRICE_NAME, 61);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 12);
+		itemValues.put(FIELD_QUANT_NAME, 0);
+		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
 	}
 }

@@ -222,7 +222,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			String filter = parentalActivity.getFilter();
 			// Message.show("loadInBackground(), filter = " + filter);
 			// Cursor cursor = db.getAllRows(DBase.TABLE_ITEMS_NAME);
-			Cursor cursor = db.getFilteredRows(DBase.TABLE_ITEMS_NAME, filter);
+			Cursor cursor = db.getRowsLikeFiltered(DBase.TABLE_ITEMS_NAME, filter);
 			return cursor;
 		}
 
