@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <EditTextPreference
-        android:defaultValue="0"
+        android:inputType="number"
         android:key="docListOnOpeningTimeDelay"
         android:summary="@string/refreshDocListOnOpening_Summary"
         android:title="@string/refreshDocListOnOpening" />
@@ -11,8 +11,15 @@
         android:key="connectPrefs"
         android:title="@string/connectPrefs" >
         <EditTextPreference
-            android:key="connectionString"
-            android:title="@string/connectionString" />
+            android:key="connectionStringDocs"
+            android:title="@string/connectionStringDocs" />
+        <EditTextPreference
+            android:key="connectionStringItems"
+            android:title="@string/connectionStringItems" />
+        <EditTextPreference
+            android:inputType="number"
+            android:key="rowsInDataBundle"
+            android:title="@string/rowsInDataBundle" />
     </PreferenceScreen>
 
     <PreferenceCategory
@@ -25,5 +32,6 @@
             android:title="@string/displayOrientation" >
         </ListPreference>
     </PreferenceCategory>
+    <CheckBoxPreference android:key="demoModePrefs" android:title="@string/demoMode"/>
 
 </PreferenceScreen>

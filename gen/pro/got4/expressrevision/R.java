@@ -61,8 +61,6 @@ public final class R {
     public static final class id {
         public static final int backgroundLayout=0x7f0a000c;
         public static final int backgroundLayout_main=0x7f0a001f;
-        public static final int btnLoadStudy=0x7f0a0024;
-        public static final int btnStartPresentation=0x7f0a0025;
         public static final int buttonCancel=0x7f0a0009;
         public static final int buttonLoad=0x7f0a000d;
         public static final int buttonNo=0x7f0a000b;
@@ -109,7 +107,6 @@ public final class R {
         public static final int items_list_item=0x7f030007;
         public static final int items_list_item_specif=0x7f030008;
         public static final int main=0x7f030009;
-        public static final int study=0x7f03000a;
     }
     public static final class raw {
         public static final int beep_interface=0x7f050000;
@@ -129,52 +126,55 @@ public final class R {
         public static final int zx=0x7f05000e;
     }
     public static final class string {
-        public static final int addDocument=0x7f070012;
+        public static final int addDocument=0x7f070013;
         public static final int app_name=0x7f070000;
-        public static final int btnEditDocument=0x7f070007;
-        public static final int btnLoadDocument=0x7f070006;
-        public static final int btnLoadStudyExample=0x7f070004;
-        public static final int btnStartPresentation=0x7f070005;
-        public static final int cancel=0x7f07000b;
-        public static final int clearTables=0x7f07001d;
-        public static final int clearValue=0x7f07002c;
-        public static final int connectPrefs=0x7f07001a;
-        public static final int connectionString=0x7f07001b;
-        public static final int currency=0x7f07002b;
-        public static final int dataCleaning=0x7f070021;
-        public static final int dataCleaningQuestion=0x7f070022;
-        public static final int demoModeOffConfirmation=0x7f07000e;
-        public static final int demoModeOffWarning=0x7f07000f;
-        public static final int demoModeOnConfirmation=0x7f07000c;
-        public static final int demoModeOnWarning=0x7f07000d;
+        public static final int btnEditDocument=0x7f070008;
+        public static final int btnLoadDocument=0x7f070007;
+        public static final int btnLoadStudyExample=0x7f070005;
+        public static final int btnStartPresentation=0x7f070006;
+        public static final int cancel=0x7f07000c;
+        public static final int clearTables=0x7f070020;
+        public static final int clearValue=0x7f07002f;
+        public static final int connectPrefs=0x7f07001b;
+        public static final int connectionStringDocs=0x7f07001c;
+        public static final int connectionStringItems=0x7f07001d;
+        public static final int currency=0x7f07002e;
+        public static final int dataCleaning=0x7f070024;
+        public static final int dataCleaningQuestion=0x7f070025;
+        public static final int demoMode=0x7f070004;
+        public static final int demoModeOffConfirmation=0x7f07000f;
+        public static final int demoModeOffWarning=0x7f070010;
+        public static final int demoModeOnConfirmation=0x7f07000d;
+        public static final int demoModeOnWarning=0x7f07000e;
         public static final int demoMode_off=0x7f070002;
         public static final int demoMode_on=0x7f070003;
-        public static final int displayOrientation=0x7f070019;
-        public static final int displayPrefs=0x7f07001c;
-        public static final int docsListConnectionString=0x7f070029;
-        public static final int docsTableNotCleared=0x7f07001f;
-        public static final int documentIsntLoaded=0x7f070023;
-        public static final int documentLoaded=0x7f070025;
-        public static final int enterFilterString=0x7f070027;
-        public static final int itemsListConnectionString=0x7f07002a;
-        public static final int itemsTableNotCleared=0x7f070020;
-        public static final int loadDocuments=0x7f070011;
-        public static final int loading=0x7f070013;
-        public static final int loadingDocuments=0x7f070014;
-        public static final int loadingItems=0x7f070015;
-        public static final int networkNotAvailable=0x7f070028;
-        public static final int no=0x7f070009;
-        public static final int ok=0x7f07000a;
-        public static final int pleaseWait=0x7f070016;
-        public static final int refreshDocListOnOpening=0x7f070017;
-        public static final int refreshDocListOnOpening_Summary=0x7f070018;
-        public static final int resreshList=0x7f070010;
-        public static final int rowsDeleted=0x7f070024;
-        public static final int rowsLoaded=0x7f070026;
-        public static final int setQuantity=0x7f07002d;
+        public static final int displayOrientation=0x7f07001a;
+        public static final int displayPrefs=0x7f07001e;
+        public static final int docsListConnectionString=0x7f07002c;
+        public static final int docsTableNotCleared=0x7f070022;
+        public static final int documentIsntLoaded=0x7f070026;
+        public static final int documentLoaded=0x7f070028;
+        public static final int enterFilterString=0x7f07002a;
+        public static final int itemsListConnectionString=0x7f07002d;
+        public static final int itemsTableNotCleared=0x7f070023;
+        public static final int loadDocuments=0x7f070012;
+        public static final int loading=0x7f070014;
+        public static final int loadingDocuments=0x7f070015;
+        public static final int loadingItems=0x7f070016;
+        public static final int networkNotAvailable=0x7f07002b;
+        public static final int no=0x7f07000a;
+        public static final int ok=0x7f07000b;
+        public static final int pleaseWait=0x7f070017;
+        public static final int refreshDocListOnOpening=0x7f070018;
+        public static final int refreshDocListOnOpening_Summary=0x7f070019;
+        public static final int resreshList=0x7f070011;
+        public static final int rowsDeleted=0x7f070027;
+        public static final int rowsInDataBundle=0x7f07001f;
+        public static final int rowsLoaded=0x7f070029;
+        public static final int setQuantity=0x7f070030;
         public static final int settings_title=0x7f070001;
-        public static final int tablesCleared=0x7f07001e;
-        public static final int yes=0x7f070008;
+        public static final int tablesCleared=0x7f070021;
+        public static final int yes=0x7f070009;
     }
     public static final class style {
         /** 

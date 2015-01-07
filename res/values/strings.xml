@@ -16,6 +16,7 @@
     <string name="settings_title">Настройки</string>
     <string name="demoMode_off">Выключить демо-режим</string>
     <string name="demoMode_on">Включить демо-режим</string>
+    <string name="demoMode">Демо-режим</string>
     <string name="btnLoadStudyExample">Загрузить обучающий пример</string>
     <string name="btnStartPresentation">Начать презентацию</string>
     <string name="btnLoadDocument">Загрузить ревизию</string>
@@ -39,8 +40,10 @@
     <string name="refreshDocListOnOpening_Summary">Установка времени, по истечении которого полученный список ревизий считается устаревшим и требуется получить новый.</string>
     <string name="displayOrientation">Ориентация экрана</string>
     <string name="connectPrefs">Настройки подключения</string>
-    <string name="connectionString">Строка подключения</string>
+    <string name="connectionStringDocs">Получение списка документов</string>
+    <string name="connectionStringItems">Получение содержимого документов</string>
     <string name="displayPrefs">Настройки экрана</string>
+    <string name="rowsInDataBundle">Строк в пакете данных</string>
     <string name="clearTables">Очистить данные</string>
     <string name="tablesCleared">Данные очищены!</string>
     <string name="docsTableNotCleared">Список ревизий не очищен!</string>
