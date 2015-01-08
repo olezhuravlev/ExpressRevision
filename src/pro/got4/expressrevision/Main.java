@@ -6,6 +6,8 @@ import pro.got4.expressrevision.dialogs.CustomDialogFragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnSeekCompleteListener;
@@ -25,13 +27,19 @@ import android.widget.Toast;
 public class Main extends FragmentActivity implements OnClickListener,
 		CustomDialogFragment.OnCloseCustomDialogListener {
 
-	// Имена полей.
+	public static final String FIELD_ORIENTATION_NAME = "displayOrientation";
+
+	public static final String FIELD_ORIENTATION_AUTO_NAME = "auto";
+	public static final String FIELD_ORIENTATION_PORTRAIT_NAME = "portrait";
+	public static final String FIELD_ORIENTATION_LANDSCAPE_NAME = "landscape";
+
 	public static final String FIELD_DEMOMODE_NAME = "demoMode";
 
-	public static final int DIALOG_DEMOMODE_ONOFF_ID = 1;
-	public static final int DIALOG_DATA_CLEANING_CONFIRMATION = 2;
+	public static final int DIALOG_DATA_CLEANING_CONFIRMATION = 1;
 
-	public DBase db;
+	public static final String PREFERENCES_FILE_NAME = "pro.got4.expressrevision";
+
+	public static DBase db;
 
 	public static Main main;
 
@@ -47,8 +55,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 	// Идентификаторы меню параметров.
 	private final int OPTIONS_MENU_PREFERENCES_BUTTON_ID = 0;
-	private final int OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID = 1;
-	private final int OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID = 2;
+	private final int OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID = 1;
 
 	/**
 	 * Дата последнего получения списка документов.
@@ -67,11 +74,13 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		super.onCreate(savedInstanceState);
 
-		if (savedInstanceState != null) {
-			Main.setDemoMode(savedInstanceState.getBoolean(FIELD_DEMOMODE_NAME));
-		}
+		// if (savedInstanceState != null) {
+		// Main.setDemoMode(savedInstanceState.getBoolean(FIELD_DEMOMODE_NAME));
+		// }
 
 		setContentView(R.layout.main);
+
+		setTitle("Some doc loaded");// TODO Имя документа?
 
 		// открываем подключение к БД
 		db = new DBase(this);
@@ -102,7 +111,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 					// запускаемый объект с лагом в исполнении на
 					// требуемое время.
 					mp.start();
-					mHandler.postDelayed(mStopAction, mEndTime - mStartTime);
+					// mHandler.postDelayed(mStopAction, mEndTime - mStartTime);
 				}
 
 				// Запускаемый объект, который остановит проигрывание и
@@ -126,9 +135,16 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		super.onResume();
 
+		// Флаг режима нужно получить из настроек, т.к. вызов м.б. связан со
+		// сменой конфигурации.
+		demoMode = PreferenceManager.getDefaultSharedPreferences(this)
+				.getBoolean(FIELD_DEMOMODE_NAME, false);
+
+		setOrientation(this);
 		setStyle(this);
 
 		setStartButtonText();
+
 	}
 
 	private void setStartButtonText() {
@@ -148,29 +164,18 @@ public class Main extends FragmentActivity implements OnClickListener,
 	}
 
 	@Override
-	public void onPause() {
-		super.onPause();
-	}
-
-	@Override
 	public void onSaveInstanceState(Bundle outState) {
 
 		super.onSaveInstanceState(outState);
-
-		outState.putBoolean(FIELD_DEMOMODE_NAME, Main.isDemoMode());
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 
-		MenuItem item = menu.add(0, OPTIONS_MENU_PREFERENCES_BUTTON_ID, 0,
-				getResources().getString(R.string.settings_title));
-		item.setIntent(new Intent(this, Preferences.class));
+		menu.add(0, OPTIONS_MENU_PREFERENCES_BUTTON_ID, 0, getResources()
+				.getString(R.string.settings_title));
 
-		menu.add(0, OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID, 1, getResources()
-				.getString(R.string.demoMode_on));
-
-		menu.add(0, OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID, 2, getResources()
+		menu.add(0, OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID, 1, getResources()
 				.getString(R.string.clearTables));
 
 		return super.onCreateOptionsMenu(menu);
@@ -183,25 +188,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public void onCloseCustomDialog(int dialogId, int buttonId) {
 
 		switch (dialogId) {
-		case DIALOG_DEMOMODE_ONOFF_ID:
-
-			// В вызванном диалоге включения/выключения деморежима пользователь
-			// подтвердил действие, поэтому режим меняется на противоположный.
-			if (buttonId == CustomDialogFragment.BUTTON_YES) {
-
-				Main.setDemoMode(!Main.isDemoMode());
-
-				// Включение/выключение демо-режима.
-				if (Main.isDemoMode()) {
-					switchDemoModeOn();
-				} else {
-					switchDemoModeOff();
-				}
-			}
-			break;
-
-		case (DIALOG_DATA_CLEANING_CONFIRMATION):
-
+		case (DIALOG_DATA_CLEANING_CONFIRMATION): {
 			// В вызванном диалоге подтверждения очистки данных пользователь
 			// подтвердил действие.
 			if (buttonId == CustomDialogFragment.BUTTON_YES) {
@@ -222,6 +209,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 				setStartButtonText();
 			}
 
+			break;
+		}
 		default:
 		}
 	}
@@ -230,12 +219,12 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public boolean onPrepareOptionsMenu(Menu menu) {
 
 		// Изменение подписи кнопки меню демо-режима.
-		MenuItem item = menu.getItem(OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID);
-		item.setTitle(Main.isDemoMode() ? R.string.demoMode_off
-				: R.string.demoMode_on);
+		// MenuItem item = menu.getItem(OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID);
+		// item.setTitle(Main.isDemoMode() ? R.string.demoMode_off
+		// : R.string.demoMode_on);
 
 		// Отключение кнопки очистки таблиц.
-		item = menu.getItem(DIALOG_DATA_CLEANING_CONFIRMATION);
+		MenuItem item = menu.getItem(DIALOG_DATA_CLEANING_CONFIRMATION);
 		boolean rowsExist = true;
 		if (db.getRowsCount(DBase.TABLE_DOCS_NAME)
 				+ db.getRowsCount(DBase.TABLE_ITEMS_NAME) == 0) {
@@ -299,40 +288,13 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		switch (item.getItemId()) {
 		case (OPTIONS_MENU_PREFERENCES_BUTTON_ID): {
-			// См. onCreateOptionsMenu(Menu menu);
-			break;
-		}
-		case (OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID): {
 
-			boolean rowsExist = true;
-			if (db.getRowsCount(DBase.TABLE_DOCS_NAME)
-					+ db.getRowsCount(DBase.TABLE_ITEMS_NAME) == 0) {
-				rowsExist = false;
-			}
-
-			// Отображение диалога о смене режима работы.
-			String title = "";
-			String message = "";
-			if (Main.isDemoMode()) {
-
-				title = getString(R.string.demoModeOffConfirmation);
-
-				if (rowsExist)
-					message = getString(R.string.demoModeOffWarning);
-
-			} else {
-
-				title = getString(R.string.demoModeOnConfirmation);
-
-				if (rowsExist)
-					message = getString(R.string.demoModeOnWarning);
-			}
-
-			CustomDialogFragment.showDialog_YesNo(title, message,
-					DIALOG_DEMOMODE_ONOFF_ID, Main.this);
+			Intent intent = new Intent(this, PreferencesActivity.class);
+			startActivity(intent);
 
 			break;
 		}
+
 		case (OPTIONS_MENU_CLEAR_TABLE_BUTTON_ID): {
 
 			// Отображение диалога об очистке таблиц.
@@ -405,7 +367,29 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * Возвращает имя загруженного документа ревизии.
 	 */
 	private String getLoadedDocumentName() {
-		return "2 киоск: ЭКС000254638 от 12.11.2014";// TODO
+		return "2 киоск: ЭКС000254638 от 12.11.2014";// TODO Имя документа?
+	}
+
+	/**
+	 * Устанавливает ориентацию в соответствии с настройками.
+	 */
+	public static void setOrientation(Activity activity) {
+
+		String orientationString = PreferenceManager
+				.getDefaultSharedPreferences(activity).getString(
+						FIELD_ORIENTATION_NAME, FIELD_ORIENTATION_AUTO_NAME);
+
+		int orientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
+		if (orientationString.equals(FIELD_ORIENTATION_AUTO_NAME)) {
+			orientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
+		} else if (orientationString.equals(FIELD_ORIENTATION_PORTRAIT_NAME)) {
+			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+		} else if (orientationString.equals(FIELD_ORIENTATION_LANDSCAPE_NAME)) {
+			orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+		}
+
+		if (activity.getRequestedOrientation() != orientation)
+			activity.setRequestedOrientation(orientation);
 	}
 
 	/**
@@ -441,6 +425,24 @@ public class Main extends FragmentActivity implements OnClickListener,
 			}
 
 			View v = activity.findViewById(R.id.backgroundLayout_main);
+			v.setBackgroundDrawable(image);
+
+		} else if (className.equals("PreferencesActivity")) {
+
+			if (Main.isDemoMode()) {
+
+				image = activity.getResources().getDrawable(
+						R.drawable.demo_texture);
+				image.setAlpha(30);
+
+			} else {
+				image = activity.getResources().getDrawable(
+						R.drawable.work_texture);
+				image.setAlpha(255);
+
+			}
+
+			View v = activity.findViewById(android.R.id.list);
 			v.setBackgroundDrawable(image);
 
 		} else if (className.equals("DocsListFragmentActivity")) {
@@ -479,43 +481,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 			View v = activity.findViewById(R.id.backgroundLayout);
 			v.setBackgroundDrawable(image);
 		}
-	}
-
-	/**
-	 * Включение демо-режима.
-	 */
-	private void switchDemoModeOn() {
-
-		// Если происходит переключение в демо-режим или обратно, то следует
-		// очистить все содержимое таблиц документов и номенклатуры.
-
-		// Установка оформления.
-		Main.setDemoMode(true);
-		setStyle(this);
-
-		// Очистка таблиц.
-		db.clearTable(DBase.TABLE_DOCS_NAME);
-		db.clearTable(DBase.TABLE_ITEMS_NAME);
-
-		setStartButtonText();
-	}
-
-	/**
-	 * Выключение демо-режима.
-	 */
-	private void switchDemoModeOff() {
-
-		// Если происходит переключение в демо-режим или обратно, то следует
-		// очистить все содержимое таблиц документов и номенклатуры.
-
-		Main.setDemoMode(false);
-		setStyle(this);
-
-		// Очистка таблиц.
-		db.clearTable(DBase.TABLE_DOCS_NAME);
-		db.clearTable(DBase.TABLE_ITEMS_NAME);
-
-		setStartButtonText();
 	}
 
 	/**
@@ -603,17 +568,26 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * @return the demoMode
 	 */
 	public static boolean isDemoMode() {
+
 		return demoMode;
 	}
 
 	/**
-	 * Установка ре
+	 * Устанавливает флаг демо-режима.
 	 * 
-	 * @param demoMode
-	 *            the demoMode to set
+	 * @return the demoMode
 	 */
-	private static void setDemoMode(boolean demoMode) {
-		Main.demoMode = demoMode;
+	public static void setDemoMode(Activity activity, boolean value) {
+
+		// Установка значения флага в настройках.
+		// SharedPreferences.Editor editor = activity.getSharedPreferences(
+		// PREFERENCES_FILE_NAME, Activity.MODE_PRIVATE).edit();
+		SharedPreferences.Editor editor = PreferenceManager
+				.getDefaultSharedPreferences(activity).edit();
+		editor.putBoolean(Main.FIELD_DEMOMODE_NAME, value);
+		editor.commit();
+
+		demoMode = value;
 	}
 
 	/**

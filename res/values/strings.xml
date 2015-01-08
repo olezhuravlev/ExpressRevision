@@ -2,14 +2,14 @@
 <resources>
 
     <string-array name="displayOrientations">
+        <item>auto</item>
         <item>portrait</item>
         <item>landscape</item>
-        <item>auto</item>
     </string-array>
     <string-array name="displayOrientations_Entries">
+        <item>Автоматический</item>
         <item>Портретный</item>
         <item>Ландшафтный</item>
-        <item>Автоматический</item>
     </string-array>
 
     <string name="app_name">Экспресс-Ревизия</string>
@@ -51,9 +51,10 @@
     <string name="dataCleaning">Очистка данных</string>
     <string name="dataCleaningQuestion">Удалить данные ревизии?</string>
     <string name="documentIsntLoaded">Ревизия не загружена!</string>
-    <string name="rowsDeleted">Cтрок:</string>
+    <string name="rows">Cтрок</string>
+    <string name="rowsDeleted">Cтрок</string>
     <string name="documentLoaded">Ревизия загружена.</string>
-    <string name="rowsLoaded">Строк:</string>
+    <string name="rowsLoaded">Строк</string>
     <string name="enterFilterString">Строка для поиска...</string>
     <string name="networkNotAvailable">Отсутствует подключение к сети!</string>
     <string name="docsListConnectionString">http://express.nsk.ru:9999/erdocs.php</string>

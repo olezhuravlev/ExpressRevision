@@ -23,6 +23,7 @@ public class DBase {
 	public static final String FIELD_DOC_NUM_NAME = "doc_num";
 	public static final String FIELD_DOC_DATE_NAME = "doc_date";
 	public static final String FIELD_DOC_COMMENT_NAME = "doc_comm";
+	public static final String FIELD_DOC_ROWS_NAME = "doc_rows";
 	public static final String FIELD_STORE_CODE_NAME = "store_code";
 	public static final String FIELD_STORE_DESCR_NAME = "store_descr";
 
@@ -131,6 +132,7 @@ public class DBase {
 					+ FIELD_ID_NAME + " integer primary key autoincrement, "
 					+ FIELD_DOC_NUM_NAME + " text, " + FIELD_DOC_DATE_NAME
 					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
+					+ FIELD_DOC_ROWS_NAME + " integer, "
 					+ FIELD_STORE_CODE_NAME + " text, "
 					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_INDEX_NAME
 					+ " text);");
@@ -140,6 +142,7 @@ public class DBase {
 					+ " integer primary key autoincrement, "
 					+ FIELD_DOC_NUM_NAME + " text, " + FIELD_DOC_DATE_NAME
 					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
+					+ FIELD_DOC_ROWS_NAME + " integer, "
 					+ FIELD_STORE_CODE_NAME + " text, "
 					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_INDEX_NAME
 					+ " text);");
@@ -285,7 +288,7 @@ public class DBase {
 	 * 
 	 * @return
 	 */
-	public Cursor getRowsSelected(String tableName, String selection,
+	public Cursor getRowsFiltered(String tableName, String selection,
 			String selectionArg, String orderBy) {
 
 		String[] selectionArgs = { selectionArg };
@@ -297,7 +300,7 @@ public class DBase {
 	/**
 	 * Возвращает курсор на содержимое таблицы, отобранное по оператору LIKE.
 	 */
-	public Cursor getRowsLikeFiltered(String tableName, String filterString) {
+	public Cursor getRowsFilteredLike(String tableName, String filterString) {
 
 		String filter = FIELD_INDEX_NAME.concat(" LIKE '%")
 				.concat(filterString).concat("%'");
@@ -312,7 +315,8 @@ public class DBase {
 	 * @return
 	 */
 	public long getRowsCount(String tableName) {
-		return DatabaseUtils.queryNumEntries(sqliteDb, tableName);
+		long rows = DatabaseUtils.queryNumEntries(sqliteDb, tableName);
+		return rows;
 	}
 
 	/**
@@ -322,7 +326,8 @@ public class DBase {
 	 * @return
 	 */
 	public int clearTable(String tableName) {
-		return sqliteDb.delete(tableName, "1", null);
+		int affected = sqliteDb.delete(tableName, "1", null);
+		return affected;
 	}
 
 	/**
@@ -339,12 +344,14 @@ public class DBase {
 		int numIdx = source.getColumnIndex(FIELD_DOC_NUM_NAME);
 		int dateIdx = source.getColumnIndex(FIELD_DOC_DATE_NAME);
 		int commentIdx = source.getColumnIndex(FIELD_DOC_COMMENT_NAME);
+		int docRowsIdx = source.getColumnIndex(FIELD_DOC_ROWS_NAME);
 		int storeCodeIdx = source.getColumnIndex(FIELD_STORE_CODE_NAME);
 		int storeIdx = source.getColumnIndex(FIELD_STORE_DESCR_NAME);
 
 		String num = source.getString(numIdx);
-		String date = source.getString(dateIdx);
+		long date = source.getLong(dateIdx);
 		String comment = source.getString(commentIdx);
+		int rows = source.getInt(docRowsIdx);
 		String storeCode = source.getString(storeCodeIdx);
 		String store = source.getString(storeIdx);
 
@@ -353,6 +360,7 @@ public class DBase {
 		docValues.put(FIELD_DOC_NUM_NAME, num);
 		docValues.put(FIELD_DOC_DATE_NAME, date);
 		docValues.put(FIELD_DOC_COMMENT_NAME, comment);
+		docValues.put(FIELD_DOC_ROWS_NAME, rows);
 		docValues.put(FIELD_STORE_CODE_NAME, storeCode);
 		docValues.put(FIELD_STORE_DESCR_NAME, store);
 
@@ -448,7 +456,7 @@ public class DBase {
 			docsValues.put(FIELD_STORE_CODE_NAME, "1");
 			docsValues.put(FIELD_STORE_DESCR_NAME, "1 киоск");
 			docsValues.put(FIELD_DOC_COMMENT_NAME, "Товары без характеристик.");
-
+			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000152");
@@ -458,7 +466,7 @@ public class DBase {
 			docsValues.put(FIELD_STORE_DESCR_NAME, "25 киоск");
 			docsValues
 					.put(FIELD_DOC_COMMENT_NAME, "Товары с характеристиками.");
-
+			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000003");
@@ -468,7 +476,7 @@ public class DBase {
 			docsValues.put(FIELD_STORE_CODE_NAME, "106");
 			docsValues.put(FIELD_DOC_COMMENT_NAME,
 					"Товары с характеристиками и без.");
-
+			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000004");
@@ -477,7 +485,7 @@ public class DBase {
 			docsValues.put(FIELD_STORE_CODE_NAME, "204");
 			docsValues.put(FIELD_STORE_DESCR_NAME, "204 киоск");
 			docsValues.put(FIELD_DOC_COMMENT_NAME, "Кола.");
-
+			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		} catch (ParseException e) {

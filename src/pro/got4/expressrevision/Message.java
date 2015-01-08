@@ -10,7 +10,7 @@ public class Message {
 	/**
 	 * Флаг того, что используются версии функций без идентификаторов.
 	 */
-	private static boolean USE_NOT_ID = true;
+	private static boolean USE_NOT_ID = false;
 
 	/**
 	 * Идентификатор сообщений: только вызовы, имеющие это значение

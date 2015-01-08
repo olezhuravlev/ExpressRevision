@@ -16,7 +16,10 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 			"dd.MM.yyyy HH:mm:ss", Locale.getDefault());
 
 	// Индексы колонок.
-	private int docNum_Idx, docDate_Idx, docComment_Idx, /* storeCode_Idx, */
+	private int docNum_Idx, docDate_Idx, docComment_Idx, docRows_Idx, /*
+																	 * storeCode_Idx
+																	 * ,
+																	 */
 	storeDescr_Idx/* , index_Idx */;
 
 	public DocsListAdapter(Context context, Cursor cursor) {
@@ -36,6 +39,7 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 		docNum_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_NUM_NAME);
 		docDate_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_DATE_NAME);
 		docComment_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_COMMENT_NAME);
+		docRows_Idx = cursor.getColumnIndex(DBase.FIELD_DOC_ROWS_NAME);
 		// storeCode_Idx = cursor.getColumnIndex(DBase.FIELD_STORE_CODE_NAME);
 		storeDescr_Idx = cursor.getColumnIndex(DBase.FIELD_STORE_DESCR_NAME);
 		// index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
@@ -52,6 +56,7 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 		String docNum = cursor.getString(docNum_Idx);
 		long docDate = cursor.getLong(docDate_Idx);
 		String docComment = cursor.getString(docComment_Idx);
+		int docRows = cursor.getInt(docRows_Idx);
 		// String storeCode = cursor.getString(storeCode_Idx);
 		String storeDescr = cursor.getString(storeDescr_Idx);
 		// String index = cursor.getString(index_Idx);
@@ -61,12 +66,16 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 		TextView dateTextView = (TextView) view.findViewById(R.id.dateTextView);
 		TextView commentTextView = (TextView) view
 				.findViewById(R.id.commentTextView);
+		TextView rowsTextView = (TextView) view.findViewById(R.id.rowsTextView);
 		TextView storeTextView = (TextView) view
 				.findViewById(R.id.storeTextView);
 
 		numberTextView.setText(docNum);
 		dateTextView.setText(dateFormatter.format(docDate));
 		commentTextView.setText(docComment);
+		rowsTextView.setText(mContext.getString(R.string.rows).concat(": ")
+				.concat(String.valueOf(docRows)));
+
 		storeTextView.setText(storeDescr);
 	}
 }

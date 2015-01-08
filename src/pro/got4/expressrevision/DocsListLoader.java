@@ -57,6 +57,7 @@ public class DocsListLoader extends FragmentActivity implements
 	private static final String DOC_TAG_NAME = "doc";
 	private static final String DOC_NUM_TAG_NAME = "num";
 	private static final String DOC_DATE_TAG_NAME = "date";
+	private static final String DOC_ROWS_TAG_NAME = "rows";
 
 	private static final String STORE_TAG_NAME = "store";
 	private static final String STORE_CODE_TAG_NAME = "code";
@@ -362,10 +363,13 @@ public class DocsListLoader extends FragmentActivity implements
 								.getNamedItem(DOC_NUM_TAG_NAME);
 						Node docDateTimeNode = docAttr
 								.getNamedItem(DOC_DATE_TAG_NAME);
+						Node docRowsNode = docAttr
+								.getNamedItem(DOC_ROWS_TAG_NAME);
 
 						String docNumValue = docNumNode.getTextContent();
 						String docDateTimeValue = docDateTimeNode
 								.getTextContent();
+						String docRowsValue = docRowsNode.getTextContent();
 
 						// ѕреобразование даты документа из строкового вида к
 						// времени с начала эпохи.
@@ -427,6 +431,7 @@ public class DocsListLoader extends FragmentActivity implements
 								docDateTimeEpochValue);
 						docsValues
 								.put(DBase.FIELD_DOC_COMMENT_NAME, docComment);
+						docsValues.put(DBase.FIELD_DOC_ROWS_NAME, docRowsValue);
 						docsValues.put(DBase.FIELD_STORE_CODE_NAME, storeCode);
 						docsValues.put(DBase.FIELD_STORE_DESCR_NAME,
 								storeDescription);

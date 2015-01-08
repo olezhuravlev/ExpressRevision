@@ -333,7 +333,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 				String docDateString = dateFormatter.format(docDate);
 				String docId = docDateString.concat(docNum);
-				Cursor cursor = dBase.getRowsSelected(
+				Cursor cursor = dBase.getRowsFiltered(
 						DBase.TABLE_ITEMS_DEMO_NAME, DBase.FIELD_DOC_ID_NAME
 								+ " = ?", docId, DBase.FIELD_ROW_NUM_NAME);
 

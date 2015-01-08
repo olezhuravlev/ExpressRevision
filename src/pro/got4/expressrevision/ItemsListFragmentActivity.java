@@ -125,8 +125,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	public void onResume() {
 
 		super.onResume();
-		Message.show();
-		// Стиль, зависящий от режима.
+
+		Main.setOrientation(this);
 		Main.setStyle(this);
 	}
 
@@ -222,7 +222,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			String filter = parentalActivity.getFilter();
 			// Message.show("loadInBackground(), filter = " + filter);
 			// Cursor cursor = db.getAllRows(DBase.TABLE_ITEMS_NAME);
-			Cursor cursor = db.getRowsLikeFiltered(DBase.TABLE_ITEMS_NAME, filter);
+			Cursor cursor = db.getRowsFilteredLike(DBase.TABLE_ITEMS_NAME,
+					filter);
 			return cursor;
 		}
 
@@ -255,7 +256,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				dBase.open();
 				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
 				String message = getString(R.string.documentIsntLoaded) + "\n"
-						+ getString(R.string.rowsDeleted) + " " + rowsDeleted;
+						+ getString(R.string.rowsDeleted) + ": " + rowsDeleted;
 
 				Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 
@@ -267,7 +268,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				dBase.open();
 				long rowsLoaded = dBase.getRowsCount(DBase.TABLE_ITEMS_NAME);
 				String message = getString(R.string.documentLoaded) + "\n"
-						+ getString(R.string.rowsLoaded) + " " + rowsLoaded;
+						+ getString(R.string.rowsLoaded) + ": " + rowsLoaded;
 				Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 			}
 

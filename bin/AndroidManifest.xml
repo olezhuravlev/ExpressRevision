@@ -32,7 +32,7 @@
             android:screenOrientation="fullSensor" >
         </activity>
         <activity
-            android:name="Preferences"
+            android:name="PreferencesActivity"
             android:screenOrientation="fullSensor" >
         </activity>
         <activity

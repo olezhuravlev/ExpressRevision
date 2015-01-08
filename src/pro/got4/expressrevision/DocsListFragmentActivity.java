@@ -116,7 +116,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		super.onResume();
 
-		// Стиль, зависящий от режима.
+		Main.setOrientation(this);
 		Main.setStyle(this);
 	}
 
