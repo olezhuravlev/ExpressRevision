@@ -28,7 +28,7 @@
     <string name="demoModeOnConfirmation">Включить демо-режим?</string>
     <string name="demoModeOnWarning">Внимание!\nВсе данные текущей ревизии будут уничтожены!\nПродолжить?</string>
     <string name="demoModeOffConfirmation">Выключить демо-режим?</string>
-    <string name="demoModeOffWarning">"Внимание!\nВсе тренировочные данные будут уничтожены!\nПродолжить?"</string>
+    <string name="demoModeOffWarning">"Внимание!\nВсе демо-данные будут уничтожены!\nПродолжить?"</string>
     <string name="resreshList">"Обновить список"</string>
     <string name="loadDocuments">"Обновить список ревизий"</string>
     <string name="addDocument">Добавить ревизию</string>
@@ -55,6 +55,7 @@
     <string name="rowsDeleted">Cтрок</string>
     <string name="documentLoaded">Ревизия загружена.</string>
     <string name="rowsLoaded">Строк</string>
+    <string name="percent">%</string>
     <string name="enterFilterString">Строка для поиска...</string>
     <string name="networkNotAvailable">Отсутствует подключение к сети!</string>
     <string name="docsListConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
@@ -62,5 +63,10 @@
     <string name="currency">руб.</string>
     <string name="clearValue">Очистить</string>
     <string name="setQuantity">Укажите количество</string>
+
+    <!-- Для отображения количества -->
+    <string name="quantityFormatPattern">###,###.##</string>
+    <string name="quantityDecimalSeparator">.</string>
+    <string name="quantityGroupingSeparator">\'</string>
 
 </resources>

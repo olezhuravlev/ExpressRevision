@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnSeekCompleteListener;
@@ -67,6 +68,21 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 */
 	private static GregorianCalendar lastItemsListFetchingTime;
 
+	// /**
+	// * Номер загруженного документа.
+	// */
+	// private String loadedDocNum;
+	//
+	// /**
+	// * Дата загруженного документа.
+	// */
+	// private long loadedDocDate;
+	//
+	// /**
+	// * Склад загруженного документа.
+	// */
+	// private String loadedStoreDescr;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
@@ -75,12 +91,10 @@ public class Main extends FragmentActivity implements OnClickListener,
 		super.onCreate(savedInstanceState);
 
 		// if (savedInstanceState != null) {
-		// Main.setDemoMode(savedInstanceState.getBoolean(FIELD_DEMOMODE_NAME));
+		//
 		// }
 
 		setContentView(R.layout.main);
-
-		setTitle("Some doc loaded");// TODO Имя документа?
 
 		// открываем подключение к БД
 		db = new DBase(this);
@@ -140,11 +154,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 		demoMode = PreferenceManager.getDefaultSharedPreferences(this)
 				.getBoolean(FIELD_DEMOMODE_NAME, false);
 
-		setOrientation(this);
 		setStyle(this);
 
 		setStartButtonText();
-
 	}
 
 	private void setStartButtonText() {
@@ -156,7 +168,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		if (getLoadedItemsCount() > 0) {
 			btnText = getString(R.string.btnEditDocument);
-			btnText = btnText + ": " + getLoadedDocumentName();
+			btnText = btnText + ": " + getLoadedDocumentDescription(this);
 		}
 
 		Button btn = (Button) findViewById(R.id.buttonStart);
@@ -207,6 +219,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 				}
 
 				setStartButtonText();
+
+				setStyle(this);
 			}
 
 			break;
@@ -217,11 +231,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-
-		// Изменение подписи кнопки меню демо-режима.
-		// MenuItem item = menu.getItem(OPTIONS_MENU_DEMO_ON_OFF_BUTTON_ID);
-		// item.setTitle(Main.isDemoMode() ? R.string.demoMode_off
-		// : R.string.demoMode_on);
 
 		// Отключение кнопки очистки таблиц.
 		MenuItem item = menu.getItem(DIALOG_DATA_CLEANING_CONFIRMATION);
@@ -364,38 +373,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 	}
 
 	/**
-	 * Возвращает имя загруженного документа ревизии.
-	 */
-	private String getLoadedDocumentName() {
-		return "2 киоск: ЭКС000254638 от 12.11.2014";// TODO Имя документа?
-	}
-
-	/**
-	 * Устанавливает ориентацию в соответствии с настройками.
-	 */
-	public static void setOrientation(Activity activity) {
-
-		String orientationString = PreferenceManager
-				.getDefaultSharedPreferences(activity).getString(
-						FIELD_ORIENTATION_NAME, FIELD_ORIENTATION_AUTO_NAME);
-
-		int orientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
-		if (orientationString.equals(FIELD_ORIENTATION_AUTO_NAME)) {
-			orientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
-		} else if (orientationString.equals(FIELD_ORIENTATION_PORTRAIT_NAME)) {
-			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-		} else if (orientationString.equals(FIELD_ORIENTATION_LANDSCAPE_NAME)) {
-			orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-		}
-
-		if (activity.getRequestedOrientation() != orientation)
-			activity.setRequestedOrientation(orientation);
-	}
-
-	/**
-	 * Устанавливает или снимает оформление заднего фона указанного вью
-	 * указанной активности в зависимости от того, включён или выключен
-	 * демо-режим.
+	 * Устанавливает заголовок, ориентацию и оформление заднего фона указанного
+	 * вью указанной активности с учётом того, включён или выключен демо-режим.
 	 * 
 	 * @param activity
 	 *            - активность, в которой будет произведен поиск вью;
@@ -406,6 +385,13 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 */
 	public static void setStyle(Activity activity) {
 
+		// Установка заголовка.
+		activity.setTitle(getLoadedDocumentDescription(activity));
+
+		// Установка ориентации.
+		setOrientation(activity);
+
+		// Установка оформления.
 		Drawable image = null;
 
 		String className = activity.getClass().getSimpleName();
@@ -481,6 +467,67 @@ public class Main extends FragmentActivity implements OnClickListener,
 			View v = activity.findViewById(R.id.backgroundLayout);
 			v.setBackgroundDrawable(image);
 		}
+	}
+
+	/**
+	 * Возвращает представление загруженного документа ревизии.
+	 */
+	private static String getLoadedDocumentDescription(Activity activity) {
+
+		// Извлекается первая запись из таблицы загруженной номенклатуры.
+		// Из этой записи по идентификатору документа извлекается документ из
+		// таблицы загруженных документов.
+		// Из строки документа извлекается его номер, дата и описание склада.
+		String sql = "" + "SELECT " + "Docs." + DBase.FIELD_DOC_NUM_NAME
+				+ " AS DocNum, " + "Docs." + DBase.FIELD_DOC_DATE_NAME
+				+ " AS DocDate, " + "Docs." + DBase.FIELD_STORE_DESCR_NAME
+				+ " AS Store FROM " + DBase.TABLE_DOCS_NAME
+				+ " AS Docs INNER JOIN " + DBase.TABLE_ITEMS_NAME
+				+ " AS Items ON Docs." + DBase.FIELD_DOC_ID_NAME + " = Items."
+				+ DBase.FIELD_DOC_ID_NAME + " LIMIT 1";
+
+		Cursor cursor = db.getRows(sql, null);
+		String docDescription = "";
+		if (cursor.moveToFirst() && cursor.isFirst()) {
+			// cursor.getCount();
+
+			String num = cursor.getString(0);
+			long date = cursor.getLong(1);
+			String docDateString = DBase.dateFormatter.format(date);
+			String store = cursor.getString(2);
+
+			docDescription = store.concat(": ").concat(num).concat(" от ")
+					.concat(docDateString);
+		}
+
+		// Если документ не загружен, то возвращается просто название
+		// приложения.
+		if (docDescription.isEmpty())
+			docDescription = activity.getString(R.string.app_name);
+
+		return docDescription;
+	}
+
+	/**
+	 * Устанавливает ориентацию в соответствии с настройками.
+	 */
+	private static void setOrientation(Activity activity) {
+
+		String orientationString = PreferenceManager
+				.getDefaultSharedPreferences(activity).getString(
+						FIELD_ORIENTATION_NAME, FIELD_ORIENTATION_AUTO_NAME);
+
+		int orientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
+		if (orientationString.equals(FIELD_ORIENTATION_AUTO_NAME)) {
+			orientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
+		} else if (orientationString.equals(FIELD_ORIENTATION_PORTRAIT_NAME)) {
+			orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+		} else if (orientationString.equals(FIELD_ORIENTATION_LANDSCAPE_NAME)) {
+			orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+		}
+
+		if (activity.getRequestedOrientation() != orientation)
+			activity.setRequestedOrientation(orientation);
 	}
 
 	/**

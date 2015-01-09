@@ -435,6 +435,8 @@ public class DocsListLoader extends FragmentActivity implements
 						docsValues.put(DBase.FIELD_STORE_CODE_NAME, storeCode);
 						docsValues.put(DBase.FIELD_STORE_DESCR_NAME,
 								storeDescription);
+						docsValues.put(DBase.FIELD_DOC_ID_NAME, DBase.getDocId(
+								docNumValue, docDateTimeEpochValue));
 
 						dBase.insert(sqliteDb, DBase.TABLE_DOCS_NAME,
 								docsValues);

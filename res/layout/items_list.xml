@@ -12,6 +12,21 @@
         android:background="@drawable/filter_field_background2"
         android:orientation="horizontal" >
 
+        <Button
+            android:id="@+id/percentButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="2dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/button_small_selector"
+            android:baselineAlignBottom="false"
+            android:cropToPadding="false"
+            android:text="@string/percent"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
         <EditText
             android:id="@+id/itemsFilterEditText"
             android:layout_width="0dp"
@@ -19,10 +34,7 @@
             android:layout_weight="10"
             android:ems="10"
             android:hint="@string/enterFilterString"
-            android:textAppearance="?android:attr/textAppearanceLarge" >
-
-            <requestFocus />
-        </EditText>
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <ImageButton
             android:id="@+id/clearFilterButton"
@@ -38,7 +50,6 @@
             android:contentDescription="@string/clearValue"
             android:cropToPadding="false"
             android:src="@android:drawable/ic_delete" />
-
     </LinearLayout>
 
     <ListView

@@ -85,7 +85,6 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 		super.onResume();
 
-		Main.setOrientation(this);
 		Main.setStyle(this);
 	}
 
@@ -135,7 +134,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 		Main.setDemoMode(this, true);
 
 		demoModePrefs.setChecked(true);
-		
+
 		Main.setStyle(this);
 	}
 
@@ -155,7 +154,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 		Main.setDemoMode(this, false);
 
 		demoModePrefs.setChecked(false);
-		
+
 		Main.setStyle(this);
 	}
 

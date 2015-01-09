@@ -116,7 +116,6 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		super.onResume();
 
-		Main.setOrientation(this);
 		Main.setStyle(this);
 	}
 

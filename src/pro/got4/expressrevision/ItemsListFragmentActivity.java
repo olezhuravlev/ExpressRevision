@@ -23,6 +23,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -41,6 +42,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	public static final String START_ITEMS_LOADER = "start_items_loader";
 
+	private Button percentButton;
 	private EditText itemsFilterEditText;
 	private ImageButton clearFilterButton;
 	private ListView lvData;
@@ -73,6 +75,9 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		adapter = new ItemsListAdapter(this, null);
 		lvData = (ListView) findViewById(R.id.listViewItems);
 		lvData.setAdapter(adapter);
+
+		percentButton = (Button) findViewById(R.id.percentButton);
+		percentButton.setOnClickListener(this);
 
 		itemsFilterEditText = (EditText) findViewById(R.id.itemsFilterEditText);
 		itemsFilterEditText.addTextChangedListener(this);
@@ -126,7 +131,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		super.onResume();
 
-		Main.setOrientation(this);
 		Main.setStyle(this);
 	}
 
@@ -344,9 +348,29 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	@Override
 	public void onClick(View v) {
+
 		switch (v.getId()) {
+		case R.id.percentButton:
+
+			String insertStr = "%";
+
+			int offset = itemsFilterEditText.getSelectionStart();
+			if (offset < 0)
+				offset = 0;
+
+			String currentText = itemsFilterEditText.getText().toString();
+
+			StringBuilder sBuilder = new StringBuilder(currentText);
+			sBuilder.insert(offset, insertStr);
+			itemsFilterEditText.setText(sBuilder.toString());
+			itemsFilterEditText.setSelection(offset + insertStr.length());
+
+			break;
+
 		case R.id.clearFilterButton:
+
 			itemsFilterEditText.setText("");
+
 			break;
 		case R.id.quant_button:
 			break;

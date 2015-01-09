@@ -32,7 +32,6 @@ public class DBase {
 	public static final String TABLE_ITEMS_NAME = "items";
 
 	// Поля таблиц номенклатуры загруженных документов.
-	public static final String FIELD_DOC_ID_NAME = "doc_id";
 	public static final String FIELD_ROW_NUM_NAME = "row_num";
 	public static final String FIELD_ITEM_CODE_NAME = "item_code";
 	public static final String FIELD_ITEM_DESCR_NAME = "item_descr";
@@ -44,14 +43,24 @@ public class DBase {
 	public static final String FIELD_PRICE_NAME = "price";
 	public static final String FIELD_QUANT_ACC_NAME = "quant_acc";
 	public static final String FIELD_QUANT_NAME = "quant";
+	public static final String FIELD_VISITED_NAME = "visited";
 
-	// Форматтер даты для преобразования в формат, понятный пользователю.
-	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(
-			"dd.MM.yyyy HH:mm:ss", Locale.getDefault());
+	// Поле идентификатора документов, присутствующее и в таблице документов, и
+	// в таблице номенклатуры.
+	public static final String FIELD_DOC_ID_NAME = "doc_id";
 
 	// Индексное поле, используемое адаптерами для идентификации строки.
 	// ИЗМЕНЯТЬ ЕГО ИМЯ НЕЛЬЗЯ!!!
 	public static final String FIELD_ID_NAME = "_id";
+
+	// Форматтер даты для преобразования в формат, понятный пользователю.
+	public static final SimpleDateFormat dateFormatter = new SimpleDateFormat(
+			"dd.MM.yyyy HH:mm:ss", Locale.getDefault());
+
+	// Форматтер даты для приведения даты к формату, используемому в
+	// идентификаторе документа.
+	public static final SimpleDateFormat dateIDFormatter = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
 	// Индексное поле, используемое для поиска в таблицах.
 	public static final String FIELD_INDEX_NAME = "idx";
@@ -134,8 +143,8 @@ public class DBase {
 					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
 					+ FIELD_DOC_ROWS_NAME + " integer, "
 					+ FIELD_STORE_CODE_NAME + " text, "
-					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_INDEX_NAME
-					+ " text);");
+					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_DOC_ID_NAME
+					+ " text," + FIELD_INDEX_NAME + " text);");
 
 			// Таблица, хранящая реальный набор документов.
 			db.execSQL("CREATE TABLE " + TABLE_DOCS_NAME + " (" + FIELD_ID_NAME
@@ -144,8 +153,8 @@ public class DBase {
 					+ " integer, " + FIELD_DOC_COMMENT_NAME + " text, "
 					+ FIELD_DOC_ROWS_NAME + " integer, "
 					+ FIELD_STORE_CODE_NAME + " text, "
-					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_INDEX_NAME
-					+ " text);");
+					+ FIELD_STORE_DESCR_NAME + " text, " + FIELD_DOC_ID_NAME
+					+ " text," + FIELD_INDEX_NAME + " text);");
 
 			// Создание таблиц номенклатуры загруженных документов.
 			// Таблица, хранящая набор номенклатуры для демонстрационных
@@ -161,8 +170,8 @@ public class DBase {
 					+ FIELD_SPECIF_DESCR_NAME + " text, "
 					+ FIELD_MEASUR_DESCR_NAME + " text, " + FIELD_PRICE_NAME
 					+ " real, " + FIELD_QUANT_ACC_NAME + " real, "
-					+ FIELD_QUANT_NAME + " real, " + FIELD_INDEX_NAME
-					+ " text);");
+					+ FIELD_QUANT_NAME + " real, " + FIELD_VISITED_NAME
+					+ " integer, " + FIELD_INDEX_NAME + " text);");
 
 			// Таблица, хранящая набор номенклатуры для реальных документов.
 			db.execSQL("CREATE TABLE " + TABLE_ITEMS_NAME + " ("
@@ -176,8 +185,8 @@ public class DBase {
 					+ FIELD_SPECIF_DESCR_NAME + " text, "
 					+ FIELD_MEASUR_DESCR_NAME + " text, " + FIELD_PRICE_NAME
 					+ " real, " + FIELD_QUANT_ACC_NAME + " real, "
-					+ FIELD_QUANT_NAME + " real, " + FIELD_INDEX_NAME
-					+ " text);");
+					+ FIELD_QUANT_NAME + " real, " + FIELD_VISITED_NAME
+					+ " integer, " + FIELD_INDEX_NAME + " text);");
 
 			insertDemoItems(db);
 		}
@@ -204,15 +213,13 @@ public class DBase {
 			return indexValue;
 
 		String[] indexFields = null;
-		if (tableName.equals(TABLE_DOCS_NAME)
-		/* || tableName.equals(TABLE_DOCS_DEMO_NAME) */) {
+		if (tableName.equals(TABLE_DOCS_NAME)) {
 
 			indexFields = new String[] { FIELD_DOC_NUM_NAME,
 					FIELD_DOC_DATE_NAME, FIELD_DOC_COMMENT_NAME,
 					FIELD_STORE_DESCR_NAME };
 
-		} else if (tableName.equals(TABLE_ITEMS_NAME)
-		/* || tableName.equals(TABLE_ITEMS_DEMO_NAME) */) {
+		} else if (tableName.equals(TABLE_ITEMS_NAME)) {
 
 			indexFields = new String[] { FIELD_ITEM_CODE_NAME,
 					FIELD_ITEM_DESCR_NAME, FIELD_ITEM_DESCR_FULL_NAME,
@@ -309,6 +316,14 @@ public class DBase {
 	}
 
 	/**
+	 * Исполняет произвольный запрос к таблице БД.
+	 */
+	public Cursor getRows(String sql, String[] selectionArgs) {
+
+		return sqliteDb.rawQuery(sql, selectionArgs);
+	}
+
+	/**
 	 * Возвращает количество строк таблицы.
 	 * 
 	 * @param tableName
@@ -347,6 +362,7 @@ public class DBase {
 		int docRowsIdx = source.getColumnIndex(FIELD_DOC_ROWS_NAME);
 		int storeCodeIdx = source.getColumnIndex(FIELD_STORE_CODE_NAME);
 		int storeIdx = source.getColumnIndex(FIELD_STORE_DESCR_NAME);
+		int docId_Idx = source.getColumnIndex(FIELD_DOC_ID_NAME);
 
 		String num = source.getString(numIdx);
 		long date = source.getLong(dateIdx);
@@ -354,6 +370,7 @@ public class DBase {
 		int rows = source.getInt(docRowsIdx);
 		String storeCode = source.getString(storeCodeIdx);
 		String store = source.getString(storeIdx);
+		String docId = source.getString(docId_Idx);
 
 		ContentValues docValues = new ContentValues();
 
@@ -363,6 +380,7 @@ public class DBase {
 		docValues.put(FIELD_DOC_ROWS_NAME, rows);
 		docValues.put(FIELD_STORE_CODE_NAME, storeCode);
 		docValues.put(FIELD_STORE_DESCR_NAME, store);
+		docValues.put(FIELD_DOC_ID_NAME, docId);
 
 		long rowId = 0;
 		try {
@@ -436,6 +454,22 @@ public class DBase {
 	}
 
 	/**
+	 * Формирование идентификатора документа.
+	 */
+	public static String getDocId(String docNum, String docDate) {
+		return docDate.concat(docNum);
+	}
+
+	/**
+	 * Формирование идентификатора документа.
+	 */
+	public static String getDocId(String docNum, long docDate) {
+
+		String docDateString = dateIDFormatter.format(docDate);
+		return getDocId(docNum, docDateString);
+	}
+
+	/**
 	 * Заполняет БД демонстрационным набором номенклатуры.
 	 * 
 	 * @throws ParseException
@@ -457,6 +491,10 @@ public class DBase {
 			docsValues.put(FIELD_STORE_DESCR_NAME, "1 киоск");
 			docsValues.put(FIELD_DOC_COMMENT_NAME, "Товары без характеристик.");
 			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
+			docsValues.put(
+					FIELD_DOC_ID_NAME,
+					getDocId(docsValues.getAsString(FIELD_DOC_NUM_NAME),
+							docsValues.getAsLong(FIELD_DOC_DATE_NAME)));
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000152");
@@ -467,6 +505,10 @@ public class DBase {
 			docsValues
 					.put(FIELD_DOC_COMMENT_NAME, "Товары с характеристиками.");
 			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
+			docsValues.put(
+					FIELD_DOC_ID_NAME,
+					getDocId(docsValues.getAsString(FIELD_DOC_NUM_NAME),
+							docsValues.getAsLong(FIELD_DOC_DATE_NAME)));
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000003");
@@ -477,6 +519,10 @@ public class DBase {
 			docsValues.put(FIELD_DOC_COMMENT_NAME,
 					"Товары с характеристиками и без.");
 			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
+			docsValues.put(
+					FIELD_DOC_ID_NAME,
+					getDocId(docsValues.getAsString(FIELD_DOC_NUM_NAME),
+							docsValues.getAsLong(FIELD_DOC_DATE_NAME)));
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 			docsValues.put(FIELD_DOC_NUM_NAME, "ЭКС00000004");
@@ -486,6 +532,10 @@ public class DBase {
 			docsValues.put(FIELD_STORE_DESCR_NAME, "204 киоск");
 			docsValues.put(FIELD_DOC_COMMENT_NAME, "Кола.");
 			docsValues.put(FIELD_DOC_ROWS_NAME, 15);
+			docsValues.put(
+					FIELD_DOC_ID_NAME,
+					getDocId(docsValues.getAsString(FIELD_DOC_NUM_NAME),
+							docsValues.getAsLong(FIELD_DOC_DATE_NAME)));
 			insert(dataBase, TABLE_DOCS_DEMO_NAME, docsValues);
 
 		} catch (ParseException e) {

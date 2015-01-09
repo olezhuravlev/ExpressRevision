@@ -2,6 +2,7 @@ package pro.got4.expressrevision;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -26,7 +27,9 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 			quant_Idx/* , index_Idx */;
 
 	// Формат чисел, отображающих количество.
-	private DecimalFormat decimalFormat;
+	private DecimalFormat quantDecimalFormat;
+
+	// private NumberFormat numberFormat;
 
 	// Интерфейс, который должна реализовывать родительская активность для того,
 	// чтобы принимать нажатия кнопок на элементах списка.
@@ -45,12 +48,18 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 			fillColumnIndices(cursor);
 
 		// Формат чисел, отображающих количество.
-		String pattern = "###,###.######";
-		// Locale locale = new Locale("en", "UK");
-		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-		symbols.setDecimalSeparator('.');
-		symbols.setGroupingSeparator('\'');
-		decimalFormat = new DecimalFormat(pattern, symbols);
+		String quantPattern = mContext
+				.getString(R.string.quantityFormatPattern);
+		String quantDecimalSeparator = mContext
+				.getString(R.string.quantityDecimalSeparator);
+		String quantGroupingSeparator = mContext
+				.getString(R.string.quantityGroupingSeparator);
+
+		Locale locale = mContext.getResources().getConfiguration().locale;
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);
+		symbols.setDecimalSeparator(quantDecimalSeparator.charAt(0));
+		symbols.setGroupingSeparator(quantGroupingSeparator.charAt(0));
+		quantDecimalFormat = new DecimalFormat(quantPattern, symbols);
 	}
 
 	/*
@@ -190,8 +199,9 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 			}
 		}
 
-		quant_button.setText(decimalFormat.format(quant).concat(" ")
-				.concat(measurDescr));
+		// String quantString = numberFormat.format(quant);
+		String quantString = quantDecimalFormat.format(quant);
+		quant_button.setText(quantString.concat(" ").concat(measurDescr));
 		price_textView.setText(String.valueOf(price).concat(" ")
 				.concat(context.getString(R.string.currency)));
 

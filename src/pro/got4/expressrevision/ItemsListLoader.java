@@ -624,8 +624,7 @@ public class ItemsListLoader extends FragmentActivity implements
 						// Идентификатор документа состоит из даты документа и
 						// его номера.
 						itemValues.put(DBase.FIELD_DOC_ID_NAME,
-								docDateTimeValue.concat(docNumValue));
-
+								DBase.getDocId(docNumValue, docDateTimeValue));
 						itemValues.put(DBase.FIELD_ROW_NUM_NAME,
 								Integer.parseInt(rowNumValue));
 						itemValues.put(DBase.FIELD_ITEM_CODE_NAME, itemCode);
