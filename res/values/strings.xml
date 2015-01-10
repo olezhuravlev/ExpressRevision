@@ -17,9 +17,7 @@
     <string name="demoMode_off">Выключить демо-режим</string>
     <string name="demoMode_on">Включить демо-режим</string>
     <string name="demoMode">Демо-режим</string>
-    <string name="btnLoadStudyExample">Загрузить обучающий пример</string>
-    <string name="btnStartPresentation">Начать презентацию</string>
-    <string name="btnLoadDocument">Загрузить ревизию</string>
+    <string name="btnLoadDocument">Загрузить список ревизий</string>
     <string name="btnEditDocument">Редактировать ревизию</string>
     <string name="yes">Да</string>
     <string name="no">Нет</string>
