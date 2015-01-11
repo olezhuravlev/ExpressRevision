@@ -123,12 +123,15 @@ public class PreferencesActivity extends PreferenceActivity implements
 	private void switchDemoModeOn() {
 
 		// Если происходит переключение в демо-режим или обратно, то следует
-		// очистить все содержимое таблиц документов и номенклатуры.
+		// очистить все содержимое таблиц документов и номенклатуры, а также
+		// сбросить дату получения списка документов.
 
-		// Установка
 		// Очистка таблиц.
 		Main.db.clearTable(DBase.TABLE_DOCS_NAME);
 		Main.db.clearTable(DBase.TABLE_ITEMS_NAME);
+
+		// Сброс даты получения списка документов.
+		Main.setLastDocsListFetchingTime(null);
 
 		// Установка флага.
 		Main.setDemoMode(this, true);
@@ -149,6 +152,9 @@ public class PreferencesActivity extends PreferenceActivity implements
 		// Очистка таблиц.
 		Main.db.clearTable(DBase.TABLE_DOCS_NAME);
 		Main.db.clearTable(DBase.TABLE_ITEMS_NAME);
+
+		// Сброс даты получения списка документов.
+		Main.setLastDocsListFetchingTime(null);
 
 		// Установка флага.
 		Main.setDemoMode(this, false);

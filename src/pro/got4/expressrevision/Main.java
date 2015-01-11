@@ -29,16 +29,15 @@ public class Main extends FragmentActivity implements OnClickListener,
 		CustomDialogFragment.OnCloseCustomDialogListener {
 
 	public static final String FIELD_ORIENTATION_NAME = "displayOrientation";
+	public static final String FIELD_DOCS_LIST_OPENING_TIME_DELAY_NAME = "docListOpeningTimeDelay";
 
 	public static final String FIELD_ORIENTATION_AUTO_NAME = "auto";
 	public static final String FIELD_ORIENTATION_PORTRAIT_NAME = "portrait";
 	public static final String FIELD_ORIENTATION_LANDSCAPE_NAME = "landscape";
 
-	public static final String FIELD_DEMOMODE_NAME = "demoMode";
+	public static final String FIELD_DEMOMODE_NAME = "demoModePrefs";
 
 	public static final int DIALOG_DATA_CLEANING_CONFIRMATION = 1;
-
-	public static final String PREFERENCES_FILE_NAME = "pro.got4.expressrevision";
 
 	public static DBase db;
 
@@ -50,9 +49,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 	private Button buttonMain;
 
 	private MediaPlayer mp;
-
-	// Идентификаторы вызываемых активностей.
-	// private final int DOCUMENTS_LIST_REQUEST_CODE = 0;
 
 	// Идентификаторы меню параметров.
 	private final int OPTIONS_MENU_PREFERENCES_BUTTON_ID = 0;
@@ -66,22 +62,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	/**
 	 * Дата последнего получения содержимого документа.
 	 */
-	private static GregorianCalendar lastItemsListFetchingTime;
-
-	// /**
-	// * Номер загруженного документа.
-	// */
-	// private String loadedDocNum;
-	//
-	// /**
-	// * Дата загруженного документа.
-	// */
-	// private long loadedDocDate;
-	//
-	// /**
-	// * Склад загруженного документа.
-	// */
-	// private String loadedStoreDescr;
+	// private static GregorianCalendar lastItemsListFetchingTime;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +74,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 		// if (savedInstanceState != null) {
 		//
 		// }
+
+		// Установка значений по умолчанию.
+		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 
 		setContentView(R.layout.main);
 
@@ -201,6 +185,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		switch (dialogId) {
 		case (DIALOG_DATA_CLEANING_CONFIRMATION): {
+
 			// В вызванном диалоге подтверждения очистки данных пользователь
 			// подтвердил действие.
 			if (buttonId == CustomDialogFragment.BUTTON_YES) {
@@ -217,6 +202,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 					Toast.makeText(this, R.string.itemsTableNotCleared,
 							Toast.LENGTH_LONG).show();
 				}
+
+				// Дату получения списка документов тоже нужно сбросить.
+				setLastDocsListFetchingTime(null);
 
 				setStartButtonText();
 
@@ -264,9 +252,15 @@ public class Main extends FragmentActivity implements OnClickListener,
 				// Открытие списка документов с передачей строки подключения,
 				// которая может понадобиться, если активность решит, что список
 				// устарел и его нужно загрузить повторно.
+
+				String connectionString = PreferenceManager
+						.getDefaultSharedPreferences(this)
+						.getString(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+								"");
+
 				Intent intent = new Intent(this, DocsListFragmentActivity.class);
 				intent.putExtra(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
-						getString(R.string.docsListConnectionString));
+						connectionString);
 
 				startActivityForResult(intent,
 						DocsListFragmentActivity.DOCS_LIST_ID);
@@ -343,8 +337,12 @@ public class Main extends FragmentActivity implements OnClickListener,
 						ItemsListFragmentActivity.class);
 
 				// Строка подключения.
+				String connectionString = PreferenceManager
+						.getDefaultSharedPreferences(this).getString(
+								ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
+								"");
 				intent.putExtra(ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
-						getString(R.string.itemsListConnectionString));
+						connectionString);
 
 				// Cведения о выбранном документе (были возвращены активностью,
 				// вернувшей результат).
@@ -538,7 +536,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		String docListOnOpeningTimeDelay = PreferenceManager
 				.getDefaultSharedPreferences(Main.main).getString(
-						"docListOnOpeningTimeDelay", "0");
+						FIELD_DOCS_LIST_OPENING_TIME_DELAY_NAME, "0");
 
 		Integer timeDelay = Integer.valueOf(0);
 		if (!docListOnOpeningTimeDelay.isEmpty())
@@ -559,13 +557,13 @@ public class Main extends FragmentActivity implements OnClickListener,
 		return false;
 	}
 
-	/**
-	 * Возвращает флаг необходимости получения нового содержимого выбранного
-	 * документа с сервера.
-	 */
-	public static boolean itemsListNeedsToBeFetched() {
-		return true;
-	}
+	// /**
+	// * Возвращает флаг необходимости получения нового содержимого выбранного
+	// * документа с сервера.
+	// */
+	// public static boolean itemsListNeedsToBeFetched() {
+	// return true;
+	// }
 
 	/**
 	 * @return the lastDocsListFetchingTime
@@ -588,26 +586,26 @@ public class Main extends FragmentActivity implements OnClickListener,
 		Main.lastDocsListFetchingTime = time;
 	}
 
-	/**
-	 * @return the lastDocsListFetchingTime
-	 */
-	public static GregorianCalendar getLastItemsListFetchingTime() {
-
-		GregorianCalendar c = new GregorianCalendar(0, 0, 0);
-
-		if (lastItemsListFetchingTime != null)
-			c = (GregorianCalendar) lastItemsListFetchingTime.clone();
-
-		return c;
-	}
-
-	/**
-	 * @param lastDocsListFetchingTime
-	 *            the lastDocsListFetchingTime to set
-	 */
-	public static void setLastItemsListFetchingTime(GregorianCalendar time) {
-		Main.lastItemsListFetchingTime = time;
-	}
+	// /**
+	// * @return the lastDocsListFetchingTime
+	// */
+	// public static GregorianCalendar getLastItemsListFetchingTime() {
+	//
+	// GregorianCalendar c = new GregorianCalendar(0, 0, 0);
+	//
+	// if (lastItemsListFetchingTime != null)
+	// c = (GregorianCalendar) lastItemsListFetchingTime.clone();
+	//
+	// return c;
+	// }
+	//
+	// /**
+	// * @param lastDocsListFetchingTime
+	// * the lastDocsListFetchingTime to set
+	// */
+	// public static void setLastItemsListFetchingTime(GregorianCalendar time) {
+	// Main.lastItemsListFetchingTime = time;
+	// }
 
 	/**
 	 * Возвращает флаг установленного демо-режима.
@@ -627,8 +625,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public static void setDemoMode(Activity activity, boolean value) {
 
 		// Установка значения флага в настройках.
-		// SharedPreferences.Editor editor = activity.getSharedPreferences(
-		// PREFERENCES_FILE_NAME, Activity.MODE_PRIVATE).edit();
 		SharedPreferences.Editor editor = PreferenceManager
 				.getDefaultSharedPreferences(activity).edit();
 		editor.putBoolean(Main.FIELD_DEMOMODE_NAME, value);

@@ -56,11 +56,13 @@
     <string name="percent">%</string>
     <string name="enterFilterString">Строка для поиска...</string>
     <string name="networkNotAvailable">Отсутствует подключение к сети!</string>
-    <string name="docsListConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
-    <string name="itemsListConnectionString">http://express.nsk.ru:9999/eritems.php</string>
     <string name="currency">руб.</string>
     <string name="clearValue">Очистить</string>
     <string name="setQuantity">Укажите количество</string>
+    <string name="docsConnectionParametersNotSet">Нет параметров для получения списка документов!</string>
+    <string name="docsConnectionStringNotSet">Не указана строка соединения для получения списка документов!</string>
+    <string name="itemsConnectionParametersNotSet">Нет параметров для получения содержимого документов!</string>
+    <string name="itemsConnectionStringNotSet">Не указана строка соединения для получения содержимого документов!</string>
 
     <!-- Для отображения количества -->
     <string name="quantityFormatPattern">###,###.##</string>

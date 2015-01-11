@@ -48,10 +48,10 @@ public class DocsListLoader extends FragmentActivity implements
 	private ProgressDialogFragment pDialog; // Используется в хэндлере.
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
-	private static final int DEMO_MODE_SLEEP_TIME = 20;
+	private static final int DEMO_MODE_SLEEP_TIME = 2000;// 20
 
 	// Имя поля, которое в экстрах хранит строку соединения.
-	public static final String CONNECTION_STRING_FIELD_NAME = "connection_string";
+	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringDocs";
 
 	// Поля XML-парсера.
 	private static final String DOC_TAG_NAME = "doc";
@@ -109,12 +109,10 @@ public class DocsListLoader extends FragmentActivity implements
 		@Override
 		public void handleMessage(android.os.Message msg) {
 
-			// Message.show("[hashCode = " + this.hashCode() + "], what = ["
-			// + msg.what + "]");
-
 			// Установка значения прогресса.
 			wrActivity.get().pDialog.setProgress(msg.what);
 			wrActivity.get().pDialog.setMax(msg.arg1);
+			wrActivity.get().pDialog.setIndeterminate(msg.arg2);
 
 			return;
 		}
@@ -136,17 +134,20 @@ public class DocsListLoader extends FragmentActivity implements
 
 		Bundle extras = getIntent().getExtras();
 		if (extras == null) {
-			Toast.makeText(this, "Нет экстр у загрузчика документов!",
-					Toast.LENGTH_LONG).show();
-			finish();
-		}
-
-		connectionString = extras.getString(CONNECTION_STRING_FIELD_NAME);
-		if (connectionString == null) {
 			Toast.makeText(this,
-					"Не указана строка соединения у загрузчика документов!",
+					getString(R.string.docsConnectionParametersNotSet),
 					Toast.LENGTH_LONG).show();
 			finish();
+		} else {
+
+			connectionString = extras.getString(CONNECTION_STRING_FIELD_NAME);
+			if (!Main.isDemoMode()
+					&& (connectionString == null || connectionString.isEmpty())) {
+				Toast.makeText(this,
+						getString(R.string.docsConnectionStringNotSet),
+						Toast.LENGTH_LONG).show();
+				finish();
+			}
 		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<DocsListLoader>(this);
@@ -171,8 +172,7 @@ public class DocsListLoader extends FragmentActivity implements
 	@Override
 	public void onResume() {
 
-		Message.show("[hashCode = " + this.hashCode()
-				+ "], (before) progressHandler = " + progressHandler);
+		super.onResume();
 
 		// Инициалиация хэндлера прогресс-диалога.
 		if (progressHandler == null) {
@@ -180,21 +180,14 @@ public class DocsListLoader extends FragmentActivity implements
 		} else {
 			progressHandler.setActivity(WEAK_REF_ACTIVITY);
 		}
-
-		Message.show("[hashCode = " + this.hashCode()
-				+ "], (after) progressHandler = " + progressHandler);
-
-		super.onResume();
 	}
 
 	@Override
 	public void onPause() {
 
-		Message.show(this);
+		super.onPause();
 
 		progressHandler = null;
-
-		super.onPause();
 	}
 
 	// /////////////////////////////////////////////////////
@@ -281,7 +274,9 @@ public class DocsListLoader extends FragmentActivity implements
 		@Override
 		public Void loadInBackground() {
 
-			Message.show(this);
+			// Неопределенный режим индикатора.
+			// setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(), 0, 0,
+			// 1);
 
 			if (Main.isDemoMode()) {
 
@@ -499,19 +494,16 @@ public class DocsListLoader extends FragmentActivity implements
 		/**
 		 * Установка состояния индикатора.
 		 */
-		private void setProgress(ProgressHandler progressHandler, int what,
-				int arg1, int arg2) {
-
-			Message.show("[hashCode = " + this.hashCode()
-					+ ", progressHandler = " + progressHandler);
+		private void setProgress(ProgressHandler progressHandler, int progress,
+				int max, int indeterminate) {
 
 			// Установка состояния индикатора.
 			if (progressHandler != null) {
 
 				android.os.Message msg = new android.os.Message();
-				msg.what = what;
-				msg.arg1 = arg1;
-				msg.arg2 = arg2;
+				msg.what = progress;
+				msg.arg1 = max;
+				msg.arg2 = indeterminate;
 
 				progressHandler.sendMessage(msg);
 			}
@@ -553,8 +545,6 @@ public class DocsListLoader extends FragmentActivity implements
 	@Override
 	public void onBackPressed() {
 
-		Message.show(this);
-
 		super.onBackPressed();
 
 		onCloseDialog(DOCSLIST_LOADER_ID, BUTTON_BACK_ID);
@@ -566,8 +556,6 @@ public class DocsListLoader extends FragmentActivity implements
 	 * @return
 	 */
 	public ProgressHandler getProgressHandler() {
-
-		// Message.show(this);
 
 		return progressHandler;
 	}

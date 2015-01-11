@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -54,10 +53,10 @@ public class ItemsListLoader extends FragmentActivity implements
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
 
-	private static final int DEMO_MODE_SLEEP_TIME = 20;
+	private static final int DEMO_MODE_SLEEP_TIME = 1000;// 20;
 
 	// Имя поля, которое в экстрах хранится строка соединения.
-	public static final String CONNECTION_STRING_FIELD_NAME = "connection_string";
+	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringItems";
 
 	private static String connectionString;
 	private static Long docDate = Long.valueOf(0);
@@ -133,12 +132,10 @@ public class ItemsListLoader extends FragmentActivity implements
 		@Override
 		public void handleMessage(android.os.Message msg) {
 
-			Message.show("[hashCode = " + this.hashCode() + "], what = ["
-					+ msg.what + "]");
-
 			// Установка значения прогресса.
 			wrActivity.get().pDialog.setProgress(msg.what);
 			wrActivity.get().pDialog.setMax(msg.arg1);
+			wrActivity.get().pDialog.setIndeterminate(msg.arg2);
 
 			return;
 		}
@@ -160,21 +157,21 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		Bundle extras = getIntent().getExtras();
 		if (extras == null) {
-			Toast.makeText(this, "Нет экстр у загрузчика строк документа!",
+			Toast.makeText(this,
+					getString(R.string.itemsConnectionParametersNotSet),
 					Toast.LENGTH_LONG).show();
 			finish();
-		}
+		} else {
 
-		connectionString = extras.getString(CONNECTION_STRING_FIELD_NAME);
-		if (connectionString == null) {
-			Toast.makeText(
-					this,
-					"Не указана строка соединения у загрузчика строк документа!",
-					Toast.LENGTH_LONG).show();
-			finish();
-		}
+			connectionString = extras.getString(CONNECTION_STRING_FIELD_NAME);
+			if (!Main.isDemoMode()
+					&& (connectionString == null || connectionString.isEmpty())) {
+				Toast.makeText(this,
+						getString(R.string.itemsConnectionStringNotSet),
+						Toast.LENGTH_LONG).show();
+				finish();
+			}
 
-		if (extras != null) {
 			docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
 			String docDateString = (String) extras
 					.get(DBase.FIELD_DOC_DATE_NAME);
@@ -209,7 +206,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	@Override
 	public void onResume() {
 
-		Message.show(this);
+		super.onResume();
 
 		// Инициалиация хэндлера прогресс-диалога.
 		if (progressHandler == null) {
@@ -217,16 +214,12 @@ public class ItemsListLoader extends FragmentActivity implements
 		} else {
 			progressHandler.setActivity(WEAK_REF_ACTIVITY);
 		}
-
-		super.onResume();
 	}
 
 	@Override
 	public void onPause() {
 
 		super.onPause();
-
-		Message.show(this);
 
 		progressHandler = null;
 
@@ -237,7 +230,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		} else {
 			setResult(RESULT_CANCELED);
 		}
-
 	}
 
 	@Override
@@ -273,7 +265,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
 
 		// Установка даты обновления.
-		Main.setLastItemsListFetchingTime(new GregorianCalendar());
+		// Main.setLastItemsListFetchingTime(new GregorianCalendar());
 	}
 
 	@Override
@@ -285,7 +277,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
 
 		// Установка даты обновления.
-		Main.setLastItemsListFetchingTime(new GregorianCalendar());
+		// Main.setLastItemsListFetchingTime(new GregorianCalendar());
 	}
 
 	// /////////////////////////////////////////////////////
@@ -327,7 +319,9 @@ public class ItemsListLoader extends FragmentActivity implements
 		@Override
 		public Void loadInBackground() {
 
-			Message.show(this);
+			// Неопределенный режим индикатора.
+			// setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(), 0, 0,
+			// 1);
 
 			if (Main.isDemoMode()) {
 
@@ -341,8 +335,9 @@ public class ItemsListLoader extends FragmentActivity implements
 				// активности, т.к. их нужно будет проверять в событии
 				// onPause(), чтобы сделать вывод о том, полностью ли загружены
 				// данные.
-				WEAK_REF_ACTIVITY.get().setRowsTotal(cursor.getCount());
 				WEAK_REF_ACTIVITY.get().setRowsCounter(0);
+				WEAK_REF_ACTIVITY.get().setRowsTotal(cursor.getCount());
+
 				cursor.moveToFirst();
 				if (cursor.isFirst()) {
 
@@ -712,16 +707,16 @@ public class ItemsListLoader extends FragmentActivity implements
 		/**
 		 * Установка состояния индикатора.
 		 */
-		private void setProgress(ProgressHandler progressHandler, int what,
-				int arg1, int arg2) {
+		private void setProgress(ProgressHandler progressHandler, int progress,
+				int max, int indeterminate) {
 
 			// Установка состояния индикатора.
 			if (progressHandler != null) {
 
 				android.os.Message msg = new android.os.Message();
-				msg.what = what;
-				msg.arg1 = arg1;
-				msg.arg2 = arg2;
+				msg.what = progress;
+				msg.arg1 = max;
+				msg.arg2 = indeterminate;
 
 				progressHandler.sendMessage(msg);
 			}

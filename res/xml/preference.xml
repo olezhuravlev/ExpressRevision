@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:orderingFromXml="true">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orderingFromXml="true" >
 
     <EditTextPreference
+        android:defaultValue="600"
         android:inputType="number"
-        android:key="docListOnOpeningTimeDelay"
+        android:key="docListOpeningTimeDelay"
         android:summary="@string/refreshDocListOnOpening_Summary"
         android:title="@string/refreshDocListOnOpening" />
 
@@ -11,12 +13,15 @@
         android:key="connectPrefs"
         android:title="@string/connectPrefs" >
         <EditTextPreference
+            android:defaultValue="http://express.nsk.ru:9999/erdocs.php"
             android:key="connectionStringDocs"
             android:title="@string/connectionStringDocs" />
         <EditTextPreference
+            android:defaultValue="http://express.nsk.ru:9999/eritems.php"
             android:key="connectionStringItems"
             android:title="@string/connectionStringItems" />
         <EditTextPreference
+            android:defaultValue="100"
             android:inputType="number"
             android:key="rowsInDataBundle"
             android:title="@string/rowsInDataBundle" />
@@ -26,6 +31,7 @@
         android:key="displayPrefs"
         android:title="@string/displayPrefs" >
         <ListPreference
+            android:defaultValue="auto"
             android:entries="@array/displayOrientations_Entries"
             android:entryValues="@array/displayOrientations"
             android:key="displayOrientation"
@@ -34,6 +40,7 @@
     </PreferenceCategory>
 
     <CheckBoxPreference
+        android:defaultValue="true"
         android:key="demoModePrefs"
         android:title="@string/demoMode" />
 

@@ -25,8 +25,11 @@ public class ProgressDialogFragment extends DialogFragment {
 
 	private String title;
 	private String message;
+
 	private int progress;
 	private int max;
+	private boolean indeterminate;
+
 	private int style;
 	private int theme;
 
@@ -110,6 +113,14 @@ public class ProgressDialogFragment extends DialogFragment {
 		setStyle(style, theme);
 
 		return v;
+	}
+
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+
+		super.onViewCreated(view, savedInstanceState);
+
+		setIndeterminate(1);
 	}
 
 	@Override
@@ -244,6 +255,24 @@ public class ProgressDialogFragment extends DialogFragment {
 
 		if (progressBar != null)
 			progressBar.setProgress(progress);
+	}
+
+	/**
+	 * Установка текущего значения индикатора.
+	 * 
+	 * @param progress
+	 *            the currentValue to set
+	 */
+	public void setIndeterminate(int value) {
+
+		if (value == 0)
+			this.indeterminate = false;
+		else
+			this.indeterminate = true;
+
+		if (progressBar != null) {
+			progressBar.setIndeterminate(this.indeterminate);
+		}
 	}
 
 	/**

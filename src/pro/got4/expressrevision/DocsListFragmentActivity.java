@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -133,10 +134,14 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			db.clearTable(DBase.TABLE_DOCS_NAME);
 			db.clearTable(DBase.TABLE_ITEMS_NAME);
 
+			String connectionString = PreferenceManager
+					.getDefaultSharedPreferences(this).getString(
+							DocsListLoader.CONNECTION_STRING_FIELD_NAME, "");
+
 			startActivityForResult(
 					new Intent(this, DocsListLoader.class).putExtra(
 							DocsListLoader.CONNECTION_STRING_FIELD_NAME,
-							getString(R.string.docsListConnectionString)),
+							connectionString),
 					DocsListLoader.DOCSLIST_LOADER_ID);
 
 			break;
