@@ -48,7 +48,7 @@ public class DocsListLoader extends FragmentActivity implements
 	private ProgressDialogFragment pDialog; // Используется в хэндлере.
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
-	private static final int DEMO_MODE_SLEEP_TIME = 2000;// 20
+	private static final int DEMO_MODE_SLEEP_TIME = 500;
 
 	// Имя поля, которое в экстрах хранит строку соединения.
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringDocs";

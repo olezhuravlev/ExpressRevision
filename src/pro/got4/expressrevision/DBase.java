@@ -43,7 +43,7 @@ public class DBase {
 	public static final String FIELD_PRICE_NAME = "price";
 	public static final String FIELD_QUANT_ACC_NAME = "quant_acc";
 	public static final String FIELD_QUANT_NAME = "quant";
-	public static final String FIELD_VISITED_NAME = "visited";
+	public static final String FIELD_ITEM_VISITED_NAME = "visited";
 
 	// Поле идентификатора документов, присутствующее и в таблице документов, и
 	// в таблице номенклатуры.
@@ -112,12 +112,29 @@ public class DBase {
 	 * @param values
 	 * @return
 	 */
-	public long update(SQLiteDatabase dataBase, String tableName, int row_id,
-			ContentValues values) {
+	public int update(SQLiteDatabase dataBase, String table,
+			ContentValues values, String whereClause, String[] whereArgs) {
 
-		String[] whereArgs = { String.valueOf(row_id) };
-		int rowsAffected = dataBase.update(tableName, values, FIELD_ID_NAME
-				+ " = ?", whereArgs);
+		int rowsAffected = dataBase.update(table, values, whereClause,
+				whereArgs);
+
+		return rowsAffected;
+	}
+
+	/**
+	 * Обновляет поля строки с указанным идентификатором.
+	 * 
+	 * @param dataBase
+	 * @param tableName
+	 * @param row_id
+	 * @param values
+	 * @return
+	 */
+	public int update(String table, ContentValues values, String whereClause,
+			String[] whereArgs) {
+
+		int rowsAffected = sqliteDb.update(table, values, whereClause,
+				whereArgs);
 
 		return rowsAffected;
 	}
@@ -170,7 +187,7 @@ public class DBase {
 					+ FIELD_SPECIF_DESCR_NAME + " text, "
 					+ FIELD_MEASUR_DESCR_NAME + " text, " + FIELD_PRICE_NAME
 					+ " real, " + FIELD_QUANT_ACC_NAME + " real, "
-					+ FIELD_QUANT_NAME + " real, " + FIELD_VISITED_NAME
+					+ FIELD_QUANT_NAME + " real, " + FIELD_ITEM_VISITED_NAME
 					+ " integer, " + FIELD_INDEX_NAME + " text);");
 
 			// Таблица, хранящая набор номенклатуры для реальных документов.
@@ -185,7 +202,7 @@ public class DBase {
 					+ FIELD_SPECIF_DESCR_NAME + " text, "
 					+ FIELD_MEASUR_DESCR_NAME + " text, " + FIELD_PRICE_NAME
 					+ " real, " + FIELD_QUANT_ACC_NAME + " real, "
-					+ FIELD_QUANT_NAME + " real, " + FIELD_VISITED_NAME
+					+ FIELD_QUANT_NAME + " real, " + FIELD_ITEM_VISITED_NAME
 					+ " integer, " + FIELD_INDEX_NAME + " text);");
 
 			insertDemoItems(db);
@@ -279,6 +296,27 @@ public class DBase {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Возвращает курсор на строку таблицы номенклатуры с указанным
+	 * идентификатором. Курсор сразу установлен на позицию для чтения данных.
+	 * 
+	 * @return
+	 */
+	public Cursor getItemRowById(int rowNum) {
+
+		String[] selectionArgs = { String.valueOf(rowNum) };
+		Cursor cursor = sqliteDb.query(DBase.TABLE_ITEMS_NAME, null,
+				DBase.FIELD_ID_NAME + " = ?", selectionArgs, null, null, null);
+
+		cursor.moveToFirst();
+		if (cursor.isFirst()) {
+			return cursor;
+
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -837,11 +875,11 @@ public class DBase {
 		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME,
 				"КРОССВОРДЫ от Потапыча  2012 Спецвыпуск 777");
 		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
-		itemValues.put(FIELD_SPECIF_CODE_NAME, 55908);
-		itemValues.put(FIELD_SPECIF_DESCR_NAME, "4/14");
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 41519);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "1/14");
 		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
-		itemValues.put(FIELD_PRICE_NAME, 23);
-		itemValues.put(FIELD_QUANT_ACC_NAME, 3);
+		itemValues.put(FIELD_PRICE_NAME, 23.5);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
 		itemValues.put(FIELD_QUANT_NAME, 0);
 		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
 
@@ -1050,11 +1088,11 @@ public class DBase {
 		itemValues.put(FIELD_ITEM_DESCR_NAME, "1000 СЕКРЕТОВ");
 		itemValues.put(FIELD_ITEM_DESCR_FULL_NAME, "1000 СЕКРЕТОВ");
 		itemValues.put(FIELD_ITEM_USE_SPECIF_NAME, 1);
-		itemValues.put(FIELD_SPECIF_CODE_NAME, 38988);
-		itemValues.put(FIELD_SPECIF_DESCR_NAME, "26/13");
+		itemValues.put(FIELD_SPECIF_CODE_NAME, 25134);
+		itemValues.put(FIELD_SPECIF_DESCR_NAME, "7/13");
 		itemValues.put(FIELD_MEASUR_DESCR_NAME, "шт");
-		itemValues.put(FIELD_PRICE_NAME, 16);
-		itemValues.put(FIELD_QUANT_ACC_NAME, 4);
+		itemValues.put(FIELD_PRICE_NAME, 18);
+		itemValues.put(FIELD_QUANT_ACC_NAME, 1);
 		itemValues.put(FIELD_QUANT_NAME, 0);
 		insert(dataBase, TABLE_ITEMS_DEMO_NAME, itemValues);
 

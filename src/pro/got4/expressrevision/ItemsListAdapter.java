@@ -24,7 +24,7 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 	private int docId_Idx, rowNum_Idx, itemCode_Idx, /* itemDescr_Idx, */
 	itemDescrFull_Idx, itemUseSpecif_Idx, specifCode_Idx, specifDescr_Idx,
 			measurDescr_Idx, price_Idx, /* quantAcc_Idx, */
-			quant_Idx/* , index_Idx */;
+			quant_Idx/* , index_Idx */, itemVisited_Idx;
 
 	// Формат чисел, отображающих количество.
 	private DecimalFormat quantDecimalFormat;
@@ -82,10 +82,13 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		// quantAcc_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_ACC_NAME);
 		quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
 		// index_Idx = cursor.getColumnIndex(DBase.FIELD_INDEX_NAME);
+		itemVisited_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_VISITED_NAME);
 	}
 
 	@Override
 	public int getItemViewType(int position) {
+
+		int itemViewType = 0;
 
 		Cursor cursor = (Cursor) getItem(position);
 
@@ -94,21 +97,39 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		if (docId_Idx == rowNum_Idx)
 			fillColumnIndices(cursor);
 
+		int itemVisited = cursor.getInt(itemVisited_Idx);
 		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
 
-		switch (itemUseSpecif) {
-		case 0: // Характеристика не используется.
-			return 0;
-		case 1: // Характеристика используется.
-			return 1;
-		default:
-			return 1;
+		if (itemVisited == 0 && itemUseSpecif == 0) {
+
+			// Элемент не посещался, характеристика не используется.
+			itemViewType = 0;
+
+		} else if (itemVisited == 0 && itemUseSpecif != 0) {
+
+			// Элемент не посещался, характеристика используется.
+			itemViewType = 1;
+
+		} else if (itemVisited != 0 && itemUseSpecif == 0) {
+
+			// Элемент посещался, характеристика не используется.
+			itemViewType = 2;
+
+		} else if (itemVisited != 0 && itemUseSpecif != 0) {
+
+			// Элемент посещался, характеристика используется.
+			itemViewType = 3;
+
+		} else {
+			itemViewType = 1;
 		}
+
+		return itemViewType;
 	}
 
 	@Override
 	public int getViewTypeCount() {
-		return 2;
+		return 4;
 	}
 
 	@Override
@@ -119,18 +140,45 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		if (docId_Idx == rowNum_Idx)
 			fillColumnIndices(cursor);
 
-		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
 		LayoutInflater li = LayoutInflater.from(context);
 
-		if (itemUseSpecif == 0) {
-			// Если характеристика не используется, то разворачивается лайаут
-			// без поля характеристики.
-			return li.inflate(R.layout.items_list_item, parent, false);
-		} else {
-			// Если характеристика используется, то разворачивается лайаут с
-			// полем характеристики.
-			return li.inflate(R.layout.items_list_item_specif, parent, false);
+		View v = null;
+
+		int itemViewType = getItemViewType(cursor.getPosition());
+		switch (itemViewType) {
+		case 0: { // Элемент не посещался, характеристика не используется.
+
+			v = li.inflate(R.layout.items_list_item, parent, false);
+
+			break;
 		}
+		case 1: { // Элемент не посещался, характеристика используется.
+
+			v = li.inflate(R.layout.items_list_item_specif, parent, false);
+
+			break;
+		}
+		case 2: { // Элемент посещался, характеристика не используется.
+
+			v = li.inflate(R.layout.items_list_item_visited, parent, false);
+
+			break;
+		}
+		case 3: { // Элемент посещался, характеристика используется.
+
+			v = li.inflate(R.layout.items_list_item_specif_visited, parent,
+					false);
+			break;
+		}
+
+		default:
+
+			// По умолчанию используется непосещенный лайаут с полем
+			// характеристики.
+			v = li.inflate(R.layout.items_list_item_specif, parent, false);
+		}
+
+		return v;
 	}
 
 	@Override
@@ -154,26 +202,30 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		// float quantAcc = cursor.getFloat(quantAcc_Idx);
 		float quant = cursor.getFloat(quant_Idx);
 		// String index = cursor.getString(index_Idx);
+		int itemVisited = cursor.getInt(itemVisited_Idx);
 
-		TextView row_num_textView = (TextView) view
-				.findViewById(R.id.row_num_textView);
-		TextView item_code_textView = (TextView) view
+		TextView row_num_textView = null;
+		TextView item_code_textView = null;
+		TextView item_descr_full_textView = null;
+		TextView specif_code_textView = null;
+		TextView specif_descr_textView = null;
+		Button quant_button = null;
+		TextView quant_textView = null;
+		TextView price_textView = null;
+
+		// Непосещенный элемент.
+		row_num_textView = (TextView) view.findViewById(R.id.row_num_textView);
+		item_code_textView = (TextView) view
 				.findViewById(R.id.item_code_textView);
-		// TextView item_descr_textView = (TextView)
-		// view.findViewById(R.id.item_descr_textView);
-		TextView item_descr_full_textView = (TextView) view
+		item_descr_full_textView = (TextView) view
 				.findViewById(R.id.item_descr_full_textView);
-		TextView specif_code_textView = (TextView) view
+		specif_code_textView = (TextView) view
 				.findViewById(R.id.specif_code_textView);
-		TextView specif_descr_textView = (TextView) view
+		specif_descr_textView = (TextView) view
 				.findViewById(R.id.specif_descr_textView);
-		Button quant_button = (Button) view.findViewById(R.id.quant_button);
-		// TextView measur_textView = (TextView) view
-		// .findViewById(R.id.measur_textView);
-		TextView price_textView = (TextView) view
-				.findViewById(R.id.price_textView);
-		// TextView currency_textView = (TextView)
-		// view.findViewById(R.id.currency_textView);
+		quant_button = (Button) view.findViewById(R.id.quant_button);
+		quant_textView = (TextView) view.findViewById(R.id.quant_textView);
+		price_textView = (TextView) view.findViewById(R.id.price_textView);
 
 		row_num_textView.setText(String.valueOf(rowNum));
 		item_code_textView.setText(itemCode);
@@ -199,17 +251,23 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 			}
 		}
 
-		// String quantString = numberFormat.format(quant);
 		String quantString = quantDecimalFormat.format(quant);
-		quant_button.setText(quantString.concat(" ").concat(measurDescr));
+
+		if (quant_button != null) {
+
+			quant_button.setText(quantString.concat(" ").concat(measurDescr));
+
+			// В теге кнопки хранится номер позиции для последующей
+			// идентификации строки данных, к которым относится нажатая кнопка.
+			quant_button.setTag(cursor.getPosition());
+			quant_button.setOnClickListener(this);
+		}
+
+		if (quant_textView != null)
+			quant_textView.setText(quantString.concat(" ").concat(measurDescr));
+
 		price_textView.setText(String.valueOf(price).concat(" ")
 				.concat(context.getString(R.string.currency)));
-
-		// В теге кнопки хранится номер позиции для последующей идентификации
-		// строки данных, к которым относится нажатая кнопка.
-		quant_button.setTag(cursor.getPosition());
-		quant_button.setOnClickListener(this);
-
 	}
 
 	@Override

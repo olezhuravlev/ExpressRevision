@@ -53,7 +53,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
 
-	private static final int DEMO_MODE_SLEEP_TIME = 1000;// 20;
+	private static final int DEMO_MODE_SLEEP_TIME = 50;
 
 	// Имя поля, которое в экстрах хранится строка соединения.
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringItems";

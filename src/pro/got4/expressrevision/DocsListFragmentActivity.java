@@ -38,7 +38,6 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	private int lastLongClickedItemPosition;
 
-	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -52,18 +51,6 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		buttonLoad = (Button) findViewById(R.id.buttonLoad);
 		buttonLoad.setOnClickListener(this);
-
-		// формируем столбцы сопоставления
-		// String[] from = new String[] { DBase.FIELD_STORE_DESCR_NAME,
-		// DBase.FIELD_DOC_DATE_NAME, DBase.FIELD_DOC_NUM_NAME,
-		// DBase.FIELD_DOC_COMMENT_NAME };
-		// int[] to = new int[] { R.id.storeTextView, R.id.dateTextView,
-		// R.id.numberTextView, R.id.commentTextView };
-
-		// создаем адаптер и настраиваем список
-		// scAdapter = new SimpleCursorAdapter(this, R.layout.docs_list_item,
-		// null, from, to,
-		// SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
 		adapter = new DocsListAdapter(this, null);
 		lvData = (ListView) findViewById(R.id.docsListView);
@@ -154,25 +141,11 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 
-		super.onCreateContextMenu(menu, v, menuInfo);
-
 		MenuItem menuItem;
 		menuItem = menu.add(0, CONTEXTMENU_LOAD_BUTTON_ID, 0,
 				R.string.btnLoadDocument);
 		menuItem.setCheckable(true);
 		menuItem.setChecked(true);
-		// menuItem.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-		//
-		// @Override
-		// public boolean onMenuItemClick(MenuItem item) {
-		//
-		// setResult(CONTEXTMENU_LOAD_BUTTON_ID);
-		//
-		// DocsListFragmentActivity.this.finish();
-		//
-		// return true;
-		// }
-		// });
 
 		menuItem = menu.add(0, CONTEXTMENU_LOAD_CANCEL_BUTTON_ID, 1,
 				R.string.cancel);

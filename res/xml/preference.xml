@@ -2,46 +2,51 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:orderingFromXml="true" >
 
-    <EditTextPreference
-        android:defaultValue="600"
-        android:inputType="number"
-        android:key="docListOpeningTimeDelay"
-        android:summary="@string/refreshDocListOnOpening_Summary"
-        android:title="@string/refreshDocListOnOpening" />
-
-    <PreferenceScreen
-        android:key="connectPrefs"
-        android:title="@string/connectPrefs" >
-        <EditTextPreference
-            android:defaultValue="http://express.nsk.ru:9999/erdocs.php"
-            android:key="connectionStringDocs"
-            android:title="@string/connectionStringDocs" />
-        <EditTextPreference
-            android:defaultValue="http://express.nsk.ru:9999/eritems.php"
-            android:key="connectionStringItems"
-            android:title="@string/connectionStringItems" />
-        <EditTextPreference
-            android:defaultValue="100"
-            android:inputType="number"
-            android:key="rowsInDataBundle"
-            android:title="@string/rowsInDataBundle" />
-    </PreferenceScreen>
-
     <PreferenceCategory
-        android:key="displayPrefs"
-        android:title="@string/displayPrefs" >
-        <ListPreference
+        android:key="dataExchangePrefs"
+        android:title="@string/dataExchangePrefs" >
+        <PreferenceScreen
+            android:key="connectPrefs"
+            android:title="@string/connectPrefs" >
+            <EditTextPreference
+                android:defaultValue="http://express.nsk.ru:9999/erdocs.php"
+                android:key="connectionStringDocs"
+                android:title="@string/connectionStringDocs" />
+            <EditTextPreference
+                android:defaultValue="http://express.nsk.ru:9999/eritems.php"
+                android:key="connectionStringItems"
+                android:title="@string/connectionStringItems" />
+            <EditTextPreference
+                android:defaultValue="100"
+                android:inputType="number"
+                android:key="rowsInDataBundle"
+                android:title="@string/rowsInDataBundle" />
+        </PreferenceScreen>
+
+        <EditTextPreference
+            android:defaultValue="600"
+            android:inputType="number"
+            android:key="docListOpeningTimeDelay"
+            android:summary="@string/refreshDocListOnOpening_Summary"
+            android:title="@string/refreshDocListOnOpening" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="userPrefs"
+        android:title="@string/userPrefs" >
+        <CheckBoxPreference android:defaultValue="true" android:key="setDuplicatesAsVisited" android:summary="@string/setDuplicatesAsVisited_Summary" android:title="@string/setDuplicatesAsVisited" /><ListPreference
             android:defaultValue="auto"
             android:entries="@array/displayOrientations_Entries"
             android:entryValues="@array/displayOrientations"
             android:key="displayOrientation"
             android:title="@string/displayOrientation" >
         </ListPreference>
-    </PreferenceCategory>
 
-    <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="demoModePrefs"
-        android:title="@string/demoMode" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="demoModePrefs"
+            android:summary="@string/demoMode_Summary"
+            android:title="@string/demoMode" />
+        
+    </PreferenceCategory>
 
 </PreferenceScreen>

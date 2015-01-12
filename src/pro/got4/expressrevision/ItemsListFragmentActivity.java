@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -23,6 +24,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -35,12 +38,18 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	public static final int ITEMS_LIST_ID = 2;
 
-	public static final int CONTEXTMENU_LOAD_BUTTON_ID = 1;
-	public static final int CONTEXTMENU_LOAD_CANCEL_BUTTON_ID = 2;
+	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_BUTTON_ID = 1;
+	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_CANCEL_BUTTON_ID = 2;
 
 	private static final String NUMBER_INPUT_DIALOG_TAG = "number_input_dialog";
 
+	public static final String FIELD_SET_DUPLICATES_AS_VISITED_NAME = "setDuplicatesAsVisited";
+
 	public static final String START_ITEMS_LOADER = "start_items_loader";
+
+	// Флаг того, что при отметке элементов как посещенных, выделяться
+	// должны все повторы элемента, встречающиеся в списке.
+	private static boolean setDuplicatesAsVisited;
 
 	private Button percentButton;
 	private EditText itemsFilterEditText;
@@ -51,9 +60,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	public DBase db;
 
-	// private Cursor currentCursor;
+	private int lastLongClickedItemPosition;
 
-	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -76,6 +84,19 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		lvData = (ListView) findViewById(R.id.listViewItems);
 		lvData.setAdapter(adapter);
 
+		lvData.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				lastLongClickedItemPosition = position;
+				return false;
+			}
+		});
+
+		// Добавляем контекстное меню к списку.
+		registerForContextMenu(lvData);
+
 		percentButton = (Button) findViewById(R.id.percentButton);
 		percentButton.setOnClickListener(this);
 
@@ -85,14 +106,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		clearFilterButton = (ImageButton) findViewById(R.id.clearFilterButton);
 		clearFilterButton.setOnClickListener(this);
-
-		Message.show();
-		// Message.show("OnCreate, itemsFilterEditText == " +
-		// itemsFilterEditText
-		// + ", text ==" + itemsFilterEditText.getText().toString());
-
-		// Добавляем контекстное меню к списку.
-		// registerForContextMenu(lvData);
 
 		// Загрузчик для чтения данных.
 		MyCursorLoader myCursorLoader = (MyCursorLoader) getSupportLoaderManager()
@@ -131,6 +144,9 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		super.onResume();
 
+		setDuplicatesAsVisited = PreferenceManager.getDefaultSharedPreferences(
+				this).getBoolean(FIELD_SET_DUPLICATES_AS_VISITED_NAME, true);
+
 		Main.setStyle(this);
 	}
 
@@ -150,17 +166,37 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 
-		super.onCreateContextMenu(menu, v, menuInfo);
+		MenuItem menuItem;
+		menuItem = menu.add(0, CONTEXTMENU_SET_DUPLICATES_AS_VISITED_BUTTON_ID,
+				0, R.string.btnSetVisitedOff);
+		menuItem.setCheckable(true);
+		menuItem.setChecked(false);
+
+		menuItem = menu.add(0,
+				CONTEXTMENU_SET_DUPLICATES_AS_VISITED_CANCEL_BUTTON_ID, 1,
+				R.string.cancel);
 	}
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 
-		if (item.getItemId() == CONTEXTMENU_LOAD_BUTTON_ID) {
+		if (item.getItemId() == CONTEXTMENU_SET_DUPLICATES_AS_VISITED_BUTTON_ID) {
+
+			// Снятие отметки о просмотре элемента номенклатуры.
+			Cursor cursor = (Cursor) adapter
+					.getItem(lastLongClickedItemPosition);
+
+			int rowIdx = cursor.getColumnIndex(DBase.FIELD_ID_NAME);
+			int row_id = cursor.getInt(rowIdx);
+			int rowsAffected = setVisitedAttribute(row_id, 0);
+
+			// Чтобы обновить список.
+			if (rowsAffected > 0)
+				getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
 
 			return true;
 
-		} else if (item.getItemId() == CONTEXTMENU_LOAD_CANCEL_BUTTON_ID) {
+		} else if (item.getItemId() == CONTEXTMENU_SET_DUPLICATES_AS_VISITED_CANCEL_BUTTON_ID) {
 
 			// Ничего не делаем. Кнопка просто для ясности, что нажимать для
 			// отмены.
@@ -391,6 +427,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				.getColumnIndex(DBase.FIELD_MEASUR_DESCR_NAME);
 		int price_Idx = cursor.getColumnIndex(DBase.FIELD_PRICE_NAME);
 		int quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
+		// int itemVisited_Idx =
+		// cursor.getColumnIndex(DBase.FIELD_ITEM_VISITED_NAME);
 
 		int row_id = cursor.getInt(row_id_Idx);
 		String itemDescrFull = cursor.getString(itemDescrFull_Idx);
@@ -399,6 +437,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		String measurDescr = cursor.getString(measurDescr_Idx);
 		float price = cursor.getFloat(price_Idx);
 		float quant = cursor.getFloat(quant_Idx);
+		// int itemVisited = cursor.getInt(itemVisited_Idx);
 
 		Bundle args = new Bundle();
 		args.putInt(NumberInputDialogFragment.ROW_ID_FIELD_NAME, row_id);
@@ -430,12 +469,128 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	 */
 	public void setCurrentQuantity(int row_id, float quantity) {
 
-		ContentValues values = new ContentValues();
-		values.put(DBase.FIELD_QUANT_NAME, quantity);
-		db.update(db.getSQLiteDatabase(), DBase.TABLE_ITEMS_NAME, row_id,
-				values);
+		// Установка введенного пользователем количества и признака посещенности
+		// элемента.
+		ContentValues valuesQuantity = new ContentValues();
+		valuesQuantity.put(DBase.FIELD_ITEM_VISITED_NAME, 1);
+		valuesQuantity.put(DBase.FIELD_QUANT_NAME, quantity);
+
+		int rowsAffected = 0;
+
+		String whereClause = DBase.FIELD_ID_NAME + " = ?";
+		String[] whereArgs = { String.valueOf(row_id) };
+
+		if (setDuplicatesAsVisited) {
+
+			// 1. Установка количества в выбранную строку.
+			int rowsAffectedQuantity = db.update(DBase.TABLE_ITEMS_NAME,
+					valuesQuantity, whereClause, whereArgs);
+
+			// 2. Установка признака посещенности во все дубликаты выбранной
+			// строки.
+			int rowsAffectedVisited = setVisitedAttribute(row_id, 1);
+			// Cursor cursor = db.getItemRowById(row_id);
+			//
+			// int itemCode_Idx = cursor
+			// .getColumnIndex(DBase.FIELD_ITEM_CODE_NAME);
+			// int itemUseSpecif_Idx = cursor
+			// .getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
+			//
+			// String itemCode = cursor.getString(itemCode_Idx);
+			// int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
+			// if (itemUseSpecif == 0) {
+			//
+			// // Характеристика не используется, подбор дубликатов
+			// // производится без учета характеристик.
+			// whereClause = DBase.FIELD_ITEM_CODE_NAME + " = ?";
+			// whereArgs = new String[] { itemCode };
+			//
+			// } else {
+			//
+			// // Характеристика используется при подборе дубликатов.
+			// int specifCode_Idx = cursor
+			// .getColumnIndex(DBase.FIELD_SPECIF_CODE_NAME);
+			// String specifCode = cursor.getString(specifCode_Idx);
+			//
+			// whereClause = DBase.FIELD_ITEM_CODE_NAME + " = ? AND "
+			// + DBase.FIELD_SPECIF_CODE_NAME + " = ?";
+			// whereArgs = new String[] { itemCode, specifCode };
+			//
+			// }
+			//
+			// ContentValues valuesVisited = new ContentValues();
+			// valuesVisited.put(DBase.FIELD_ITEM_VISITED_NAME, 1);
+			// int rowsAffectedVisited = db.update(DBase.TABLE_ITEMS_NAME,
+			// valuesVisited, whereClause, whereArgs);
+
+			rowsAffected = Math.max(rowsAffectedQuantity, rowsAffectedVisited);
+
+		} else {
+
+			// Если отмечать дубликаты посещенного элемента не нужно, то
+			// достаточно идентифицировать строку по её индексу и выполнить
+			// обновление единственным запросом.
+			rowsAffected = db.update(DBase.TABLE_ITEMS_NAME, valuesQuantity,
+					whereClause, whereArgs);
+		}
 
 		// Чтобы обновить список.
-		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+		if (rowsAffected > 0)
+			getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+	}
+
+	/**
+	 * Установка признака посещенности одной или нескольких строк.
+	 * 
+	 * @param row_id
+	 * @return
+	 */
+	private int setVisitedAttribute(int row_id, int value) {
+
+		// Если нужно отмечать все дубликаты посещенного элемента, то эти
+		// дубликаты подбираются с учетом характеристики или без него, в
+		// зависимости от того, используется характеристика для посещенного
+		// элемента или нет.
+		// Для идентификации используются их коды.
+
+		int rowsAffected = 0;
+
+		Cursor cursor = db.getItemRowById(row_id);
+
+		int itemCode_Idx = cursor.getColumnIndex(DBase.FIELD_ITEM_CODE_NAME);
+		int itemUseSpecif_Idx = cursor
+				.getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
+
+		String itemCode = cursor.getString(itemCode_Idx);
+		int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
+
+		String whereClause = null;
+		String[] whereArgs = null;
+		if (itemUseSpecif == 0) {
+
+			// Характеристика не используется, подбор дубликатов
+			// производится без учета характеристик.
+			whereClause = DBase.FIELD_ITEM_CODE_NAME + " = ?";
+			whereArgs = new String[] { itemCode };
+
+		} else {
+
+			// Характеристика используется при подборе дубликатов.
+			int specifCode_Idx = cursor
+					.getColumnIndex(DBase.FIELD_SPECIF_CODE_NAME);
+			String specifCode = cursor.getString(specifCode_Idx);
+
+			whereClause = DBase.FIELD_ITEM_CODE_NAME + " = ? AND "
+					+ DBase.FIELD_SPECIF_CODE_NAME + " = ?";
+			whereArgs = new String[] { itemCode, specifCode };
+
+		}
+
+		ContentValues valuesVisited = new ContentValues();
+		valuesVisited.put(DBase.FIELD_ITEM_VISITED_NAME, value);
+		rowsAffected = db.update(DBase.TABLE_ITEMS_NAME, valuesVisited,
+				whereClause, whereArgs);
+
+		return rowsAffected;
 	}
 }

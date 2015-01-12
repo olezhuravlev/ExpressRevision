@@ -17,7 +17,11 @@
     <string name="demoMode_off">Выключить демо-режим</string>
     <string name="demoMode_on">Включить демо-режим</string>
     <string name="demoMode">Демо-режим</string>
+    <string name="demoMode_Summary">Обучающий режим работы, не требующий подключения к источникам данных</string>
+    <string name="setDuplicatesAsVisited">Отмечать повторы как посещенные</string>
+    <string name="setDuplicatesAsVisited_Summary">Все повторяющиеся в списке номенклатуры элементы будут отмечены как посещенные, если посетить хотя бы один из них</string>
     <string name="btnLoadDocument">Загрузить список ревизий</string>
+    <string name="btnSetVisitedOff">Снять посещение</string>
     <string name="btnEditDocument">Редактировать ревизию</string>
     <string name="yes">Да</string>
     <string name="no">Нет</string>
@@ -36,11 +40,12 @@
     <string name="pleaseWait">Пожалуйста, подождите...</string>
     <string name="refreshDocListOnOpening">Интервал обновления списка ревизий</string>
     <string name="refreshDocListOnOpening_Summary">Установка времени, по истечении которого полученный список ревизий считается устаревшим и требуется получить новый.</string>
+    <string name="dataExchangePrefs">Настройки обмена данных</string>
+    <string name="userPrefs">Пользовательские настройки</string>
     <string name="displayOrientation">Ориентация экрана</string>
     <string name="connectPrefs">Настройки подключения</string>
     <string name="connectionStringDocs">Получение списка документов</string>
     <string name="connectionStringItems">Получение содержимого документов</string>
-    <string name="displayPrefs">Настройки экрана</string>
     <string name="rowsInDataBundle">Строк в пакете данных</string>
     <string name="clearTables">Очистить данные</string>
     <string name="tablesCleared">Данные очищены!</string>
