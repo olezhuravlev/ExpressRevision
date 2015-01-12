@@ -1,6 +1,6 @@
 package pro.got4.expressrevision;
 
-public class Message {
+public class Message_ {
 
 	/**
 	 * Флаг того, что используются версии функций с идентификаторами.

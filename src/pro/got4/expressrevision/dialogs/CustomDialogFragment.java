@@ -1,6 +1,5 @@
 package pro.got4.expressrevision.dialogs;
 
-import pro.got4.expressrevision.Message;
 import pro.got4.expressrevision.R;
 import android.app.Activity;
 import android.os.Bundle;
@@ -36,7 +35,7 @@ public class CustomDialogFragment extends DialogFragment {
 	private String title;
 	private String message;
 	private int style;
-	private int theme;
+	// private int theme;
 	private static String dialogTag;
 	private int dialogId;
 
@@ -60,8 +59,6 @@ public class CustomDialogFragment extends DialogFragment {
 	@Override
 	public void onAttach(Activity activity) {
 
-		Message.show(null);
-
 		super.onAttach(activity);
 
 		try {
@@ -75,14 +72,12 @@ public class CustomDialogFragment extends DialogFragment {
 	@Override
 	public void onCreate(Bundle bundle) {
 
-		Message.show(null);
-
 		super.onCreate(bundle);
 
 		setTitle(getArguments().getString(FIELD_TITLE_NAME));
 		setMessage(getArguments().getString(FIELD_MESSAGE_NAME));
 		setStyle(getArguments().getInt(FIELD_STYLE_NAME));
-		setTheme(getArguments().getInt(FIELD_THEME_NAME));
+		// setTheme(getArguments().getInt(FIELD_THEME_NAME));
 		dialogTag = getArguments().getString(FIELD_DIALOGTAG_NAME);
 		dialogId = getArguments().getInt(FIELD_DIALOGID_NAME);
 
@@ -101,8 +96,6 @@ public class CustomDialogFragment extends DialogFragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-
-		Message.show(null);
 
 		View v = null;
 
@@ -178,8 +171,6 @@ public class CustomDialogFragment extends DialogFragment {
 	 */
 	public static CustomDialogFragment showDialog_YesNo(String title,
 			String message, int dialogId, FragmentActivity fragmentActivity) {
-
-		Message.show(null);
 
 		CustomDialogFragment dialog = new CustomDialogFragment();
 
@@ -262,13 +253,13 @@ public class CustomDialogFragment extends DialogFragment {
 		return super.getTheme();
 	}
 
-	/**
-	 * @param theme
-	 *            the theme to set
-	 */
-	public void setTheme(int theme) {
-		this.theme = theme;
-	}
+	// /**
+	// * @param theme
+	// * the theme to set
+	// */
+	// public void setTheme(int theme) {
+	// this.theme = theme;
+	// }
 
 	/**
 	 * @return the currentValue
@@ -301,8 +292,6 @@ public class CustomDialogFragment extends DialogFragment {
 	 *            the maxValue to set
 	 */
 	public void setMax(int max) {
-
-		Message.show(null);
 
 		this.max = max;
 

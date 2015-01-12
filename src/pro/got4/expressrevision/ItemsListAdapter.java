@@ -202,7 +202,7 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		// float quantAcc = cursor.getFloat(quantAcc_Idx);
 		float quant = cursor.getFloat(quant_Idx);
 		// String index = cursor.getString(index_Idx);
-		int itemVisited = cursor.getInt(itemVisited_Idx);
+		// int itemVisited = cursor.getInt(itemVisited_Idx);
 
 		TextView row_num_textView = null;
 		TextView item_code_textView = null;

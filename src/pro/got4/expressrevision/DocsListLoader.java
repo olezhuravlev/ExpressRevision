@@ -88,9 +88,6 @@ public class DocsListLoader extends FragmentActivity implements
 
 		public ProgressHandler(WeakReference<DocsListLoader> wrActivity) {
 
-			Message.show("[hashCode = " + this.hashCode() + "], wrActivity = "
-					+ wrActivity);
-
 			this.wrActivity = wrActivity;
 		}
 
@@ -100,8 +97,6 @@ public class DocsListLoader extends FragmentActivity implements
 		 * @param wrActivity
 		 */
 		public void setActivity(WeakReference<DocsListLoader> wrActivity) {
-
-			Message.show(this);
 
 			this.wrActivity = wrActivity;
 		}
@@ -121,8 +116,6 @@ public class DocsListLoader extends FragmentActivity implements
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
-		Message.show(this);
 
 		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this)) {
 			Toast.makeText(this, R.string.networkNotAvailable,
@@ -197,18 +190,13 @@ public class DocsListLoader extends FragmentActivity implements
 	@Override
 	public Loader<Void> onCreateLoader(int id, Bundle bndl) {
 
-		Message.show("[hashCode = " + this.hashCode() + "], id = " + id);
-
 		Loader<Void> ldr = new DocsAsyncTaskLoader(this);
-		Message.show(ldr);
 
 		return ldr;
 	}
 
 	@Override
 	public void onLoadFinished(Loader<Void> loader, Void data) {
-
-		Message.show(this);
 
 		setResult(RESULT_OK);
 		onCloseDialog(DOCSLIST_LOADER_ID, BUTTON_BACK_ID);
@@ -219,8 +207,6 @@ public class DocsListLoader extends FragmentActivity implements
 
 	@Override
 	public void onLoaderReset(Loader<Void> loader) {
-
-		Message.show(this);
 
 		setResult(RESULT_CANCELED);
 		onCloseDialog(DOCSLIST_LOADER_ID, BUTTON_BACK_ID);
@@ -247,8 +233,6 @@ public class DocsListLoader extends FragmentActivity implements
 
 			super(context);
 
-			Message.show(this);
-
 			this.context = context;
 
 			rowsTotal = 0;
@@ -257,8 +241,6 @@ public class DocsListLoader extends FragmentActivity implements
 
 		@Override
 		public void onStartLoading() {
-
-			Message.show(this);
 
 			dBase = new DBase(context);
 			dBase.open();
@@ -452,8 +434,6 @@ public class DocsListLoader extends FragmentActivity implements
 		@Override
 		public void onStopLoading() {
 
-			Message.show(this);
-
 			cancelLoad();
 
 			super.onStopLoading();
@@ -464,8 +444,6 @@ public class DocsListLoader extends FragmentActivity implements
 		@Override
 		public void onCanceled(Void data) {
 
-			Message.show(this);
-
 			super.onCanceled(data);
 
 			onReleaseResources();
@@ -473,8 +451,6 @@ public class DocsListLoader extends FragmentActivity implements
 
 		@Override
 		protected void onReset() {
-
-			Message.show(this);
 
 			super.onReset();
 
@@ -562,9 +538,6 @@ public class DocsListLoader extends FragmentActivity implements
 
 	// Слушатель прогресс-диалога.
 	public void onCloseDialog(int dialogId, int buttonId) {
-
-		Message.show("[hashCode = " + this.hashCode() + "dialogId = "
-				+ dialogId + ", buttonId = " + buttonId);
 
 		getSupportLoaderManager().getLoader(DOCSLIST_LOADER_ID).abandon();
 

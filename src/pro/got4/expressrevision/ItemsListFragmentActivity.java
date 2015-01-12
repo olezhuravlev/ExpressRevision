@@ -134,12 +134,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	}
 
 	@Override
-	public void onStart() {
-		super.onStart();
-		Message.show();
-	}
-
-	@Override
 	public void onResume() {
 
 		super.onResume();
@@ -148,18 +142,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				this).getBoolean(FIELD_SET_DUPLICATES_AS_VISITED_NAME, true);
 
 		Main.setStyle(this);
-	}
-
-	@Override
-	public void onPause() {
-		super.onPause();
-		Message.show();
-	}
-
-	@Override
-	public void onStop() {
-		super.onStop();
-		Message.show();
 	}
 
 	@Override
@@ -276,9 +258,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-		Message.show("onActivityResult(), requestCode = " + requestCode
-				+ ", resultCode = " + resultCode);
-
 		switch (requestCode) {
 
 		case ItemsListLoader.ITEMSLIST_LOADER_ID:
@@ -357,8 +336,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
 
-		Message.show("onKey(), keyCode ==" + keyCode + ", event ==" + event);
-
 		boolean returnCode = false;
 
 		switch (v.getId()) {
@@ -368,8 +345,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			// Отлавливаем нажатие ENTER на софт-клавиатуре.
 			if (event.getAction() == KeyEvent.ACTION_DOWN
 					&& event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-
-				Message.show("onKey(), ACTION_DOWN && KEYCODE_ENTER");
 
 				itemsFilterEditText.clearFocus();
 				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);

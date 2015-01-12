@@ -1,6 +1,5 @@
 package pro.got4.expressrevision.dialogs;
 
-import pro.got4.expressrevision.Message;
 import pro.got4.expressrevision.R;
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -52,8 +51,6 @@ public class ProgressDialogFragment extends DialogFragment {
 	@Override
 	public void onAttach(Activity activity) {
 
-		Message.show(this);
-
 		super.onAttach(activity);
 
 		setRetainInstance(true);
@@ -88,8 +85,6 @@ public class ProgressDialogFragment extends DialogFragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 
-		Message.show(this);
-
 		View v = inflater.inflate(R.layout.dialog_progress, container, false);
 
 		textViewTitle = (TextView) v.findViewById(R.id.textViewTitle);
@@ -103,8 +98,6 @@ public class ProgressDialogFragment extends DialogFragment {
 
 			@Override
 			public void onClick(View v) {
-
-				Message.show(this);
 
 				listener.onCloseDialog(DIALOG_PROGRESS_ID, BUTTON_CANCEL);
 			}
@@ -139,8 +132,6 @@ public class ProgressDialogFragment extends DialogFragment {
 	@Override
 	public void onCancel(DialogInterface dialog) {
 
-		Message.show(this);
-
 		super.onCancel(dialog);
 
 		listener.onCloseDialog(DIALOG_PROGRESS_ID, BUTTON_CANCEL);
@@ -148,8 +139,6 @@ public class ProgressDialogFragment extends DialogFragment {
 
 	@Override
 	public void onDetach() {
-
-		Message.show(this);
 
 		super.onDetach();
 
@@ -235,12 +224,10 @@ public class ProgressDialogFragment extends DialogFragment {
 	 */
 	public void setMax(int max) {
 
-		Message.show(this);
-
 		this.max = max;
 
 		if (progressBar != null)
-			progressBar.setMax(max);
+			progressBar.setMax(this.max);
 	}
 
 	/**
@@ -254,7 +241,7 @@ public class ProgressDialogFragment extends DialogFragment {
 		this.progress = progress;
 
 		if (progressBar != null)
-			progressBar.setProgress(progress);
+			progressBar.setProgress(this.progress);
 	}
 
 	/**

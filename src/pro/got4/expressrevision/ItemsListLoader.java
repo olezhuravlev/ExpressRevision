@@ -124,8 +124,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		 */
 		public void setActivity(WeakReference<ItemsListLoader> wrActivity) {
 
-			Message.show(this);
-
 			this.wrActivity = wrActivity;
 		}
 
@@ -150,8 +148,6 @@ public class ItemsListLoader extends FragmentActivity implements
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
-		Message.show(this);
 
 		super.onCreate(savedInstanceState);
 
@@ -248,10 +244,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	@Override
 	public Loader<Void> onCreateLoader(int id, Bundle bndl) {
 
-		Message.show("[hashCode = " + this.hashCode() + "], id = " + id);
-
 		Loader<Void> ldr = new ItemsAsyncTaskLoader(this);
-		Message.show(ldr);
 
 		return ldr;
 	}
@@ -259,25 +252,17 @@ public class ItemsListLoader extends FragmentActivity implements
 	@Override
 	public void onLoadFinished(Loader<Void> loader, Void data) {
 
-		Message.show(this, 0);
-
 		setResult(RESULT_OK);
 		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
 
-		// Установка даты обновления.
-		// Main.setLastItemsListFetchingTime(new GregorianCalendar());
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Void> loader) {
 
-		Message.show(this, 0);
-
 		setResult(RESULT_CANCELED);
 		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
 
-		// Установка даты обновления.
-		// Main.setLastItemsListFetchingTime(new GregorianCalendar());
 	}
 
 	// /////////////////////////////////////////////////////
@@ -295,15 +280,11 @@ public class ItemsListLoader extends FragmentActivity implements
 
 			super(context);
 
-			Message.show(this);
-
 			this.context = context;
 		}
 
 		@Override
 		public void onStartLoading() {
-
-			Message.show(this, 0);
 
 			dBase = new DBase(context);
 			dBase.open();
@@ -347,10 +328,6 @@ public class ItemsListLoader extends FragmentActivity implements
 					WEAK_REF_ACTIVITY.get().incrementRowsCounter(1);
 					dBase.copyItemRow(DBase.TABLE_ITEMS_NAME, cursor);
 
-					Message.show("[hashCode = " + this.hashCode()
-							+ "], copyItemRow("
-							+ WEAK_REF_ACTIVITY.get().getRowsCounter() + ")");
-
 					setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(),
 							WEAK_REF_ACTIVITY.get().getRowsCounter(),
 							WEAK_REF_ACTIVITY.get().getRowsTotal(), 0);
@@ -368,11 +345,6 @@ public class ItemsListLoader extends FragmentActivity implements
 
 						WEAK_REF_ACTIVITY.get().incrementRowsCounter(1);
 						dBase.copyItemRow(DBase.TABLE_ITEMS_NAME, cursor);
-
-						Message.show("[hashCode = " + this.hashCode()
-								+ "], copyItemRow("
-								+ WEAK_REF_ACTIVITY.get().getRowsCounter()
-								+ ")");
 
 						setProgress(WEAK_REF_ACTIVITY.get()
 								.getProgressHandler(), WEAK_REF_ACTIVITY.get()
@@ -657,8 +629,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		@Override
 		public void onStopLoading() {
 
-			Message.show(this, 0);
-
 			cancelLoad();
 
 			super.onStopLoading();
@@ -669,8 +639,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		@Override
 		public void onCanceled(Void data) {
 
-			Message.show(this, 0);
-
 			super.onCanceled(data);
 
 			onReleaseResources();
@@ -678,8 +646,6 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		@Override
 		protected void onReset() {
-
-			Message.show(this, 0);
 
 			super.onReset();
 
@@ -690,8 +656,6 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		@Override
 		public void onAbandon() {
-
-			Message.show(this, 0);
 
 			super.onAbandon();
 		}
@@ -758,8 +722,6 @@ public class ItemsListLoader extends FragmentActivity implements
 	@Override
 	public void onBackPressed() {
 
-		Message.show(this);
-
 		super.onBackPressed();
 
 		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
@@ -772,16 +734,11 @@ public class ItemsListLoader extends FragmentActivity implements
 	 */
 	public ProgressHandler getProgressHandler() {
 
-		// Message.show(this);
-
 		return progressHandler;
 	}
 
 	// Слушатель прогресс-диалога.
 	public void onCloseDialog(int dialogId, int buttonId) {
-
-		Message.show("[hashCode = " + this.hashCode() + "dialogId = "
-				+ dialogId + ", buttonId = " + buttonId);
 
 		getSupportLoaderManager().getLoader(ITEMSLIST_LOADER_ID).abandon();
 

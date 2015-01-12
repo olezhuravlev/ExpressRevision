@@ -248,9 +248,6 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		case DocsListLoader.DOCSLIST_LOADER_ID:
 
-			Message.show("requestCode = " + requestCode + ", resultCode = "
-					+ resultCode);
-
 			// Чтобы обновить список.
 			getSupportLoaderManager().getLoader(DOCS_LIST_ID).forceLoad();
 

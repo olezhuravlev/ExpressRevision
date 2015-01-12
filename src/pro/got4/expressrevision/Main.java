@@ -11,11 +11,9 @@ import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnSeekCompleteListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
@@ -92,39 +90,40 @@ public class Main extends FragmentActivity implements OnClickListener,
 			// Проигрывание участка звукового файла.
 
 			// Начало и окончание проигрываемого отрезка.
-			final int mStartTime = 0;
-			final int mEndTime = 1200;
+			// final int mStartTime = 0;
+			// final int mEndTime = 1200;
 
 			mp = MediaPlayer.create(this, R.raw.logo);
-			mp.setOnSeekCompleteListener(new OnSeekCompleteListener() {
-
-				Handler mHandler = new Handler();
-
-				// Слушатель процедуры поиска.
-				@Override
-				public void onSeekComplete(MediaPlayer mp) {
-					// Когда завершается процедура поиска, то вызывается это
-					// событие.
-					// Здесь запускаем плеер и хэндлеру отправляем
-					// запускаемый объект с лагом в исполнении на
-					// требуемое время.
-					mp.start();
-					// mHandler.postDelayed(mStopAction, mEndTime - mStartTime);
-				}
-
-				// Запускаемый объект, который остановит проигрывание и
-				// освободит ресурс.
-				final Runnable mStopAction = new Runnable() {
-					@Override
-					public void run() {
-						mp.stop();
-						mp.release();
-					}
-				};
-			});
+			mp.start();
+			// mp.setOnSeekCompleteListener(new OnSeekCompleteListener() {
+			//
+			// Handler mHandler = new Handler();
+			//
+			// // Слушатель процедуры поиска.
+			// @Override
+			// public void onSeekComplete(MediaPlayer mp) {
+			// // Когда завершается процедура поиска, то вызывается это
+			// // событие.
+			// // Здесь запускаем плеер и хэндлеру отправляем
+			// // запускаемый объект с лагом в исполнении на
+			// // требуемое время.
+			// mp.start();
+			// // mHandler.postDelayed(mStopAction, mEndTime - mStartTime);
+			// }
+			//
+			// // Запускаемый объект, который остановит проигрывание и
+			// // освободит ресурс.
+			// final Runnable mStopAction = new Runnable() {
+			// @Override
+			// public void run() {
+			// mp.stop();
+			// mp.release();
+			// }
+			// };
+			// });
 
 			// Переход к проигрыванию отрезка.
-			mp.seekTo(mStartTime);
+			// mp.seekTo(mStartTime);
 		}
 	}
 
@@ -320,9 +319,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			// Ответ получен из активности, отображающей список документов и
 			// загружающей выбранный.
-
-			Message.show("requestCode = " + requestCode + ", resultCode = "
-					+ resultCode);
 
 			switch (resultCode) {
 
