@@ -117,13 +117,13 @@ public class DocsListLoader extends FragmentActivity implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
+		super.onCreate(savedInstanceState);
+
 		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this)) {
 			Toast.makeText(this, R.string.networkNotAvailable,
 					Toast.LENGTH_LONG).show();
 			finish();
 		}
-
-		super.onCreate(savedInstanceState);
 
 		Bundle extras = getIntent().getExtras();
 		if (extras == null) {

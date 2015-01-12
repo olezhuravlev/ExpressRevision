@@ -1,6 +1,6 @@
 package pro.got4.expressrevision;
 
-public class Message_ {
+public class Tracker {
 
 	/**
 	 * Флаг того, что используются версии функций с идентификаторами.
@@ -10,7 +10,7 @@ public class Message_ {
 	/**
 	 * Флаг того, что используются версии функций без идентификаторов.
 	 */
-	private static boolean USE_NOT_ID = false;
+	private static boolean USE_NOT_ID = true;
 
 	/**
 	 * Идентификатор сообщений: только вызовы, имеющие это значение

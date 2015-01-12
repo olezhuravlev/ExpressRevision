@@ -404,7 +404,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			}
 
-			View v = activity.findViewById(R.id.backgroundLayout_main);
+			View v = activity.findViewById(R.id.backgroundLayout);
 			v.setBackgroundDrawable(image);
 
 		} else if (className.equals("PreferencesActivity")) {

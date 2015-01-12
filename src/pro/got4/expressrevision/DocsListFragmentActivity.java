@@ -29,7 +29,6 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	private ListView lvData;
 
-	// private SimpleCursorAdapter scAdapter;
 	private DocsListAdapter adapter;
 
 	private Button buttonLoad;
@@ -100,11 +99,15 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 	}
 
 	@Override
-	public void onResume() {
+	public void onWindowFocusChanged(boolean hasFocus) {
 
-		super.onResume();
+		super.onWindowFocusChanged(hasFocus);
 
-		Main.setStyle(this);
+		// Поздний вызов установки стиля отсюда позволяет избежать появления
+		// некрасивых контрастных "ушей" у закругленных углов главной кнопки при
+		// её отпускании.
+		if (hasFocus == true)
+			Main.setStyle(this);
 	}
 
 	/**
@@ -205,6 +208,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+
 		adapter.swapCursor(cursor);
 	}
 
@@ -224,6 +228,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		private MyCursorLoader(Context context, DBase db) {
 
 			super(context);
+
 			this.db = db;
 		}
 
@@ -250,7 +255,6 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 			// Чтобы обновить список.
 			getSupportLoaderManager().getLoader(DOCS_LIST_ID).forceLoad();
-
 		}
 	}
 }

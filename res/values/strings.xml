@@ -17,9 +17,9 @@
     <string name="demoMode_off">Выключить демо-режим</string>
     <string name="demoMode_on">Включить демо-режим</string>
     <string name="demoMode">Демо-режим</string>
-    <string name="demoMode_Summary">Обучающий режим работы, не требующий подключения к источникам данных</string>
-    <string name="setDuplicatesAsVisited">Отмечать повторы как посещенные</string>
-    <string name="setDuplicatesAsVisited_Summary">Все повторяющиеся в списке номенклатуры элементы будут отмечены как посещенные, если посетить хотя бы один из них</string>
+    <string name="demoMode_Summary">Обучающий режим работы, не требующий подключения к источникам данных.</string>
+    <string name="setDuplicatesAsVisited">Отмечать дубликаты как посещенные</string>
+    <string name="setDuplicatesAsVisited_Summary">Все повторяющиеся в списке номенклатуры элементы будут отмечены как посещенные, если посетить хотя бы один из них.</string>
     <string name="btnLoadDocument">Загрузить список ревизий</string>
     <string name="btnSetVisitedOff">Снять посещение</string>
     <string name="btnEditDocument">Редактировать ревизию</string>

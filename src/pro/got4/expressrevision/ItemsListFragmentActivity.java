@@ -140,8 +140,18 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		setDuplicatesAsVisited = PreferenceManager.getDefaultSharedPreferences(
 				this).getBoolean(FIELD_SET_DUPLICATES_AS_VISITED_NAME, true);
+	}
 
-		Main.setStyle(this);
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+
+		super.onWindowFocusChanged(hasFocus);
+
+		// Поздний вызов установки стиля отсюда позволяет избежать появления
+		// некрасивых контрастных "ушей" у закругленных углов главной кнопки при
+		// её отпускании.
+		if (hasFocus == true)
+			Main.setStyle(this);
 	}
 
 	@Override
