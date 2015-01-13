@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -50,6 +51,10 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 	private GestureDetector gDetector;
 
+	private static int red, green, blue;
+
+	private OnTouchListener gListener;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -58,6 +63,39 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 		currentEditText = null;
 		currentEditText_Width = 0;
+
+		red = 255;
+		green = 255;
+		blue = 255;
+
+		gListener = new OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				// Если жест идет по другому ЭУ, то цвета нужно вернуть в
+				// исходное состояние.
+				if (currentEditText != v) {
+
+					red = 255;
+					green = 255;
+					blue = 255;
+
+					if (currentEditText != null) {
+						currentEditText.setBackgroundColor(Color.rgb(red,
+								green, blue));
+					}
+
+				}
+
+				currentEditText = (EditText) v;
+				currentEditText_Width = currentEditText.getWidth();
+
+				gDetector.onTouchEvent(event);
+
+				return false;
+			}
+		};
 
 		gDetector = new GestureDetector(this, new SimpleOnGestureListener() {
 
@@ -71,16 +109,25 @@ public class PreferencesActivity extends PreferenceActivity implements
 				if (significantMove > 0 && gestureWidth >= significantMove
 						&& Math.abs(velocityX) > Math.abs(velocityY)) {
 
-					Tracker.show("gestureWidth = " + gestureWidth
-							+ ", currentEditText_Width = "
-							+ currentEditText_Width);
+					green -= 40;
+					if (green < 0)
+						green = 0;
 
-					int color = 0xFFFF8578;
-					currentEditText.setBackgroundColor(color);
+					blue -= 40;
+					if (blue < 0)
+						blue = 0;
+
+					if (currentEditText != null) {
+						currentEditText.setBackgroundColor(Color.rgb(red,
+								green, blue));
+					}
+
+					if (green == 0 && blue == 0) {
+						// Установка целевого значения.
+						String txt = "Ready!";
+						currentEditText.setText(txt);
+					}
 				}
-
-				currentEditText = null;
-				currentEditText_Width = 0;
 
 				return false;
 			}
@@ -94,38 +141,13 @@ public class PreferencesActivity extends PreferenceActivity implements
 		// документов.
 		connectionStringDocs = (EditTextPreference) findPreference(CONNECTION_STRING_DOCS_PREFS_ID);
 		connectionStringDocs_EditText = connectionStringDocs.getEditText();
-		connectionStringDocs_EditText.setOnTouchListener(new OnTouchListener() {
-
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-
-				currentEditText = (EditText) v;
-				currentEditText_Width = currentEditText.getWidth();
-
-				gDetector.onTouchEvent(event);
-
-				return false;
-			}
-		});
+		connectionStringDocs_EditText.setOnTouchListener(gListener);
 
 		// Установка детектора жестов для настройки источника получения
 		// содержимого документа.
 		connectionStringItems = (EditTextPreference) findPreference(CONNECTION_STRING_ITEMS_PREFS_ID);
 		connectionStringItems_EditText = connectionStringItems.getEditText();
-		connectionStringItems_EditText
-				.setOnTouchListener(new OnTouchListener() {
-
-					@Override
-					public boolean onTouch(View v, MotionEvent event) {
-
-						currentEditText = (EditText) v;
-						currentEditText_Width = currentEditText.getWidth();
-
-						gDetector.onTouchEvent(event);
-
-						return false;
-					}
-				});
+		connectionStringItems_EditText.setOnTouchListener(gListener);
 
 		// Вызов подтверждения при изменении флажка демо-режима.
 		demoModePrefs = (CheckBoxPreference) findPreference(DEMO_MODE_PREFS_ID);
