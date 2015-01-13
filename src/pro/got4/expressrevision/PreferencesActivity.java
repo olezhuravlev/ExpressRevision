@@ -6,9 +6,16 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
+import android.widget.EditText;
 
 /**
  * Работа с экраном настроек, созданным на основе XML-описания.
@@ -24,8 +31,24 @@ public class PreferencesActivity extends PreferenceActivity implements
 	private static final String DIALOG_TITLE_FIELD_NAME = "title";
 	private static final String DIALOG_MESSAGE_FIELD_NAME = "message";
 
+	private static final String CONNECTION_STRING_DOCS_PREFS_ID = "connectionStringDocs";
+	private static final String CONNECTION_STRING_ITEMS_PREFS_ID = "connectionStringItems";
 	private static final String DEMO_MODE_PREFS_ID = "demoModePrefs";
+
+	private EditTextPreference connectionStringDocs;
+	private EditTextPreference connectionStringItems;
 	private CheckBoxPreference demoModePrefs;
+
+	// Элемент, над которым производится жест.
+	private EditText currentEditText;
+
+	// Ширина элемента, над которым производится жест.
+	int currentEditText_Width;
+
+	private EditText connectionStringDocs_EditText;
+	private EditText connectionStringItems_EditText;
+
+	private GestureDetector gDetector;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -33,10 +56,78 @@ public class PreferencesActivity extends PreferenceActivity implements
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.preference);
 
+		currentEditText = null;
+		currentEditText_Width = 0;
+
+		gDetector = new GestureDetector(this, new SimpleOnGestureListener() {
+
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2,
+					float velocityX, float velocityY) {
+
+				int gestureWidth = Math.abs((int) (e2.getX() - e1.getX()));
+				int significantMove = currentEditText_Width / 4;
+
+				if (significantMove > 0 && gestureWidth >= significantMove
+						&& Math.abs(velocityX) > Math.abs(velocityY)) {
+
+					Tracker.show("gestureWidth = " + gestureWidth
+							+ ", currentEditText_Width = "
+							+ currentEditText_Width);
+
+					int color = 0xFFFF8578;
+					currentEditText.setBackgroundColor(color);
+				}
+
+				currentEditText = null;
+				currentEditText_Width = 0;
+
+				return false;
+			}
+		});
+
 		// Установка вью, в элемент @android:id/list которого будут установлены
 		// вью настроек.
 		setContentView(R.layout.prefs_listview);
 
+		// Установка детектора жестов для настройки источника получения списка
+		// документов.
+		connectionStringDocs = (EditTextPreference) findPreference(CONNECTION_STRING_DOCS_PREFS_ID);
+		connectionStringDocs_EditText = connectionStringDocs.getEditText();
+		connectionStringDocs_EditText.setOnTouchListener(new OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+
+				currentEditText = (EditText) v;
+				currentEditText_Width = currentEditText.getWidth();
+
+				gDetector.onTouchEvent(event);
+
+				return false;
+			}
+		});
+
+		// Установка детектора жестов для настройки источника получения
+		// содержимого документа.
+		connectionStringItems = (EditTextPreference) findPreference(CONNECTION_STRING_ITEMS_PREFS_ID);
+		connectionStringItems_EditText = connectionStringItems.getEditText();
+		connectionStringItems_EditText
+				.setOnTouchListener(new OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+
+						currentEditText = (EditText) v;
+						currentEditText_Width = currentEditText.getWidth();
+
+						gDetector.onTouchEvent(event);
+
+						return false;
+					}
+				});
+
+		// Вызов подтверждения при изменении флажка демо-режима.
 		demoModePrefs = (CheckBoxPreference) findPreference(DEMO_MODE_PREFS_ID);
 		demoModePrefs
 				.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {

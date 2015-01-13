@@ -9,11 +9,9 @@
             android:key="connectPrefs"
             android:title="@string/connectPrefs" >
             <EditTextPreference
-                android:defaultValue="http://express.nsk.ru:9999/erdocs.php"
                 android:key="connectionStringDocs"
                 android:title="@string/connectionStringDocs" />
             <EditTextPreference
-                android:defaultValue="http://express.nsk.ru:9999/eritems.php"
                 android:key="connectionStringItems"
                 android:title="@string/connectionStringItems" />
             <EditTextPreference
@@ -33,7 +31,13 @@
     <PreferenceCategory
         android:key="userPrefs"
         android:title="@string/userPrefs" >
-        <CheckBoxPreference android:defaultValue="true" android:key="setDuplicatesAsVisited" android:summary="@string/setDuplicatesAsVisited_Summary" android:title="@string/setDuplicatesAsVisited" /><ListPreference
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="setDuplicatesAsVisited"
+            android:summary="@string/setDuplicatesAsVisited_Summary"
+            android:title="@string/setDuplicatesAsVisited" />
+
+        <ListPreference
             android:defaultValue="auto"
             android:entries="@array/displayOrientations_Entries"
             android:entryValues="@array/displayOrientations"
@@ -46,7 +50,6 @@
             android:key="demoModePrefs"
             android:summary="@string/demoMode_Summary"
             android:title="@string/demoMode" />
-        
     </PreferenceCategory>
 
 </PreferenceScreen>
