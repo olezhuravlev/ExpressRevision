@@ -159,12 +159,16 @@ public final class R {
         public static final int demoMode_on=0x7f070003;
         public static final int displayOrientation=0x7f07001e;
         public static final int docsConnectionParametersNotSet=0x7f070034;
+        /**  Строки подключения 
+         */
+        public static final int docsConnectionString=0x7f070038;
         public static final int docsConnectionStringNotSet=0x7f070035;
         public static final int docsTableNotCleared=0x7f070025;
         public static final int documentIsntLoaded=0x7f070029;
         public static final int documentLoaded=0x7f07002c;
         public static final int enterFilterString=0x7f07002f;
         public static final int itemsConnectionParametersNotSet=0x7f070036;
+        public static final int itemsConnectionString=0x7f070039;
         public static final int itemsConnectionStringNotSet=0x7f070037;
         public static final int itemsTableNotCleared=0x7f070026;
         public static final int loadDocuments=0x7f070014;
@@ -176,11 +180,11 @@ public final class R {
         public static final int ok=0x7f07000d;
         public static final int percent=0x7f07002e;
         public static final int pleaseWait=0x7f070019;
-        public static final int quantityDecimalSeparator=0x7f070039;
+        public static final int quantityDecimalSeparator=0x7f07003b;
         /**  Для отображения количества 
          */
-        public static final int quantityFormatPattern=0x7f070038;
-        public static final int quantityGroupingSeparator=0x7f07003a;
+        public static final int quantityFormatPattern=0x7f07003a;
+        public static final int quantityGroupingSeparator=0x7f07003c;
         public static final int refreshDocListOnOpening=0x7f07001a;
         public static final int refreshDocListOnOpening_Summary=0x7f07001b;
         public static final int resreshList=0x7f070013;
