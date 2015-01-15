@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -76,10 +75,6 @@ public class PreferencesActivity extends PreferenceActivity implements
 	private float lastTurnPoint_1;
 	private float lastTurnPoint_2;
 
-	private static int red, green, blue;
-
-	private OnTouchListener gListener;
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -87,39 +82,6 @@ public class PreferencesActivity extends PreferenceActivity implements
 		addPreferencesFromResource(R.xml.preference);
 
 		resetStates();
-
-		red = 255;
-		green = 255;
-		blue = 255;
-
-		gListener = new OnTouchListener() {
-
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-
-				// Если жест идет по другому ЭУ, то цвета нужно вернуть в
-				// исходное состояние.
-				if (currentEditText != v) {
-
-					red = 255;
-					green = 255;
-					blue = 255;
-
-					if (currentEditText != null) {
-						currentEditText.setBackgroundColor(Color.rgb(red,
-								green, blue));
-					}
-
-				}
-
-				currentEditText = (EditText) v;
-				currentEditText_Width = currentEditText.getWidth();
-
-				gDetector.onTouchEvent(event);
-
-				return false;
-			}
-		};
 
 		gDetector = new GestureDetector(this, new SimpleOnGestureListener() {
 
@@ -155,7 +117,6 @@ public class PreferencesActivity extends PreferenceActivity implements
 						float distance = Math.abs(lastTurnPoint_1
 								- lastTurnPoint_2);
 
-
 						if (distance > valuableGestureWidth) {
 							++gCounter;
 						}
@@ -179,7 +140,6 @@ public class PreferencesActivity extends PreferenceActivity implements
 				}
 
 				prevDistanceX = distanceX;
-
 
 				return false;
 			}
