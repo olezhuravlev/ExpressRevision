@@ -20,7 +20,7 @@
     <string name="demoMode_Summary">Обучающий режим работы, не требующий подключения к источникам данных.</string>
     <string name="setDuplicatesAsVisited">Отмечать дубликаты как посещенные</string>
     <string name="setDuplicatesAsVisited_Summary">Все повторяющиеся в списке номенклатуры элементы будут отмечены как посещенные, если посетить хотя бы один из них.</string>
-    <string name="btnLoadDocument">Загрузить список ревизий</string>
+    <string name="btnLoadDocument">Загрузить ревизию</string>
     <string name="btnSetVisitedOff">Снять посещение</string>
     <string name="btnEditDocument">Редактировать ревизию</string>
     <string name="yes">Да</string>
@@ -68,6 +68,10 @@
     <string name="docsConnectionStringNotSet">Не указана строка соединения для получения списка документов!</string>
     <string name="itemsConnectionParametersNotSet">Нет параметров для получения содержимого документов!</string>
     <string name="itemsConnectionStringNotSet">Не указана строка соединения для получения содержимого документов!</string>
+
+    <!-- Строки подключения -->
+    <string name="docsConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
+    <string name="itemsConnectionString">http://express.nsk.ru:9999/eritems.php</string>
 
     <!-- Для отображения количества -->
     <string name="quantityFormatPattern">###,###.##</string>

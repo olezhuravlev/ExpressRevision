@@ -29,6 +29,9 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 	private static final int DIALOG_DEMOMODE_ONOFF_ID = 1;
 
+	private static final int DOCS_EDITTEXT_ID = 0;
+	private static final int ITEMS_EDITTEXT_ID = 1;
+
 	private static final String DIALOG_TITLE_FIELD_NAME = "title";
 	private static final String DIALOG_MESSAGE_FIELD_NAME = "message";
 
@@ -36,20 +39,42 @@ public class PreferencesActivity extends PreferenceActivity implements
 	private static final String CONNECTION_STRING_ITEMS_PREFS_ID = "connectionStringItems";
 	private static final String DEMO_MODE_PREFS_ID = "demoModePrefs";
 
-	private EditTextPreference connectionStringDocs;
-	private EditTextPreference connectionStringItems;
-	private CheckBoxPreference demoModePrefs;
-
-	// Элемент, над которым производится жест.
-	private EditText currentEditText;
-
-	// Ширина элемента, над которым производится жест.
-	int currentEditText_Width;
-
-	private EditText connectionStringDocs_EditText;
-	private EditText connectionStringItems_EditText;
+	private CheckBoxPreference demoModePref;
 
 	private GestureDetector gDetector;
+
+	/**
+	 * Доля от ширины ЭУ, над которым производится жест, достаточная для
+	 * детектирования этого жеста.
+	 */
+	private static final int DIVIDER = 4;
+
+	/**
+	 * Счетчик жестов, по достижении которого происходит событие.
+	 */
+	private final int GESTURE_COUNT_ENOUGH = 5;
+
+	private EditTextPreference connectionStringDocsPref;
+	private EditText connectionStringDocsPref_EditText;
+
+	private EditTextPreference connectionStringItemsPref;
+	private EditText connectionStringItemsPref_EditText;
+
+	/**
+	 * ИД элемента, над которым производится жест.
+	 */
+	private int currentEditText_Id;
+
+	/**
+	 * Ширина движения, достаточная для детектирования жеста.
+	 */
+	private int valuableGestureWidth;
+
+	private int gCounter;
+
+	private float prevDistanceX;
+	private float lastTurnPoint_1;
+	private float lastTurnPoint_2;
 
 	private static int red, green, blue;
 
@@ -61,8 +86,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.preference);
 
-		currentEditText = null;
-		currentEditText_Width = 0;
+		resetStates();
 
 		red = 255;
 		green = 255;
@@ -100,34 +124,62 @@ public class PreferencesActivity extends PreferenceActivity implements
 		gDetector = new GestureDetector(this, new SimpleOnGestureListener() {
 
 			@Override
-			public boolean onFling(MotionEvent e1, MotionEvent e2,
-					float velocityX, float velocityY) {
+			public boolean onDown(MotionEvent e) {
 
-				int gestureWidth = Math.abs((int) (e2.getX() - e1.getX()));
-				int significantMove = currentEditText_Width / 4;
+				// Если пользователь поднял палец, то все состояния жестов
+				// сбрасываются.
+				resetStates();
 
-				if (significantMove > 0 && gestureWidth >= significantMove
-						&& Math.abs(velocityX) > Math.abs(velocityY)) {
+				return false;
+			}
 
-					green -= 40;
-					if (green < 0)
-						green = 0;
+			// Детектор жеста, когда пользователь потер пальцем экран.
+			@Override
+			public boolean onScroll(MotionEvent e1, MotionEvent e2,
+					float distanceX, float distanceY) {
 
-					blue -= 40;
-					if (blue < 0)
-						blue = 0;
+				// Если текущая дистанция поменяла знак, значит предыдущая точка
+				// является поворотной.
+				if ((prevDistanceX < 0 && distanceX > 0)
+						|| (prevDistanceX > 0 && distanceX < 0)) {
 
-					if (currentEditText != null) {
-						currentEditText.setBackgroundColor(Color.rgb(red,
-								green, blue));
-					}
+					lastTurnPoint_1 = lastTurnPoint_2;
+					lastTurnPoint_2 = e2.getX();
 
-					if (green == 0 && blue == 0) {
-						// Установка целевого значения.
-						String txt = "Ready!";
-						currentEditText.setText(txt);
+					// Если присутствуют две поворотные точки и расстояние по X
+					// между ними превышает значимое расстояние, то считается,
+					// что пользователь сдвинул палец достаточно, чтобы
+					// зафиксировать жест.
+					if (lastTurnPoint_1 != lastTurnPoint_2) {
+
+						float distance = Math.abs(lastTurnPoint_1
+								- lastTurnPoint_2);
+
+
+						if (distance > valuableGestureWidth) {
+							++gCounter;
+						}
+
+						// Если счетчик превысил требуемое количество жестов, то
+						// можно выполнить целевое действие.
+						if (gCounter > GESTURE_COUNT_ENOUGH) {
+
+							switch (currentEditText_Id) {
+							case DOCS_EDITTEXT_ID:
+								connectionStringDocsPref_EditText
+										.setText(getString(R.string.docsConnectionString));
+							case ITEMS_EDITTEXT_ID:
+								connectionStringItemsPref_EditText
+										.setText(getString(R.string.itemsConnectionString));
+							}
+
+							resetStates();
+						}
 					}
 				}
+
+				prevDistanceX = distanceX;
+
 
 				return false;
 			}
@@ -139,19 +191,49 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 		// Установка детектора жестов для настройки источника получения списка
 		// документов.
-		connectionStringDocs = (EditTextPreference) findPreference(CONNECTION_STRING_DOCS_PREFS_ID);
-		connectionStringDocs_EditText = connectionStringDocs.getEditText();
-		connectionStringDocs_EditText.setOnTouchListener(gListener);
+		connectionStringDocsPref = (EditTextPreference) findPreference(CONNECTION_STRING_DOCS_PREFS_ID);
+		connectionStringDocsPref_EditText = connectionStringDocsPref
+				.getEditText();
+		connectionStringDocsPref_EditText.setId(DOCS_EDITTEXT_ID);
+		connectionStringDocsPref_EditText
+				.setOnTouchListener(new OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+
+						currentEditText_Id = v.getId();
+						valuableGestureWidth = v.getWidth() / DIVIDER;
+
+						gDetector.onTouchEvent(event);
+
+						return false;
+					}
+				});
 
 		// Установка детектора жестов для настройки источника получения
 		// содержимого документа.
-		connectionStringItems = (EditTextPreference) findPreference(CONNECTION_STRING_ITEMS_PREFS_ID);
-		connectionStringItems_EditText = connectionStringItems.getEditText();
-		connectionStringItems_EditText.setOnTouchListener(gListener);
+		connectionStringItemsPref = (EditTextPreference) findPreference(CONNECTION_STRING_ITEMS_PREFS_ID);
+		connectionStringItemsPref_EditText = connectionStringItemsPref
+				.getEditText();
+		connectionStringItemsPref_EditText.setId(ITEMS_EDITTEXT_ID);
+		connectionStringItemsPref_EditText
+				.setOnTouchListener(new OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+
+						currentEditText_Id = v.getId();
+						valuableGestureWidth = v.getWidth() / DIVIDER;
+
+						gDetector.onTouchEvent(event);
+
+						return false;
+					}
+				});
 
 		// Вызов подтверждения при изменении флажка демо-режима.
-		demoModePrefs = (CheckBoxPreference) findPreference(DEMO_MODE_PREFS_ID);
-		demoModePrefs
+		demoModePref = (CheckBoxPreference) findPreference(DEMO_MODE_PREFS_ID);
+		demoModePref
 				.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
 
 					@Override
@@ -249,7 +331,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 		// Установка флага.
 		Main.setDemoMode(this, true);
 
-		demoModePrefs.setChecked(true);
+		demoModePref.setChecked(true);
 
 		Main.setStyle(this);
 	}
@@ -272,7 +354,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 		// Установка флага.
 		Main.setDemoMode(this, false);
 
-		demoModePrefs.setChecked(false);
+		demoModePref.setChecked(false);
 
 		Main.setStyle(this);
 	}
@@ -294,5 +376,21 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 			break;
 		}
+	}
+
+	/**
+	 * Сброс состояний детектора жестов.
+	 */
+	private void resetStates() {
+
+		currentEditText_Id = 0;
+
+		valuableGestureWidth = 0;
+
+		gCounter = 0;
+
+		prevDistanceX = 0f;
+		lastTurnPoint_1 = 0f;
+		lastTurnPoint_2 = 0f;
 	}
 }
