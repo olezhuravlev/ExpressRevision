@@ -14,13 +14,17 @@
 
     <string name="app_name">Экспресс-Ревизия</string>
     <string name="settings_title">Настройки</string>
-    <string name="demoMode_off">Выключить демо-режим</string>
+
+    <!--
     <string name="demoMode_on">Включить демо-режим</string>
+    <string name="demoMode_off">Отключить демо-режим</string>
+    -->
+
     <string name="demoMode">Демо-режим</string>
     <string name="demoMode_Summary">Обучающий режим работы, не требующий подключения к источникам данных.</string>
     <string name="setDuplicatesAsVisited">Отмечать дубликаты как посещенные</string>
     <string name="setDuplicatesAsVisited_Summary">Все повторяющиеся в списке номенклатуры элементы будут отмечены как посещенные, если посетить хотя бы один из них.</string>
-    <string name="btnLoadDocument">Загрузить ревизию</string>
+    <string name="btnLoadDocument">Загрузить список ревизий</string>
     <string name="btnSetVisitedOff">Снять посещение</string>
     <string name="btnEditDocument">Редактировать ревизию</string>
     <string name="yes">Да</string>
@@ -29,24 +33,29 @@
     <string name="cancel">Отмена</string>
     <string name="demoModeOnConfirmation">Включить демо-режим?</string>
     <string name="demoModeOnWarning">Внимание!\nВсе данные текущей ревизии будут уничтожены!\nПродолжить?</string>
-    <string name="demoModeOffConfirmation">Выключить демо-режим?</string>
+    <string name="demoModeOffConfirmation">Отключить демо-режим?</string>
     <string name="demoModeOffWarning">"Внимание!\nВсе демо-данные будут уничтожены!\nПродолжить?"</string>
     <string name="resreshList">"Обновить список"</string>
     <string name="loadDocuments">"Обновить список ревизий"</string>
+    <string name="loadDocument">Загрузить ревизию</string>
     <string name="addDocument">Добавить ревизию</string>
     <string name="loading">Загрузка</string>
-    <string name="loadingDocuments">Загрузка ревизий</string>
+    <string name="loadingDocuments">Загрузка списка ревизий</string>
     <string name="loadingItems">Загрузка номенклатуры</string>
+    <string name="loadingCancelled">Загрузка отменена</string>
+    <string name="loadingUnsuccessful">Загрузка не удалась!</string>
     <string name="pleaseWait">Пожалуйста, подождите...</string>
     <string name="refreshDocListOnOpening">Интервал обновления списка ревизий</string>
     <string name="refreshDocListOnOpening_Summary">Установка времени, по истечении которого полученный список ревизий считается устаревшим и требуется получить новый.</string>
+    <string name="itemsListLoadedNumberOfUsingThreads">Потоков загрузки</string>
+    <string name="itemsListLoadedNumberOfUsingThreads_Summary">Количество потоков, используемых для загрузки номенклатуры.</string>
     <string name="dataExchangePrefs">Настройки обмена данных</string>
     <string name="userPrefs">Пользовательские настройки</string>
     <string name="displayOrientation">Ориентация экрана</string>
     <string name="connectPrefs">Настройки подключения</string>
     <string name="connectionStringDocs">Получение списка документов</string>
     <string name="connectionStringItems">Получение содержимого документов</string>
-    <string name="rowsInDataBundle">Строк в пакете данных</string>
+    <string name="rowsInDataParcel">Строк в пакете данных</string>
     <string name="clearTables">Очистить данные</string>
     <string name="tablesCleared">Данные очищены!</string>
     <string name="docsTableNotCleared">Список ревизий не очищен!</string>
@@ -54,10 +63,11 @@
     <string name="dataCleaning">Очистка данных</string>
     <string name="dataCleaningQuestion">Удалить данные ревизии?</string>
     <string name="documentIsntLoaded">Ревизия не загружена!</string>
-    <string name="rows">Cтрок</string>
-    <string name="rowsDeleted">Cтрок</string>
-    <string name="documentLoaded">Ревизия загружена.</string>
-    <string name="rowsLoaded">Строк</string>
+    <string name="rows">Cтрок:</string>
+    <string name="rowsDeleted">Cтрок удалено:</string>
+    <string name="documentLoaded">Ревизия загружена</string>
+    <string name="docLoadedButCantSetRevisionStatus">Статус документа установить не удалось!</string>
+    <string name="rowsLoaded">Строк загружено:</string>
     <string name="percent">%</string>
     <string name="enterFilterString">Строка для поиска...</string>
     <string name="networkNotAvailable">Отсутствует подключение к сети!</string>
@@ -77,5 +87,8 @@
     <string name="quantityFormatPattern">###,###.##</string>
     <string name="quantityDecimalSeparator">.</string>
     <string name="quantityGroupingSeparator">\'</string>
+
+    <!-- Признак, выставляемый документу после успешной загрузки на устройство -->
+    <string name="itemsLoadingSuccessfulStatus">2</string>
 
 </resources>

@@ -73,8 +73,8 @@ public class DocsListAdapter extends ResourceCursorAdapter {
 		numberTextView.setText(docNum);
 		dateTextView.setText(dateFormatter.format(docDate));
 		commentTextView.setText(docComment);
-		rowsTextView.setText(mContext.getString(R.string.rows).concat(": ")
-				.concat(String.valueOf(docRows)));
+		rowsTextView.setText(mContext.getString(R.string.rows).concat(
+				String.valueOf(docRows)));
 
 		storeTextView.setText(storeDescr);
 	}

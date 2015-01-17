@@ -105,9 +105,11 @@ public class DocsListLoader extends FragmentActivity implements
 		public void handleMessage(android.os.Message msg) {
 
 			// Установка значения прогресса.
-			wrActivity.get().pDialog.setProgress(msg.what);
+			wrActivity.get().pDialog.setIndeterminate(msg.arg2 == 0 ? false
+					: true);
+			wrActivity.get().pDialog.setIncrementMode(false);
 			wrActivity.get().pDialog.setMax(msg.arg1);
-			wrActivity.get().pDialog.setIndeterminate(msg.arg2);
+			wrActivity.get().pDialog.setProgress(msg.what);
 
 			return;
 		}
@@ -421,8 +423,6 @@ public class DocsListLoader extends FragmentActivity implements
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
-					// Toast.makeText(context, e.toString(), Toast.LENGTH_LONG)
-					// .show();
 				}
 			} // if (Main.isDemoMode()) {
 

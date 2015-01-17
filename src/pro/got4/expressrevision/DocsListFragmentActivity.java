@@ -146,7 +146,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		MenuItem menuItem;
 		menuItem = menu.add(0, CONTEXTMENU_LOAD_BUTTON_ID, 0,
-				R.string.btnLoadDocument);
+				R.string.loadDocument);
 		menuItem.setCheckable(true);
 		menuItem.setChecked(true);
 
@@ -166,12 +166,16 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 			int numIdx = cursor.getColumnIndex(DBase.FIELD_DOC_NUM_NAME);
 			int dateIdx = cursor.getColumnIndex(DBase.FIELD_DOC_DATE_NAME);
+			int rowsIdx = cursor.getColumnIndex(DBase.FIELD_DOC_ROWS_NAME);
+
 			String docNum = cursor.getString(numIdx);
 			String docDate = cursor.getString(dateIdx);
+			int rows = cursor.getInt(rowsIdx);
 
 			setResult(CONTEXTMENU_LOAD_BUTTON_ID,
 					new Intent().putExtra(DBase.FIELD_DOC_NUM_NAME, docNum)
-							.putExtra(DBase.FIELD_DOC_DATE_NAME, docDate));
+							.putExtra(DBase.FIELD_DOC_DATE_NAME, docDate)
+							.putExtra(DBase.FIELD_DOC_ROWS_NAME, rows));
 
 			finish();
 

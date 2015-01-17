@@ -1,11 +1,26 @@
 package pro.got4.expressrevision;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.http.protocol.HTTP;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
 import pro.got4.expressrevision.ItemsListAdapter.OnItemButtonClickListener;
 import pro.got4.expressrevision.dialogs.NumberInputDialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
@@ -13,8 +28,11 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.telephony.TelephonyManager;
 import android.text.Editable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -126,7 +144,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			intent.putExtras(getIntent());
 
 			// «апуск загрузки строк.
-			startActivityForResult(intent, ItemsListLoader.ITEMSLIST_LOADER_ID);
+			startActivityForResult(intent, ItemsListLoader.ITEMSLISTLOADER_ID);
 
 			// „тобы обновить список.
 			getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
@@ -252,8 +270,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		public Cursor loadInBackground() {
 
 			String filter = parentalActivity.getFilter();
-			// Message.show("loadInBackground(), filter = " + filter);
-			// Cursor cursor = db.getAllRows(DBase.TABLE_ITEMS_NAME);
 			Cursor cursor = db.getRowsFilteredLike(DBase.TABLE_ITEMS_NAME,
 					filter);
 			return cursor;
@@ -270,7 +286,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		switch (requestCode) {
 
-		case ItemsListLoader.ITEMSLIST_LOADER_ID:
+		case ItemsListLoader.ITEMSLISTLOADER_ID:
 
 			switch (resultCode) {
 			case RESULT_CANCELED: {
@@ -284,21 +300,99 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				DBase dBase = new DBase(this);
 				dBase.open();
 				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
-				String message = getString(R.string.documentIsntLoaded) + "\n"
-						+ getString(R.string.rowsDeleted) + ": " + rowsDeleted;
 
-				Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+				String message1 = getString(R.string.loadingCancelled);
+				String message2 = message1 + "\n"
+						+ getString(R.string.rowsDeleted) + rowsDeleted;
 
+				SpannableString coloredText = new SpannableString(message2);
+				coloredText.setSpan(new ForegroundColorSpan(Color.YELLOW), 0,
+						message1.length(), 0);
+
+				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 			}
+
+				break;
 
 			case RESULT_OK: {
 
 				DBase dBase = new DBase(this);
 				dBase.open();
 				long rowsLoaded = dBase.getRowsCount(DBase.TABLE_ITEMS_NAME);
-				String message = getString(R.string.documentLoaded) + "\n"
-						+ getString(R.string.rowsLoaded) + ": " + rowsLoaded;
-				Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+
+				// —верка количества загруженных строк с тем количеством,
+				// которое указано дл€ загружаемого документа.
+				int assignedRows = getIntent().getExtras().getInt(
+						DBase.FIELD_DOC_ROWS_NAME);
+
+				SpannableString coloredText = null;
+				String message1;
+				String message2;
+				String message3;
+				if (rowsLoaded == assignedRows) {
+
+					// ≈сли загружено именно то количество строк, которое и
+					// требуетс€, то следует установить статус документа, как
+					// полученного на мобильном устройстве.
+					Bundle extras = getIntent().getExtras();
+					String connectionString = getString(R.string.docsConnectionString);
+					String docNum = extras.getString(DBase.FIELD_DOC_NUM_NAME);
+					String docDateString = extras
+							.getString(DBase.FIELD_DOC_DATE_NAME);
+					Long docDate = Long.valueOf(docDateString);
+
+					String statusString = getString(R.string.itemsLoadingSuccessfulStatus);
+					int status = Integer.parseInt(statusString);
+					boolean statusSuccess = setStatus(connectionString, docNum,
+							docDate, status);
+
+					if (statusSuccess == true) {
+
+						message1 = getString(R.string.documentLoaded);
+						message2 = message1 + "\n"
+								+ getString(R.string.rowsLoaded) + rowsLoaded;
+
+						coloredText = new SpannableString(message2);
+						coloredText.setSpan(
+								new ForegroundColorSpan(Color.GREEN), 0,
+								message1.length(), 0);
+
+					} else {
+
+						// «агрузка документа удалась, но статус документу
+						// установить не получилось.
+						// ¬се загруженные строки удал€ютс€, как при неудачной
+						// загрузке.
+						int rowsDeleted = dBase
+								.clearTable(DBase.TABLE_ITEMS_NAME);
+
+						message1 = getString(R.string.docLoadedButCantSetRevisionStatus);
+						message2 = message1 + "\n"
+								+ getString(R.string.rowsDeleted) + rowsDeleted;
+
+						coloredText = new SpannableString(message2);
+						coloredText.setSpan(new ForegroundColorSpan(Color.RED),
+								0, message1.length(), 0);
+					}
+
+				} else {
+
+					int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
+
+					message1 = getString(R.string.loadingUnsuccessful);
+
+					message2 = message1 + "\n"
+							+ getString(R.string.rowsDeleted) + rowsDeleted;
+
+					coloredText = new SpannableString(message2);
+					coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
+							message1.length(), 0);
+
+				}
+
+				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
+
+				break;
 			}
 
 			}
@@ -311,23 +405,14 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void beforeTextChanged(CharSequence s, int start, int count,
 			int after) {
-		// Message.show("beforeTextChanged(), CharSequence = " + s +
-		// ", start = "
-		// + start + ", count = " + count);
 	}
 
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		// Message.show("onTextChanged(), CharSequence = " + s + ", start = "
-		// + start + ", before = " + before + ", count = " + count);
 	}
 
 	@Override
 	public void afterTextChanged(Editable s) {
-
-		// String filter = itemsFilterEditText.getText().toString();
-		// Message.show("afterTextChanged(), filter ==" + filter);
-
 		// „тобы обновить список.
 		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
 	}
@@ -474,40 +559,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			// 2. ”становка признака посещенности во все дубликаты выбранной
 			// строки.
 			int rowsAffectedVisited = setVisitedAttribute(row_id, 1);
-			// Cursor cursor = db.getItemRowById(row_id);
-			//
-			// int itemCode_Idx = cursor
-			// .getColumnIndex(DBase.FIELD_ITEM_CODE_NAME);
-			// int itemUseSpecif_Idx = cursor
-			// .getColumnIndex(DBase.FIELD_ITEM_USE_SPECIF_NAME);
-			//
-			// String itemCode = cursor.getString(itemCode_Idx);
-			// int itemUseSpecif = cursor.getInt(itemUseSpecif_Idx);
-			// if (itemUseSpecif == 0) {
-			//
-			// // ’арактеристика не используетс€, подбор дубликатов
-			// // производитс€ без учета характеристик.
-			// whereClause = DBase.FIELD_ITEM_CODE_NAME + " = ?";
-			// whereArgs = new String[] { itemCode };
-			//
-			// } else {
-			//
-			// // ’арактеристика используетс€ при подборе дубликатов.
-			// int specifCode_Idx = cursor
-			// .getColumnIndex(DBase.FIELD_SPECIF_CODE_NAME);
-			// String specifCode = cursor.getString(specifCode_Idx);
-			//
-			// whereClause = DBase.FIELD_ITEM_CODE_NAME + " = ? AND "
-			// + DBase.FIELD_SPECIF_CODE_NAME + " = ?";
-			// whereArgs = new String[] { itemCode, specifCode };
-			//
-			// }
-			//
-			// ContentValues valuesVisited = new ContentValues();
-			// valuesVisited.put(DBase.FIELD_ITEM_VISITED_NAME, 1);
-			// int rowsAffectedVisited = db.update(DBase.TABLE_ITEMS_NAME,
-			// valuesVisited, whereClause, whereArgs);
-
 			rowsAffected = Math.max(rowsAffectedQuantity, rowsAffectedVisited);
 
 		} else {
@@ -577,5 +628,53 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				whereClause, whereArgs);
 
 		return rowsAffected;
+	}
+
+	private boolean setStatus(String connectionString, String docNum,
+			Long docDate, int status) {
+
+		// —трока имеет вид:
+		// http://express.nsk.ru:9999/erdocs.php?deviceid=12345&docdate=20150105162307&docnum=%27%D0%AD%D0%9A%D0%A100000008%27&status=1
+
+		// ѕолучение идентификатора устройства.
+		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		String deviceId = tm.getDeviceId();
+		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMddHHmmss",
+				Locale.getDefault());
+		String dateURIFormattedString = dateFormatter.format(docDate);
+
+		String docQuery = "?deviceid=" + deviceId + "&docdate="
+				+ dateURIFormattedString + "&docnum='";
+		String statusQuery = "&status=" + status;
+
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+
+		// Ќепосредственно момент загрузки через сеть.
+		DocumentBuilder dBuilder;
+		Document domDoc;
+		try {
+
+			// ¬ номере документа может содержатьс€ кириллица, поэтому
+			// необходимо преобразование.
+			docQuery = docQuery + URLEncoder.encode(docNum, HTTP.UTF_8) + "'";
+			String uriString = connectionString + docQuery + statusQuery;
+
+			dBuilder = dbFactory.newDocumentBuilder();
+			domDoc = dBuilder.parse(uriString);
+			domDoc.getDocumentElement().normalize();
+
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
 	}
 }

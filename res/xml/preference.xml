@@ -15,10 +15,17 @@
                 android:key="connectionStringItems"
                 android:title="@string/connectionStringItems" />
             <EditTextPreference
-                android:defaultValue="100"
+                android:defaultValue="500"
                 android:inputType="number"
-                android:key="rowsInDataBundle"
-                android:title="@string/rowsInDataBundle" />
+                android:key="rowsInDataParcel"
+                android:title="@string/rowsInDataParcel" />
+            <EditTextPreference
+                android:defaultValue="1"
+                android:enabled="false"
+                android:inputType="number"
+                android:key="itemsListLoadedNumberOfUsingThreads"
+                android:summary="@string/itemsListLoadedNumberOfUsingThreads_Summary"
+                android:title="@string/itemsListLoadedNumberOfUsingThreads" />
         </PreferenceScreen>
 
         <EditTextPreference

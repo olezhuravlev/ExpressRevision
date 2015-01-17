@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.protocol.HTTP;
 import org.w3c.dom.Document;
@@ -21,15 +22,16 @@ import pro.got4.expressrevision.dialogs.ProgressDialogFragment.DialogListener;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.telephony.TelephonyManager;
+import android.util.SparseArray;
 import android.widget.Toast;
 
 /**
@@ -41,29 +43,28 @@ import android.widget.Toast;
 public class ItemsListLoader extends FragmentActivity implements
 		LoaderCallbacks<Void>, DialogListener {
 
-	public static final int ITEMSLIST_LOADER_ID = 1;
+	private static final int DEMO_MODE_SLEEP_TIME = 50;
+
+	public static final int ITEMSLISTLOADER_ID = 1;
 	public static final String ITEMSLIST_LOADER_TAG = "itemslistloaderfragmentactivity_tag";
 
-	private static final String FIELD_ROWSCOUNTER_NAME = "rowsCounter";
-	private static final String FIELD_ROWSTOTAL_NAME = "rowsTotal";
+	public static final String NUMBER_OF_TREADS_FIELD_NAME = "itemsListLoadedNumberOfUsingThreads";
+
+	private static final String FIELD_DOC_LOADED_ROWS_TOTAL_NAME = "docRowsTotal";
+	private static final String FIELD_DOC_ROWS_TOTAL_NAME = "docLoadedRowsTotal";
+
+	private static final String FIELD_DOC_NUM_NAME = "docNum";
+	private static final String FIELD_DOC_DATE_NAME = "docDate";
+	private static final String FIELD_CONNECTION_STRING_NAME = "connectionString";
+
+	private static final String FIELD_FIRST_LOADED_ROW_NUM_NAME = "firstRow";
+	private static final String FIELD_LAST_LOADED_ROW_NUM_NAME = "lastRow";
+	private static final String FIELD_ROWS_IN_EACH_PARCEL_NAME = "rowsInDataParcel";
 
 	public static final int BUTTON_BACK_ID = 1;
 
-	private ProgressDialogFragment pDialog; // Используется в хэндлере.
-
-	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
-
-	private static final int DEMO_MODE_SLEEP_TIME = 50;
-
 	// Имя поля, которое в экстрах хранится строка соединения.
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringItems";
-
-	private static String connectionString;
-	private static Long docDate = Long.valueOf(0);
-	private static String docNum = "";
-
-	private static int rowsCounter;
-	private static int rowsTotal;
 
 	// Поля XML-парсера.
 	private static final String DOC_TAG_NAME = "doc";
@@ -99,6 +100,25 @@ public class ItemsListLoader extends FragmentActivity implements
 	// хэндлера не делать статическим).
 	private static WeakReference<ItemsListLoader> WEAK_REF_ACTIVITY;
 
+	// //////////////////////////////////////////////////////////////////////
+	// НЕСТАТИЧЕСКИЕ ПОЛЯ, значения которых подлежат восстановлению при
+	// реконфигурации активности.
+	//
+	private ProgressDialogFragment pDialog; // Используется в хэндлере.
+
+	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
+
+	private String connectionString;
+	private Long docDate = Long.valueOf(0);
+	private String docNum = "";
+	private int docRowsTotal = 0;
+
+	private int docLoadedRowsTotal = 0; // Количество загруженных строк по всем
+										// загрузчикам.
+
+	private int threadsNumber = 0;
+	private int maxRowsInParcel = 0;
+
 	// /////////////////////////////////////////////////////
 	// Хэндлер.
 	// /////////////////////////////////////////////////////
@@ -111,8 +131,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		private WeakReference<ItemsListLoader> wrActivity;
 
 		public ProgressHandler(WeakReference<ItemsListLoader> wrActivity) {
-
-			// Message.show(this);
 
 			this.wrActivity = wrActivity;
 		}
@@ -131,19 +149,15 @@ public class ItemsListLoader extends FragmentActivity implements
 		public void handleMessage(android.os.Message msg) {
 
 			// Установка значения прогресса.
-			wrActivity.get().pDialog.setProgress(msg.what);
+			wrActivity.get().pDialog.setIndeterminate(msg.arg2 == 0 ? false
+					: true);
+			wrActivity.get().pDialog.setIncrementMode(true);
 			wrActivity.get().pDialog.setMax(msg.arg1);
-			wrActivity.get().pDialog.setIndeterminate(msg.arg2);
+			wrActivity.get().pDialog.setProgress(msg.what);
 
 			return;
 		}
 	};
-
-	public ItemsListLoader() {
-
-		rowsCounter = 0;
-		rowsTotal = 0;
-	}
 
 	/** Called when the activity is first created. */
 	@Override
@@ -169,9 +183,12 @@ public class ItemsListLoader extends FragmentActivity implements
 			}
 
 			docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
+
 			String docDateString = (String) extras
 					.get(DBase.FIELD_DOC_DATE_NAME);
 			docDate = Long.valueOf(docDateString);
+
+			docRowsTotal = (Integer) extras.get(DBase.FIELD_DOC_ROWS_NAME);
 		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<ItemsListLoader>(this);
@@ -191,12 +208,49 @@ public class ItemsListLoader extends FragmentActivity implements
 		}
 
 		if (savedInstanceState != null) {
-
-			rowsCounter = savedInstanceState.getInt(FIELD_ROWSCOUNTER_NAME, 0);
-			rowsTotal = savedInstanceState.getInt(FIELD_ROWSTOTAL_NAME, 0);
+			docLoadedRowsTotal = savedInstanceState.getInt(
+					FIELD_DOC_ROWS_TOTAL_NAME, 0);
 		}
 
-		getSupportLoaderManager().initLoader(ITEMSLIST_LOADER_ID, null, this);
+		if (Main.isDemoMode()) {
+
+			// В демо-режиме достаточно одного потока.
+			threadsNumber = 1;
+
+		} else {
+
+			threadsNumber = Integer.valueOf(PreferenceManager
+					.getDefaultSharedPreferences(this).getString(
+							NUMBER_OF_TREADS_FIELD_NAME, "1"));
+		}
+
+		// Максимальное количество строк в загружаемом пакете.
+		maxRowsInParcel = Integer.valueOf(PreferenceManager
+				.getDefaultSharedPreferences(this).getString(
+						FIELD_ROWS_IN_EACH_PARCEL_NAME, "100"));
+
+		SparseArray<int[]> spArr = sliceInterval(docRowsTotal, threadsNumber,
+				maxRowsInParcel);
+		for (int i = 0; i < spArr.size(); i++) {
+
+			// Каждый загрузчик получает набор параметров:
+			// - номер первой строки документа, которую он должен загрузить.
+			// - номер последней строки документа, которую он должен загрузить.
+			// - желательное количество строк в одном загружаемом пакете.
+			Bundle loaderArgs = new Bundle();
+			loaderArgs.putString(FIELD_DOC_NUM_NAME, docNum);
+			loaderArgs.putLong(FIELD_DOC_DATE_NAME, docDate);
+			loaderArgs
+					.putString(FIELD_CONNECTION_STRING_NAME, connectionString);
+
+			loaderArgs.putInt(FIELD_FIRST_LOADED_ROW_NUM_NAME,
+					spArr.get(i)[0] + 1);
+			loaderArgs.putInt(FIELD_LAST_LOADED_ROW_NUM_NAME,
+					spArr.get(i)[1] + 1);
+			loaderArgs.putInt(FIELD_ROWS_IN_EACH_PARCEL_NAME, maxRowsInParcel);
+
+			getSupportLoaderManager().initLoader(i, loaderArgs, this);
+		}
 	}
 
 	@Override
@@ -219,9 +273,9 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		progressHandler = null;
 
-		// Если загружены не все строки, то результат -1.
+		// Если загружены не все строки, то результат 0.
 		// Если всё, то 1.
-		if (rowsCounter == rowsTotal) {
+		if (docRowsTotal == docLoadedRowsTotal) {
 			setResult(RESULT_OK);
 		} else {
 			setResult(RESULT_CANCELED);
@@ -233,8 +287,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		super.onSaveInstanceState(outState);
 
-		outState.putInt(FIELD_ROWSTOTAL_NAME, rowsTotal);
-		outState.putInt(FIELD_ROWSCOUNTER_NAME, rowsCounter);
+		outState.putInt(FIELD_DOC_LOADED_ROWS_TOTAL_NAME, docLoadedRowsTotal);
 	}
 
 	// /////////////////////////////////////////////////////
@@ -242,9 +295,9 @@ public class ItemsListLoader extends FragmentActivity implements
 	// /////////////////////////////////////////////////////
 
 	@Override
-	public Loader<Void> onCreateLoader(int id, Bundle bndl) {
+	public Loader<Void> onCreateLoader(int id, Bundle args) {
 
-		Loader<Void> ldr = new ItemsAsyncTaskLoader(this);
+		Loader<Void> ldr = new ItemsAsyncTaskLoader(this, args);
 
 		return ldr;
 	}
@@ -253,7 +306,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	public void onLoadFinished(Loader<Void> loader, Void data) {
 
 		setResult(RESULT_OK);
-		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ITEMSLISTLOADER_ID, BUTTON_BACK_ID);
 
 	}
 
@@ -261,7 +314,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	public void onLoaderReset(Loader<Void> loader) {
 
 		setResult(RESULT_CANCELED);
-		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ITEMSLISTLOADER_ID, BUTTON_BACK_ID);
 
 	}
 
@@ -276,9 +329,43 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		private DBase dBase;
 
-		public ItemsAsyncTaskLoader(Context context) {
+		private String docNum;
+		private Long docDate;
+		private String connectionString;
+
+		// Интервалы строк к получению.
+		SparseArray<int[]> spArr;
+
+		public ItemsAsyncTaskLoader(Context context, Bundle args) {
 
 			super(context);
+
+			if (args != null) {
+
+				docNum = args.getString(FIELD_DOC_NUM_NAME);
+				docDate = args.getLong(FIELD_DOC_DATE_NAME);
+				connectionString = args.getString(FIELD_CONNECTION_STRING_NAME);
+
+				int firstLoadersRowNumber = args
+						.getInt(FIELD_FIRST_LOADED_ROW_NUM_NAME);
+				int lastLoadersRowNumber = args
+						.getInt(FIELD_LAST_LOADED_ROW_NUM_NAME);
+				int maxRowsInParcel = args
+						.getInt(FIELD_ROWS_IN_EACH_PARCEL_NAME);
+
+				// Количество строк к получению в данном загрузчике.
+				int rowsTotal = lastLoadersRowNumber - firstLoadersRowNumber
+						+ 1;
+
+				// Количество запросов, необходимых для получения требуемого
+				// количества строк (с округлением вверх).
+				int queries = (int) Math.ceil((double) rowsTotal
+						/ maxRowsInParcel);
+
+				// Исходя из полученного интервала строк и количества строк в
+				// пакете производится разбивка строк по пакетам.
+				spArr = sliceInterval(rowsTotal, queries, maxRowsInParcel);
+			}
 
 			this.context = context;
 		}
@@ -300,10 +387,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		@Override
 		public Void loadInBackground() {
 
-			// Неопределенный режим индикатора.
-			// setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(), 0, 0,
-			// 1);
-
 			if (Main.isDemoMode()) {
 
 				String docDateString = dateFormatter.format(docDate);
@@ -312,25 +395,22 @@ public class ItemsListLoader extends FragmentActivity implements
 						DBase.TABLE_ITEMS_DEMO_NAME, DBase.FIELD_DOC_ID_NAME
 								+ " = ?", docId, DBase.FIELD_ROW_NUM_NAME);
 
-				// Приходится хранить значения счетчиков в родительской
-				// активности, т.к. их нужно будет проверять в событии
-				// onPause(), чтобы сделать вывод о том, полностью ли загружены
-				// данные.
-				WEAK_REF_ACTIVITY.get().setRowsCounter(0);
-				WEAK_REF_ACTIVITY.get().setRowsTotal(cursor.getCount());
-
 				cursor.moveToFirst();
 				if (cursor.isFirst()) {
 
 					if (!isStarted() || isAbandoned() || isReset())
 						return null;
 
-					WEAK_REF_ACTIVITY.get().incrementRowsCounter(1);
 					dBase.copyItemRow(DBase.TABLE_ITEMS_NAME, cursor);
 
+					int rowsLoaded = 1;
+
+					WEAK_REF_ACTIVITY.get().incrementDocLoadedRowsTotal(
+							rowsLoaded);
+
 					setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(),
-							WEAK_REF_ACTIVITY.get().getRowsCounter(),
-							WEAK_REF_ACTIVITY.get().getRowsTotal(), 0);
+							rowsLoaded, WEAK_REF_ACTIVITY.get()
+									.getDocRowsTotal(), 0);
 
 					while (cursor.moveToNext()) {
 
@@ -343,13 +423,16 @@ public class ItemsListLoader extends FragmentActivity implements
 						if (!isStarted() || isAbandoned() || isReset())
 							break;
 
-						WEAK_REF_ACTIVITY.get().incrementRowsCounter(1);
 						dBase.copyItemRow(DBase.TABLE_ITEMS_NAME, cursor);
 
+						rowsLoaded = 1;
+
+						WEAK_REF_ACTIVITY.get().incrementDocLoadedRowsTotal(
+								rowsLoaded);
+
 						setProgress(WEAK_REF_ACTIVITY.get()
-								.getProgressHandler(), WEAK_REF_ACTIVITY.get()
-								.getRowsCounter(), WEAK_REF_ACTIVITY.get()
-								.getRowsTotal(), 0);
+								.getProgressHandler(), rowsLoaded,
+								WEAK_REF_ACTIVITY.get().getDocRowsTotal(), 0);
 					}
 				}
 
@@ -363,6 +446,11 @@ public class ItemsListLoader extends FragmentActivity implements
 				String deviceId = tm.getDeviceId();
 
 				// Итоговая строка должна иметь вид:
+				// Если задано ограничение строк:
+				// http://express.nsk.ru:9999/eritems.php?deviceid=12345
+				// &docdate=20150105162307&docnum=%27%D0%AD%D0%9A%D0%A100000008%27
+				// &firstrow=1&lastrow=10
+				// Если не задано ограничение строк:
 				// http://express.nsk.ru:9999/eritems.php?deviceid=12345&docdate=20141223120310&docnum="ЭКС00000001"
 				// Дата в БД имеет вид миллисекунд с начала Юникс-эпохи,
 				// и её следует преобразовать к виду "20140101000000".
@@ -380,245 +468,41 @@ public class ItemsListLoader extends FragmentActivity implements
 					e1.printStackTrace();
 				}
 
-				String uriString = connectionString + query;
+				DocumentBuilderFactory dbFactory = DocumentBuilderFactory
+						.newInstance();
 
 				try {
 
-					DocumentBuilderFactory dbFactory = DocumentBuilderFactory
-							.newInstance();
-
 					DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-					Document domDoc = dBuilder.parse(uriString);
-					domDoc.getDocumentElement().normalize();
 
-					// Получение всех узлов документов. Т.к. за раз всегда
-					// извлекается содержимое только одного документа, то и узел
-					// всегда один.
-					NodeList docNodes = domDoc
-							.getElementsByTagName(DOC_TAG_NAME);
+					// Перебор интервалов и исполнение запроса по каждому из
+					// них.
+					for (int i = 0; i < spArr.size(); i++) {
 
-					// Извлечение номера и даты документа.
-					String docNumValue = "";
-					String docDateTimeValue = "";
+						String queryRowsInterval = "&firstrow="
+								+ (spArr.get(i)[0] + 1) + "&lastrow="
+								+ (spArr.get(i)[1] + 1);
 
-					int docsTotal = docNodes.getLength();
-					if (docsTotal > 0) {
+						String uriString = connectionString + query
+								+ queryRowsInterval;
 
-						Node docNode = docNodes.item(0);
+						// Непосредственно момент загрузки через сеть.
+						Document domDoc = dBuilder.parse(uriString);
+						domDoc.getDocumentElement().normalize();
 
-						NamedNodeMap docAttr = docNode.getAttributes();
-						Node docNumNode = docAttr
-								.getNamedItem(DOC_NUM_TAG_NAME);
-						Node docDateTimeNode = docAttr
-								.getNamedItem(DOC_DATE_TAG_NAME);
-
-						if (docNumNode != null)
-							docNumValue = docNumNode.getTextContent();
-
-						if (docDateTimeNode != null)
-							docDateTimeValue = docDateTimeNode.getTextContent();
+						// Парсинг.
+						// Получение всех узлов документов. Т.к. за раз всегда
+						// извлекается содержимое только одного документа, то и
+						// узел всегда один.
+						parseDocument(domDoc, dBase);
 					}
 
-					// Получение всех узлов строк.
-					NodeList rowNodes = domDoc
-							.getElementsByTagName(ROW_TAG_NAME);
-					rowsTotal = rowNodes.getLength();
-					rowsCounter = 0;
-
-					SQLiteDatabase sqliteDb = dBase.getSQLiteDatabase();
-
-					// Перебор всех строк.
-					for (int rowIdx = 0; rowIdx < rowsTotal; rowIdx++) {
-
-						if (!isStarted() || isAbandoned() || isReset())
-							return null;
-
-						Node rowNode = rowNodes.item(rowIdx);
-
-						// Извлечение номера строки.
-						NamedNodeMap rowAttr = rowNode.getAttributes();
-						Node rowNumNode = rowAttr
-								.getNamedItem(ROW_NUM_TAG_NAME);
-
-						String rowNumValue = rowNumNode.getTextContent();
-
-						// Извлечение содержимого строки.
-						String itemCode = ""; // Код номенклатуры.
-						String itemDescr = ""; // Наименование номенклатуры.
-						String itemDescrFull = ""; // Полное наименование
-													// номенклатуры.
-						int itemUseSpecif = 0; // Вести учет по
-												// характеристикам.
-						String specifCode = ""; // Код характеристики
-												// номенклатуры.
-						String specifDescr = ""; // Наименование характеристики
-													// номенклатуры.
-						String measurDescr = ""; // Наименование единицы
-													// измерения.
-						float price = 0; // Цена.
-						float quantAcc = 0; // Количество в учете.
-						float quant = 0; // Количество по инвентаризации.
-
-						// Перебор всех полей строки.
-						NodeList rowFields = rowNode.getChildNodes();
-						int rowFieldsTotal = rowFields.getLength();
-						for (int rowFieldIdx = 0; rowFieldIdx < rowFieldsTotal; rowFieldIdx++) {
-
-							Node rowFieldNode = rowFields.item(rowFieldIdx);
-							String rowFieldName = rowFieldNode.getNodeName();
-
-							if (rowFieldName.equals(ITEM_TAG_NAME)) {
-
-								// Получение кода номенклатуры.
-								NamedNodeMap itemAttr = rowFieldNode
-										.getAttributes();
-
-								Node itemCodeNode = itemAttr
-										.getNamedItem(ITEM_CODE_TAG_NAME);
-								itemCode = itemCodeNode.getTextContent();
-
-								// Перебор всех полей номенклатуры.
-								NodeList itemFields = rowFieldNode
-										.getChildNodes();
-								int itemFieldsTotal = itemFields.getLength();
-								for (int itemFieldIdx = 0; itemFieldIdx < itemFieldsTotal; itemFieldIdx++) {
-
-									Node itemFieldNode = itemFields
-											.item(itemFieldIdx);
-									String itemFieldName = itemFieldNode
-											.getNodeName();
-
-									if (itemFieldName
-											.equals(ITEM_DESCR_TAG_NAME)) {
-										itemDescr = itemFieldNode
-												.getTextContent();
-
-									} else if (itemFieldName
-											.equals(ITEM_DESCR_FULL_TAG_NAME)) {
-										itemDescrFull = itemFieldNode
-												.getTextContent();
-									} else if (itemFieldName
-											.equals(ITEM_USE_SPECIF_TAG_NAME)) {
-
-										String itemUseSpecifSting = itemFieldNode
-												.getTextContent();
-
-										if (itemUseSpecifSting.equals("1")) {
-											itemUseSpecif = 1;
-										} else {
-											itemUseSpecif = 0;
-										}
-									}
-								}
-
-							} else if (rowFieldName.equals(SPECIF_TAG_NAME)) {
-
-								// Получение кода характеристики номенклатуры.
-								NamedNodeMap specifAttr = rowFieldNode
-										.getAttributes();
-
-								Node specifCodeNode = specifAttr
-										.getNamedItem(SPECIF_CODE_TAG_NAME);
-								specifCode = specifCodeNode.getTextContent();
-
-								// Перебор всех полей характеристики
-								// номенклатуры.
-								NodeList specifFields = rowFieldNode
-										.getChildNodes();
-								int specifFieldsTotal = specifFields
-										.getLength();
-								for (int specifFieldIdx = 0; specifFieldIdx < specifFieldsTotal; specifFieldIdx++) {
-
-									Node specifFieldNode = specifFields
-											.item(specifFieldIdx);
-									String specifFieldName = specifFieldNode
-											.getNodeName();
-
-									if (specifFieldName
-											.equals(SPECIF_DESCR_TAG_NAME)) {
-										specifDescr = specifFieldNode
-												.getTextContent();
-									}
-								}
-
-							} else if (rowFieldName.equals(MEASUR_TAG_NAME)) {
-
-								// Перебор всех полей единицы измерения.
-								NodeList measurFields = rowFieldNode
-										.getChildNodes();
-								int measurFieldsTotal = measurFields
-										.getLength();
-								for (int measurFieldIdx = 0; measurFieldIdx < measurFieldsTotal; measurFieldIdx++) {
-
-									Node measurFieldNode = measurFields
-											.item(measurFieldIdx);
-									String measurFieldName = measurFieldNode
-											.getNodeName();
-
-									if (measurFieldName
-											.equals(MEASUR_DESCR_TAG_NAME)) {
-										measurDescr = measurFieldNode
-												.getTextContent();
-									}
-								}
-
-							} else if (rowFieldName.equals(PRICE_TAG_NAME)) {
-
-								String priceString = rowFieldNode
-										.getTextContent();
-								price = Float.parseFloat(priceString.replace(
-										",", "."));
-
-							} else if (rowFieldName.equals(QUANT_ACC_TAG_NAME)) {
-
-								String quant_accString = rowFieldNode
-										.getTextContent();
-								quantAcc = Float.parseFloat(quant_accString
-										.replace(",", "."));
-
-							} else if (rowFieldName.equals(QUANT_TAG_NAME)) {
-
-								String quantString = rowFieldNode
-										.getTextContent();
-								quant = Float.parseFloat(quantString.replace(
-										",", "."));
-							}
-						} // for (int rowFieldIdx = 0; rowFieldIdx <
-							// rowFieldsTotal; rowFieldIdx++)
-
-						ContentValues itemValues = new ContentValues();
-
-						// Идентификатор документа состоит из даты документа и
-						// его номера.
-						itemValues.put(DBase.FIELD_DOC_ID_NAME,
-								DBase.getDocId(docNumValue, docDateTimeValue));
-						itemValues.put(DBase.FIELD_ROW_NUM_NAME,
-								Integer.parseInt(rowNumValue));
-						itemValues.put(DBase.FIELD_ITEM_CODE_NAME, itemCode);
-						itemValues.put(DBase.FIELD_ITEM_DESCR_NAME, itemDescr);
-						itemValues.put(DBase.FIELD_ITEM_DESCR_FULL_NAME,
-								itemDescrFull);
-						itemValues.put(DBase.FIELD_ITEM_USE_SPECIF_NAME,
-								itemUseSpecif);
-						itemValues
-								.put(DBase.FIELD_SPECIF_CODE_NAME, specifCode);
-						itemValues.put(DBase.FIELD_SPECIF_DESCR_NAME,
-								specifDescr);
-						itemValues.put(DBase.FIELD_MEASUR_DESCR_NAME,
-								measurDescr);
-						itemValues.put(DBase.FIELD_PRICE_NAME, price);
-						itemValues.put(DBase.FIELD_QUANT_ACC_NAME, quantAcc);
-						itemValues.put(DBase.FIELD_QUANT_NAME, quant);
-
-						dBase.insert(sqliteDb, DBase.TABLE_ITEMS_NAME,
-								itemValues);
-
-						++rowsCounter;
-
-					}
+				} catch (ParserConfigurationException e) {
+					e.printStackTrace();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+
 			} // if (Main.isDemoMode()) {
 
 			mp.start();
@@ -671,14 +555,14 @@ public class ItemsListLoader extends FragmentActivity implements
 		/**
 		 * Установка состояния индикатора.
 		 */
-		private void setProgress(ProgressHandler progressHandler, int progress,
-				int max, int indeterminate) {
+		private void setProgress(ProgressHandler progressHandler,
+				int progressIncrement, int max, int indeterminate) {
 
 			// Установка состояния индикатора.
 			if (progressHandler != null) {
 
 				android.os.Message msg = new android.os.Message();
-				msg.what = progress;
+				msg.what = progressIncrement;
 				msg.arg1 = max;
 				msg.arg2 = indeterminate;
 
@@ -686,37 +570,212 @@ public class ItemsListLoader extends FragmentActivity implements
 			}
 		}
 
-		// @Override
-		// public void deliverResult(Void data) {
-		//
-		// Message.show(this);
-		//
-		// super.deliverResult(data);
-		// }
+		/**
+		 * Парсинг DOM-документа, содержащего XML с построчной его записью в БД.
+		 * 
+		 * @return количество записанных строк.
+		 */
+		private int parseDocument(Document domDoc, DBase dBase) {
 
-		// @Override
-		// public void onAbandon() {
-		//
-		// Message.show(this);
-		//
-		// super.onAbandon();
-		// }
+			// Количество строк, загруженных в данном вызове.
+			int rowsCounter = 0;
 
-		// @Override
-		// public void onContentChanged() {
-		//
-		// Message.show(this);
-		//
-		// super.onContentChanged();
-		// }
+			NodeList docNodes = domDoc.getElementsByTagName(DOC_TAG_NAME);
 
-		// @Override
-		// public void onForceLoad() {
-		//
-		// Message.show(this);
-		//
-		// super.onForceLoad();
-		// }
+			// Извлечение номера и даты документа.
+			String docNumValue = "";
+			String docDateTimeValue = "";
+
+			int docsTotal = docNodes.getLength();
+			if (docsTotal > 0) {
+
+				Node docNode = docNodes.item(0);
+
+				NamedNodeMap docAttr = docNode.getAttributes();
+				Node docNumNode = docAttr.getNamedItem(DOC_NUM_TAG_NAME);
+				Node docDateTimeNode = docAttr.getNamedItem(DOC_DATE_TAG_NAME);
+
+				if (docNumNode != null)
+					docNumValue = docNumNode.getTextContent();
+
+				if (docDateTimeNode != null)
+					docDateTimeValue = docDateTimeNode.getTextContent();
+			}
+
+			// Получение всех узлов строк.
+			NodeList rowNodes = domDoc.getElementsByTagName(ROW_TAG_NAME);
+			int rows = rowNodes.getLength();
+
+			// Перебор всех строк.
+			for (int rowIdx = 0; rowIdx < rows; rowIdx++) {
+
+				if (!isStarted() || isAbandoned() || isReset())
+					return rowsCounter;
+
+				Node rowNode = rowNodes.item(rowIdx);
+
+				// Извлечение номера строки.
+				NamedNodeMap rowAttr = rowNode.getAttributes();
+				Node rowNumNode = rowAttr.getNamedItem(ROW_NUM_TAG_NAME);
+
+				String rowNumValue = rowNumNode.getTextContent();
+
+				// Извлечение содержимого строки.
+				String itemCode = ""; // Код номенклатуры.
+				String itemDescr = ""; // Наименование номенклатуры.
+				String itemDescrFull = ""; // Полное наименование
+											// номенклатуры.
+				int itemUseSpecif = 0; // Вести учет по
+										// характеристикам.
+				String specifCode = ""; // Код характеристики
+										// номенклатуры.
+				String specifDescr = ""; // Наименование
+											// характеристики
+											// номенклатуры.
+				String measurDescr = ""; // Наименование единицы
+											// измерения.
+				float price = 0; // Цена.
+				float quantAcc = 0; // Количество в учете.
+				float quant = 0; // Количество по инвентаризации.
+
+				// Перебор всех полей строки.
+				NodeList rowFields = rowNode.getChildNodes();
+				int rowFieldsTotal = rowFields.getLength();
+				for (int rowFieldIdx = 0; rowFieldIdx < rowFieldsTotal; rowFieldIdx++) {
+
+					Node rowFieldNode = rowFields.item(rowFieldIdx);
+					String rowFieldName = rowFieldNode.getNodeName();
+
+					if (rowFieldName.equals(ITEM_TAG_NAME)) {
+
+						// Получение кода номенклатуры.
+						NamedNodeMap itemAttr = rowFieldNode.getAttributes();
+
+						Node itemCodeNode = itemAttr
+								.getNamedItem(ITEM_CODE_TAG_NAME);
+						itemCode = itemCodeNode.getTextContent();
+
+						// Перебор всех полей номенклатуры.
+						NodeList itemFields = rowFieldNode.getChildNodes();
+						int itemFieldsTotal = itemFields.getLength();
+						for (int itemFieldIdx = 0; itemFieldIdx < itemFieldsTotal; itemFieldIdx++) {
+
+							Node itemFieldNode = itemFields.item(itemFieldIdx);
+							String itemFieldName = itemFieldNode.getNodeName();
+
+							if (itemFieldName.equals(ITEM_DESCR_TAG_NAME)) {
+								itemDescr = itemFieldNode.getTextContent();
+
+							} else if (itemFieldName
+									.equals(ITEM_DESCR_FULL_TAG_NAME)) {
+								itemDescrFull = itemFieldNode.getTextContent();
+							} else if (itemFieldName
+									.equals(ITEM_USE_SPECIF_TAG_NAME)) {
+
+								String itemUseSpecifSting = itemFieldNode
+										.getTextContent();
+
+								if (itemUseSpecifSting.equals("1")) {
+									itemUseSpecif = 1;
+								} else {
+									itemUseSpecif = 0;
+								}
+							}
+						}
+
+					} else if (rowFieldName.equals(SPECIF_TAG_NAME)) {
+
+						// Получение кода характеристики
+						// номенклатуры.
+						NamedNodeMap specifAttr = rowFieldNode.getAttributes();
+
+						Node specifCodeNode = specifAttr
+								.getNamedItem(SPECIF_CODE_TAG_NAME);
+						specifCode = specifCodeNode.getTextContent();
+
+						// Перебор всех полей характеристики
+						// номенклатуры.
+						NodeList specifFields = rowFieldNode.getChildNodes();
+						int specifFieldsTotal = specifFields.getLength();
+						for (int specifFieldIdx = 0; specifFieldIdx < specifFieldsTotal; specifFieldIdx++) {
+
+							Node specifFieldNode = specifFields
+									.item(specifFieldIdx);
+							String specifFieldName = specifFieldNode
+									.getNodeName();
+
+							if (specifFieldName.equals(SPECIF_DESCR_TAG_NAME)) {
+								specifDescr = specifFieldNode.getTextContent();
+							}
+						}
+
+					} else if (rowFieldName.equals(MEASUR_TAG_NAME)) {
+
+						// Перебор всех полей единицы измерения.
+						NodeList measurFields = rowFieldNode.getChildNodes();
+						int measurFieldsTotal = measurFields.getLength();
+						for (int measurFieldIdx = 0; measurFieldIdx < measurFieldsTotal; measurFieldIdx++) {
+
+							Node measurFieldNode = measurFields
+									.item(measurFieldIdx);
+							String measurFieldName = measurFieldNode
+									.getNodeName();
+
+							if (measurFieldName.equals(MEASUR_DESCR_TAG_NAME)) {
+								measurDescr = measurFieldNode.getTextContent();
+							}
+						}
+
+					} else if (rowFieldName.equals(PRICE_TAG_NAME)) {
+
+						String priceString = rowFieldNode.getTextContent();
+						price = Float.parseFloat(priceString.replace(",", "."));
+
+					} else if (rowFieldName.equals(QUANT_ACC_TAG_NAME)) {
+
+						String quant_accString = rowFieldNode.getTextContent();
+						quantAcc = Float.parseFloat(quant_accString.replace(
+								",", "."));
+
+					} else if (rowFieldName.equals(QUANT_TAG_NAME)) {
+
+						String quantString = rowFieldNode.getTextContent();
+						quant = Float.parseFloat(quantString.replace(",", "."));
+					}
+				}
+
+				ContentValues itemValues = new ContentValues();
+
+				// Идентификатор документа состоит из даты документа
+				// и его номера.
+				itemValues.put(DBase.FIELD_DOC_ID_NAME,
+						DBase.getDocId(docNumValue, docDateTimeValue));
+				itemValues.put(DBase.FIELD_ROW_NUM_NAME,
+						Integer.parseInt(rowNumValue));
+				itemValues.put(DBase.FIELD_ITEM_CODE_NAME, itemCode);
+				itemValues.put(DBase.FIELD_ITEM_DESCR_NAME, itemDescr);
+				itemValues.put(DBase.FIELD_ITEM_DESCR_FULL_NAME, itemDescrFull);
+				itemValues.put(DBase.FIELD_ITEM_USE_SPECIF_NAME, itemUseSpecif);
+				itemValues.put(DBase.FIELD_SPECIF_CODE_NAME, specifCode);
+				itemValues.put(DBase.FIELD_SPECIF_DESCR_NAME, specifDescr);
+				itemValues.put(DBase.FIELD_MEASUR_DESCR_NAME, measurDescr);
+				itemValues.put(DBase.FIELD_PRICE_NAME, price);
+				itemValues.put(DBase.FIELD_QUANT_ACC_NAME, quantAcc);
+				itemValues.put(DBase.FIELD_QUANT_NAME, quant);
+
+				dBase.insert(dBase.getSQLiteDatabase(), DBase.TABLE_ITEMS_NAME,
+						itemValues);
+
+				++rowsCounter;
+
+				WEAK_REF_ACTIVITY.get().incrementDocLoadedRowsTotal(1);
+
+				setProgress(WEAK_REF_ACTIVITY.get().getProgressHandler(), 1,
+						WEAK_REF_ACTIVITY.get().getDocRowsTotal(), 0);
+			}
+
+			return rowsCounter;
+		}
 	}
 
 	@Override
@@ -724,7 +783,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		super.onBackPressed();
 
-		onCloseDialog(ITEMSLIST_LOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ITEMSLISTLOADER_ID, BUTTON_BACK_ID);
 	}
 
 	/**
@@ -740,7 +799,10 @@ public class ItemsListLoader extends FragmentActivity implements
 	// Слушатель прогресс-диалога.
 	public void onCloseDialog(int dialogId, int buttonId) {
 
-		getSupportLoaderManager().getLoader(ITEMSLIST_LOADER_ID).abandon();
+		// Останавливаются все загрузчики.
+		for (int i = 0; i < threadsNumber; i++) {
+			getSupportLoaderManager().getLoader(i).abandon();
+		}
 
 		finish();
 	}
@@ -749,98 +811,103 @@ public class ItemsListLoader extends FragmentActivity implements
 	 * @param rowsCounter
 	 *            the rowsCounter to set
 	 */
-	public void setRowsCounter(int rowsCounter) {
-		ItemsListLoader.rowsCounter = rowsCounter;
+	public void setDocRowsTotal(int rows) {
+		docRowsTotal = rows;
 	}
 
-	public int getRowsCounter() {
-		return rowsCounter;
+	public int getDocRowsTotal() {
+		return docRowsTotal;
 	}
 
 	/**
 	 * @param rowsCounter
 	 *            the rowsCounter to set
 	 */
-	public void incrementRowsCounter(int increment) {
-		ItemsListLoader.rowsCounter += increment;
+	public void incrementDocLoadedRowsTotal(int increment) {
+		docLoadedRowsTotal += increment;
 	}
 
 	/**
 	 * @param rowsTotal
 	 *            the rowsTotal to set
 	 */
-	public void setRowsTotal(int rowsTotal) {
-		ItemsListLoader.rowsTotal = rowsTotal;
+	public void setDocLoadedRowsTotal(int rows) {
+		docLoadedRowsTotal = rows;
 	}
 
-	public int getRowsTotal() {
-		return rowsTotal;
+	public int getDocLoadedRowsTotal() {
+		return docLoadedRowsTotal;
 	}
 
 	/**
-	 * Возвращает дату, отформатированную для использования в URI.<br>
-	 * Например, из "01.02.2014" будет возвращено "20140201".
+	 * Распределеяет интервал на поддиапазоны, принимая в расчет максимально
+	 * допустимое количество элементов в каждом диапазоне.
 	 * 
-	 * @param dateString
-	 * @param simpleDateFormat
-	 * @return
+	 * @param itemsTotal
+	 *            количество элементов
+	 * @param numberOfIntervals
+	 *            количество подинтервалов, в которые д.б. распределены элементы
+	 * @param itemsPerInterval
+	 *            желаемое количество элементов в интервале. Если ==0, то
+	 *            элементы будут равномерно распределены по поддиапазонам.
+	 * @return SparseArray, каждый элемент которого содержит массив из двух
+	 *         элементов.<br>
+	 *         Первый - это индекс первого элемента поддиапазона;<br>
+	 *         Второй - это индекс последнего элемента поддиапазона.
 	 */
-	// static String getURIFormattedString(String dateString,
-	// SimpleDateFormat simpleDateFormat) {
-	//
-	// String yearString;
-	// String monthOfYearString;
-	// String dayOfMonthString;
-	// String hoursString;
-	// String minutesString;
-	// String secondsString;
-	//
-	// Date date;
-	// try {
-	//
-	// date = simpleDateFormat.parse(dateString);
-	//
-	// int year = date.getYear() + 1900;
-	// int monthOfYear = date.getMonth() + 1;
-	// int dayOfMonth = date.getDate();
-	// int hours = date.getHours();
-	// int minutes = date.getMinutes();
-	// int seconds = date.getSeconds();
-	//
-	// yearString = Integer.toString(year);
-	//
-	// monthOfYearString = Integer.toString(monthOfYear);
-	// if (monthOfYearString.length() < 2) {
-	// monthOfYearString = "0" + monthOfYearString;
-	// }
-	//
-	// dayOfMonthString = Integer.toString(dayOfMonth);
-	// if (dayOfMonthString.length() < 2) {
-	// dayOfMonthString = "0" + dayOfMonthString;
-	// }
-	//
-	// hoursString = Integer.toString(hours);
-	// if (hoursString.length() < 2) {
-	// hoursString = "0" + hoursString;
-	// }
-	//
-	// minutesString = Integer.toString(minutes);
-	// if (minutesString.length() < 2) {
-	// minutesString = "0" + minutesString;
-	// }
-	//
-	// secondsString = Integer.toString(seconds);
-	// if (secondsString.length() < 2) {
-	// secondsString = "0" + secondsString;
-	// }
-	//
-	// } catch (ParseException e) {
-	// e.printStackTrace();
-	// return "";
-	// }
-	//
-	// return yearString.concat(monthOfYearString).concat(dayOfMonthString)
-	// .concat(hoursString).concat(minutesString)
-	// .concat(secondsString);
-	// }
+	private static SparseArray<int[]> sliceInterval(int itemsTotal,
+			int numberOfIntervals, int itemsPerInterval) {
+
+		SparseArray<int[]> spArray = new SparseArray<int[]>();
+
+		int lastIntervalItemIdx = -1;
+
+		for (int i = 0; i < numberOfIntervals; i++) {
+
+			// Интервалов осталось:
+			int intervalsLeft = numberOfIntervals - i;
+
+			// Нераспределенных элементов осталось:
+			int itemsLeft = itemsTotal - (lastIntervalItemIdx + 1);
+
+			// Если нераспределенных строк больше нет, то дальше распределять
+			// создавать не нужно.
+			if (itemsLeft <= 0)
+				break;
+
+			// Индекс первого элемента интервала очередного поддиапазона.
+			int firstIntervalItemIdx = lastIntervalItemIdx + 1;
+
+			// Элементов, приходящихся на каждый из оставшихся интервалов
+			// (с округлением до большего):
+			int itemsLeftPerInterval = (int) Math.ceil((double) itemsLeft
+					/ intervalsLeft);
+
+			// Если количество элементов, приходящихся на интервал оказалось
+			// меньше допустимого количества элементов в пакете, то на интервал
+			// должно приходиться именно допустимое количество.
+			// Это нужно для того, чтобы интервалы содержали максимально
+			// допустимое количество элементов, а не просто усредненное.
+			// В противном случае, если интервалов много, то они будут мелкими,
+			// что м.б. неэффективно.
+			if (itemsPerInterval != 0
+					&& itemsLeftPerInterval < itemsPerInterval)
+				itemsLeftPerInterval = itemsPerInterval;
+
+			// Индекс последнего элемента интервала очередного поддиапазона.
+			lastIntervalItemIdx = firstIntervalItemIdx + itemsLeftPerInterval
+					- 1;
+
+			// Последний элемент не может выходить за пределы всего количества
+			// элементов.
+			if (lastIntervalItemIdx > itemsTotal - 1)
+				lastIntervalItemIdx = itemsTotal - 1;
+
+			int[] arr = { firstIntervalItemIdx, lastIntervalItemIdx };
+
+			spArray.put(i, arr);
+		}
+
+		return spArray;
+	}
 }

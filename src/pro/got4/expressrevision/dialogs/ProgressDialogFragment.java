@@ -18,6 +18,13 @@ public class ProgressDialogFragment extends DialogFragment {
 	public static final int DIALOG_PROGRESS_ID = 0;
 	public static final String DIALOG_PROGRESS_TAG = "progress_dialog";
 
+	public static final String FIELD_TITLE_NAME = "title";
+	public static final String FIELD_MESSAGE_NAME = "message";
+	public static final String FIELD_INCREMENT_MODE_NAME = "incrementMode";
+	public static final String FIELD_INDETERMINATE_NAME = "indeterminate";
+	public static final String FIELD_MAX_NAME = "max";
+	public static final String FIELD_PROGRESS_NAME = "progress";
+
 	public static final int BUTTON_CANCEL = 0;
 
 	private DialogListener listener;
@@ -25,9 +32,11 @@ public class ProgressDialogFragment extends DialogFragment {
 	private String title;
 	private String message;
 
-	private int progress;
-	private int max;
+	private boolean incrementMode;
+
 	private boolean indeterminate;
+	private int max;
+	private int progress;
 
 	private int style;
 	private int theme;
@@ -48,31 +57,6 @@ public class ProgressDialogFragment extends DialogFragment {
 		public void onCloseDialog(int dialogId, int buttonId);
 	}
 
-	@Override
-	public void onAttach(Activity activity) {
-
-		super.onAttach(activity);
-
-		setRetainInstance(true);
-		setCancelable(true);
-
-		try {
-			listener = ((DialogListener) activity);
-		} catch (ClassCastException e) {
-			throw new ClassCastException(activity.toString()
-					+ " must implement interface DialogListener!");
-		}
-
-	}
-
-	@Override
-	public void onCreate(Bundle bundle) {
-
-		// Message.show(this);
-
-		super.onCreate(bundle);
-	}
-
 	// Здесь можно создать диалог с помощью билдера и не использовать потом
 	// onCreateView.
 	// @Override
@@ -82,8 +66,35 @@ public class ProgressDialogFragment extends DialogFragment {
 	// }
 
 	@Override
+	public void onAttach(Activity activity) {
+
+		super.onAttach(activity);
+
+		try {
+			listener = (DialogListener) activity;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+
+		indeterminate = true;
+		if (savedInstanceState != null) {
+
+			title = savedInstanceState.getString(FIELD_TITLE_NAME);
+			message = savedInstanceState.getString(FIELD_MESSAGE_NAME);
+			incrementMode = savedInstanceState.getBoolean(
+					FIELD_INCREMENT_MODE_NAME, false);
+			indeterminate = savedInstanceState.getBoolean(
+					FIELD_INDETERMINATE_NAME, true);
+			max = savedInstanceState.getInt(FIELD_MAX_NAME);
+			progress = savedInstanceState.getInt(FIELD_PROGRESS_NAME);
+		}
+
+		setCancelable(true);
 
 		View v = inflater.inflate(R.layout.dialog_progress, container, false);
 
@@ -98,10 +109,13 @@ public class ProgressDialogFragment extends DialogFragment {
 
 			@Override
 			public void onClick(View v) {
-
 				listener.onCloseDialog(DIALOG_PROGRESS_ID, BUTTON_CANCEL);
 			}
 		});
+
+		progressBar.setMax(max);
+		progressBar.setProgress(progress);
+		progressBar.setIndeterminate(indeterminate);
 
 		setStyle(style, theme);
 
@@ -109,17 +123,20 @@ public class ProgressDialogFragment extends DialogFragment {
 	}
 
 	@Override
-	public void onViewCreated(View view, Bundle savedInstanceState) {
+	public void onSaveInstanceState(Bundle outState) {
 
-		super.onViewCreated(view, savedInstanceState);
+		super.onSaveInstanceState(outState);
 
-		setIndeterminate(1);
+		outState.putString(FIELD_TITLE_NAME, title);
+		outState.putString(FIELD_MESSAGE_NAME, message);
+		outState.putBoolean(FIELD_INCREMENT_MODE_NAME, incrementMode);
+		outState.putBoolean(FIELD_INDETERMINATE_NAME, indeterminate);
+		outState.putInt(FIELD_MAX_NAME, max);
+		outState.putInt(FIELD_PROGRESS_NAME, progress);
 	}
 
 	@Override
 	public void onDestroyView() {
-
-		// Message.show(this);
 
 		// Следует реализовывать таким образом по причине бага:
 		// https://code.google.com/p/android/issues/detail?id=17423
@@ -130,19 +147,27 @@ public class ProgressDialogFragment extends DialogFragment {
 	}
 
 	@Override
+	public void onDestroy() {
+
+		super.onDestroy();
+
+		listener = null;
+
+		title = null;
+		message = null;
+
+		textViewTitle = null;
+		textViewMessage = null;
+		progressBar = null;
+		buttonCancel = null;
+	}
+
+	@Override
 	public void onCancel(DialogInterface dialog) {
 
 		super.onCancel(dialog);
 
 		listener.onCloseDialog(DIALOG_PROGRESS_ID, BUTTON_CANCEL);
-	}
-
-	@Override
-	public void onDetach() {
-
-		super.onDetach();
-
-		listener = null;
 	}
 
 	// Из-за бага нельзя будет открывать диалог в событии onActivityResult().
@@ -188,7 +213,7 @@ public class ProgressDialogFragment extends DialogFragment {
 		this.title = title;
 
 		if (textViewTitle != null)
-			textViewTitle.setText(title);
+			textViewTitle.setText(this.title);
 	}
 
 	/**
@@ -213,7 +238,7 @@ public class ProgressDialogFragment extends DialogFragment {
 		this.message = message;
 
 		if (textViewMessage != null)
-			textViewMessage.setText(message);
+			textViewMessage.setText(this.message);
 	}
 
 	/**
@@ -225,38 +250,59 @@ public class ProgressDialogFragment extends DialogFragment {
 	public void setMax(int max) {
 
 		this.max = max;
-
 		if (progressBar != null)
 			progressBar.setMax(this.max);
 	}
 
 	/**
-	 * Установка текущего значения индикатора.
+	 * Установка режима индикатора, при котором параметр прогресса
+	 * интерпретируется не как абсолютное значение прогресса, а как приращение
+	 * существующего значения прогресса.
 	 * 
 	 * @param progress
 	 *            the currentValue to set
 	 */
-	public void setProgress(int progress) {
-
-		this.progress = progress;
-
-		if (progressBar != null)
-			progressBar.setProgress(this.progress);
+	public void setIncrementMode(boolean incrementMode) {
+		this.incrementMode = incrementMode;
 	}
 
 	/**
 	 * Установка текущего значения индикатора.
 	 * 
+	 * @param nprogress
+	 *            the currentValue to set
+	 */
+	public void setProgress(int newProgress) {
+
+		int resultProgress = 0;
+		if (incrementMode) {
+			resultProgress = this.progress + newProgress;
+		} else {
+			resultProgress = newProgress;
+		}
+
+		this.progress = resultProgress;
+		if (this.progress > this.max) {
+			setMax(this.progress);
+		}
+
+		if (progressBar != null)
+			progressBar.setProgress(this.progress);
+
+	}
+
+	/**
+	 * Установка текущего состояни индикатора "определенный"/"неопределенный".
+	 * 
 	 * @param progress
 	 *            the currentValue to set
 	 */
-	public void setIndeterminate(int value) {
+	public void setIndeterminate(boolean value) {
 
-		if (value == 0)
-			this.indeterminate = false;
-		else
-			this.indeterminate = true;
+		this.indeterminate = value;
 
+		// Установка этого признака сбрасывает текущее значение индикатора в
+		// ноль!
 		if (progressBar != null) {
 			progressBar.setIndeterminate(this.indeterminate);
 		}
@@ -270,9 +316,6 @@ public class ProgressDialogFragment extends DialogFragment {
 	 *            the style to set
 	 */
 	public void setStyle(int style) {
-
-		// Message.show(this);
-
 		this.style = style;
 	}
 
@@ -284,9 +327,6 @@ public class ProgressDialogFragment extends DialogFragment {
 	 *            the theme to set
 	 */
 	public void setTheme(int theme) {
-
-		// Message.show(this);
-
 		this.theme = theme;
 	}
 }
