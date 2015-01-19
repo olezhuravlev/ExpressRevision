@@ -345,16 +345,19 @@ public class DocsListLoader extends FragmentActivity implements
 						Node docRowsNode = docAttr
 								.getNamedItem(DOC_ROWS_TAG_NAME);
 
+						// Номер и дата документа.
 						String docNumValue = docNumNode.getTextContent();
 						String docDateTimeValue = docDateTimeNode
 								.getTextContent();
-						String docRowsValue = docRowsNode.getTextContent();
 
-						// Преобразование даты документа из строкового вида к
-						// времени с начала эпохи.
+						// Преобразование даты документа из строкового вида
+						// "2015-01-19 14:50:04" к времени с начала эпохи.
 						Date gmt = DocsListLoader.dateFormatter
 								.parse(docDateTimeValue);
 						long docDateTimeEpochValue = gmt.getTime();
+
+						// Количество строк.
+						String docRowsValue = docRowsNode.getTextContent();
 
 						// Извлечение комментария к документу и данных о складе.
 						String docComment = "";

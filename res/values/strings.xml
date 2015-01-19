@@ -17,7 +17,7 @@
 
     <!--
     <string name="demoMode_on">Включить демо-режим</string>
-    <string name="demoMode_off">Отключить демо-режим</string>
+    <string name="demoMode_off">Отключить демо-режим</string>
     -->
 
     <string name="demoMode">Демо-режим</string>
@@ -66,6 +66,7 @@
     <string name="rows">Cтрок:</string>
     <string name="rowsDeleted">Cтрок удалено:</string>
     <string name="documentLoaded">Ревизия загружена</string>
+    <string name="docStatusRetrieving">Установка статуса документа</string>
     <string name="docLoadedButCantSetRevisionStatus">Статус документа установить не удалось!</string>
     <string name="rowsLoaded">Строк загружено:</string>
     <string name="percent">%</string>
@@ -76,6 +77,7 @@
     <string name="setQuantity">Укажите количество</string>
     <string name="docsConnectionParametersNotSet">Нет параметров для получения списка документов!</string>
     <string name="docsConnectionStringNotSet">Не указана строка соединения для получения списка документов!</string>
+    <string name="docsStatusSettingsNotSet">Не указаны параметры для установки статуса документа!</string>
     <string name="itemsConnectionParametersNotSet">Нет параметров для получения содержимого документов!</string>
     <string name="itemsConnectionStringNotSet">Не указана строка соединения для получения содержимого документов!</string>
 

@@ -1,19 +1,5 @@
 package pro.got4.expressrevision;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.http.protocol.HTTP;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
 import pro.got4.expressrevision.ItemsListAdapter.OnItemButtonClickListener;
 import pro.got4.expressrevision.dialogs.NumberInputDialogFragment;
 import android.content.ContentValues;
@@ -28,7 +14,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
@@ -64,6 +49,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	public static final String FIELD_SET_DUPLICATES_AS_VISITED_NAME = "setDuplicatesAsVisited";
 
 	public static final String START_ITEMS_LOADER = "start_items_loader";
+
+	private static final int STATUS_AFTER_SUCCESSFUL_LOADING = 2;
 
 	// ‘лаг того, что при отметке элементов как посещенных, выдел€тьс€
 	// должны все повторы элемента, встречающиес€ в списке.
@@ -284,9 +271,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-		switch (requestCode) {
-
-		case ItemsListLoader.ITEMSLISTLOADER_ID:
+		if (requestCode == ItemsListLoader.ITEMSLISTLOADER_ID) {
 
 			switch (resultCode) {
 			case RESULT_CANCELED: {
@@ -310,9 +295,9 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 						message1.length(), 0);
 
 				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
-			}
 
 				break;
+			}
 
 			case RESULT_OK: {
 
@@ -328,52 +313,46 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				SpannableString coloredText = null;
 				String message1;
 				String message2;
-				String message3;
 				if (rowsLoaded == assignedRows) {
 
 					// ≈сли загружено именно то количество строк, которое и
 					// требуетс€, то следует установить статус документа, как
 					// полученного на мобильном устройстве.
-					Bundle extras = getIntent().getExtras();
-					String connectionString = getString(R.string.docsConnectionString);
-					String docNum = extras.getString(DBase.FIELD_DOC_NUM_NAME);
-					String docDateString = extras
-							.getString(DBase.FIELD_DOC_DATE_NAME);
-					Long docDate = Long.valueOf(docDateString);
+					Intent intent = new Intent(this,
+							DocsStatusFragmentActivity.class);
 
-					String statusString = getString(R.string.itemsLoadingSuccessfulStatus);
-					int status = Integer.parseInt(statusString);
-					boolean statusSuccess = setStatus(connectionString, docNum,
-							docDate, status);
+					//  опирование параметров интента, в которых содержитс€
+					// номер и дата загружаемого документа.
+					intent.putExtras(getIntent());
 
-					if (statusSuccess == true) {
+					// —трока соединени€ дл€ получени€ статуса.
+					String connectionString = PreferenceManager
+							.getDefaultSharedPreferences(this)
+							.getString(
+									DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+									"");
+					intent.putExtra(
+							DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+							connectionString);
 
-						message1 = getString(R.string.documentLoaded);
-						message2 = message1 + "\n"
-								+ getString(R.string.rowsLoaded) + rowsLoaded;
+					// ƒобавление в параметры статуса, которы документ должен
+					// получить на сервере.
+					intent.putExtra(
+							DocsStatusFragmentActivity.FIELD_STATUS_NAME,
+							STATUS_AFTER_SUCCESSFUL_LOADING);
 
-						coloredText = new SpannableString(message2);
-						coloredText.setSpan(
-								new ForegroundColorSpan(Color.GREEN), 0,
-								message1.length(), 0);
+					// COMMAND.set - это команда на простую установку статуса.
+					// ¬последствии лучше изменить на команду установки статуса
+					// с проверкой текущего статуса документа.
+					// “.е. указывать, с какого на какой именно статус м.б.
+					// изменен.
+					intent.putExtra(
+							DocsStatusFragmentActivity.FIELD_COMMAND_NAME,
+							DocsStatusFragmentActivity.COMMAND.SET);
 
-					} else {
-
-						// «агрузка документа удалась, но статус документу
-						// установить не получилось.
-						// ¬се загруженные строки удал€ютс€, как при неудачной
-						// загрузке.
-						int rowsDeleted = dBase
-								.clearTable(DBase.TABLE_ITEMS_NAME);
-
-						message1 = getString(R.string.docLoadedButCantSetRevisionStatus);
-						message2 = message1 + "\n"
-								+ getString(R.string.rowsDeleted) + rowsDeleted;
-
-						coloredText = new SpannableString(message2);
-						coloredText.setSpan(new ForegroundColorSpan(Color.RED),
-								0, message1.length(), 0);
-					}
+					startActivityForResult(
+							intent,
+							DocsStatusFragmentActivity.DOCS_STATUS_FRAGMENT_ACTIVITY_ID);
 
 				} else {
 
@@ -388,15 +367,43 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 					coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
 							message1.length(), 0);
 
+					Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 				}
 
-				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
-
 				break;
-			}
+			} // case RESULT_OK: {
+			} // switch (resultCode) {
 
+		} else if (requestCode == DocsStatusFragmentActivity.DOCS_STATUS_FRAGMENT_ACTIVITY_ID) {
+
+			// ѕолучен ответ из активности, устанавливающей статус документа на
+			// сервере.
+			switch (resultCode) {
+			case RESULT_OK:
+
+				// —татус успешно установлен, ничего предпринимать не нужно.
+				break;
+
+			default: {
+				// ¬о всех прочих случа€х считаетс€, что статус документа
+				// на сервере установить не удалось, и все полученные с
+				// него данные д.б. уничтожены, как недостоверные.
+				DBase dBase = new DBase(this);
+				dBase.open();
+				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
+
+				String message1 = getString(R.string.docLoadedButCantSetRevisionStatus);
+				String message2 = message1 + "\n"
+						+ getString(R.string.rowsDeleted) + rowsDeleted;
+
+				SpannableString coloredText = null;
+				coloredText = new SpannableString(message2);
+				coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
+						message1.length(), 0);
+				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 			}
-		}
+			} // switch (resultCode) {
+		} // if (requestCode == ItemsListLoader.ITEMSLISTLOADER_ID)
 
 		// „тобы обновить список.
 		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
@@ -628,53 +635,5 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				whereClause, whereArgs);
 
 		return rowsAffected;
-	}
-
-	private boolean setStatus(String connectionString, String docNum,
-			Long docDate, int status) {
-
-		// —трока имеет вид:
-		// http://express.nsk.ru:9999/erdocs.php?deviceid=12345&docdate=20150105162307&docnum=%27%D0%AD%D0%9A%D0%A100000008%27&status=1
-
-		// ѕолучение идентификатора устройства.
-		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		String deviceId = tm.getDeviceId();
-		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMddHHmmss",
-				Locale.getDefault());
-		String dateURIFormattedString = dateFormatter.format(docDate);
-
-		String docQuery = "?deviceid=" + deviceId + "&docdate="
-				+ dateURIFormattedString + "&docnum='";
-		String statusQuery = "&status=" + status;
-
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-
-		// Ќепосредственно момент загрузки через сеть.
-		DocumentBuilder dBuilder;
-		Document domDoc;
-		try {
-
-			// ¬ номере документа может содержатьс€ кириллица, поэтому
-			// необходимо преобразование.
-			docQuery = docQuery + URLEncoder.encode(docNum, HTTP.UTF_8) + "'";
-			String uriString = connectionString + docQuery + statusQuery;
-
-			dBuilder = dbFactory.newDocumentBuilder();
-			domDoc = dBuilder.parse(uriString);
-			domDoc.getDocumentElement().normalize();
-
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return false;
 	}
 }

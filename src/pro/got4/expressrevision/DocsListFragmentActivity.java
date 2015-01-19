@@ -160,7 +160,8 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		if (item.getItemId() == CONTEXTMENU_LOAD_BUTTON_ID) {
 
-			// «агрузка списка документов.
+			// ”становка результатов дл€ их последующей передачи в активность,
+			// отвечающую за загрузку списка документов.
 			Cursor cursor = (Cursor) adapter
 					.getItem(lastLongClickedItemPosition);
 

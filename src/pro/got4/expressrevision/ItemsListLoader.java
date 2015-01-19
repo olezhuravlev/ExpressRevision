@@ -182,13 +182,12 @@ public class ItemsListLoader extends FragmentActivity implements
 				finish();
 			}
 
-			docNum = (String) extras.get(DBase.FIELD_DOC_NUM_NAME);
+			docNum = extras.getString(DBase.FIELD_DOC_NUM_NAME);
 
-			String docDateString = (String) extras
-					.get(DBase.FIELD_DOC_DATE_NAME);
+			String docDateString = extras.getString(DBase.FIELD_DOC_DATE_NAME);
 			docDate = Long.valueOf(docDateString);
 
-			docRowsTotal = (Integer) extras.get(DBase.FIELD_DOC_ROWS_NAME);
+			docRowsTotal = extras.getInt(DBase.FIELD_DOC_ROWS_NAME);
 		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<ItemsListLoader>(this);
@@ -439,12 +438,6 @@ public class ItemsListLoader extends FragmentActivity implements
 			} else {
 
 				// Загрузка с сервера.
-
-				// Получение идентификатора устройства.
-				TelephonyManager tm = (TelephonyManager) context
-						.getSystemService(Context.TELEPHONY_SERVICE);
-				String deviceId = tm.getDeviceId();
-
 				// Итоговая строка должна иметь вид:
 				// Если задано ограничение строк:
 				// http://express.nsk.ru:9999/eritems.php?deviceid=12345
@@ -452,6 +445,12 @@ public class ItemsListLoader extends FragmentActivity implements
 				// &firstrow=1&lastrow=10
 				// Если не задано ограничение строк:
 				// http://express.nsk.ru:9999/eritems.php?deviceid=12345&docdate=20141223120310&docnum="ЭКС00000001"
+
+				// Получение идентификатора устройства.
+				TelephonyManager tm = (TelephonyManager) context
+						.getSystemService(Context.TELEPHONY_SERVICE);
+				String deviceId = tm.getDeviceId();
+
 				// Дата в БД имеет вид миллисекунд с начала Юникс-эпохи,
 				// и её следует преобразовать к виду "20140101000000".
 				SimpleDateFormat dateFormatter = new SimpleDateFormat(

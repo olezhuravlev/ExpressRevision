@@ -40,6 +40,10 @@
             android:screenOrientation="fullSensor" >
         </activity>
         <activity
+            android:name="DocsStatusFragmentActivity"
+            android:screenOrientation="fullSensor" >
+        </activity>
+        <activity
             android:name="ItemsListFragmentActivity"
             android:screenOrientation="fullSensor" >
         </activity>
