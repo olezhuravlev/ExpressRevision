@@ -1,7 +1,14 @@
 package pro.got4.expressrevision;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -43,12 +50,14 @@ import android.widget.Toast;
 public class ItemsListLoader extends FragmentActivity implements
 		LoaderCallbacks<Void>, DialogListener {
 
+	public static final int ID = 500;
+
 	private static final int DEMO_MODE_SLEEP_TIME = 50;
 
-	public static final int ITEMSLISTLOADER_ID = 1;
 	public static final String ITEMSLIST_LOADER_TAG = "itemslistloaderfragmentactivity_tag";
 
 	public static final String NUMBER_OF_TREADS_FIELD_NAME = "itemsListLoadedNumberOfUsingThreads";
+	public static final String UPLOADING_FLAG_FIELD_NAME = "uploadingFlag";
 
 	private static final String FIELD_DOC_LOADED_ROWS_TOTAL_NAME = "docRowsTotal";
 	private static final String FIELD_DOC_ROWS_TOTAL_NAME = "docLoadedRowsTotal";
@@ -61,7 +70,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	private static final String FIELD_LAST_LOADED_ROW_NUM_NAME = "lastRow";
 	private static final String FIELD_ROWS_IN_EACH_PARCEL_NAME = "rowsInDataParcel";
 
-	public static final int BUTTON_BACK_ID = 1;
+	public static final int BUTTON_BACK_ID = 501;
 
 	// Имя поля, которое в экстрах хранится строка соединения.
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringItems";
@@ -165,6 +174,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		super.onCreate(savedInstanceState);
 
+		boolean uploading = false;
 		Bundle extras = getIntent().getExtras();
 		if (extras == null) {
 			Toast.makeText(this,
@@ -183,11 +193,10 @@ public class ItemsListLoader extends FragmentActivity implements
 			}
 
 			docNum = extras.getString(DBase.FIELD_DOC_NUM_NAME);
+			docDate = extras.getLong(DBase.FIELD_DOC_DATE_NAME);
+			docRowsTotal = (int) extras.getLong(DBase.FIELD_DOC_ROWS_NAME);
 
-			String docDateString = extras.getString(DBase.FIELD_DOC_DATE_NAME);
-			docDate = Long.valueOf(docDateString);
-
-			docRowsTotal = extras.getInt(DBase.FIELD_DOC_ROWS_NAME);
+			uploading = extras.getBoolean(UPLOADING_FLAG_FIELD_NAME);
 		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<ItemsListLoader>(this);
@@ -223,7 +232,7 @@ public class ItemsListLoader extends FragmentActivity implements
 							NUMBER_OF_TREADS_FIELD_NAME, "1"));
 		}
 
-		// Максимальное количество строк в загружаемом пакете.
+		// Максимальное количество строк в пакете.
 		maxRowsInParcel = Integer.valueOf(PreferenceManager
 				.getDefaultSharedPreferences(this).getString(
 						FIELD_ROWS_IN_EACH_PARCEL_NAME, "100"));
@@ -232,23 +241,31 @@ public class ItemsListLoader extends FragmentActivity implements
 				maxRowsInParcel);
 		for (int i = 0; i < spArr.size(); i++) {
 
-			// Каждый загрузчик получает набор параметров:
+			Bundle exchangeArgs = new Bundle();
+
+			// Каждый загрузчик/выгрузчик получает набор параметров:
 			// - номер первой строки документа, которую он должен загрузить.
-			// - номер последней строки документа, которую он должен загрузить.
+			// - номер последней строки документа, которую он должен
+			// загрузить.
 			// - желательное количество строк в одном загружаемом пакете.
-			Bundle loaderArgs = new Bundle();
-			loaderArgs.putString(FIELD_DOC_NUM_NAME, docNum);
-			loaderArgs.putLong(FIELD_DOC_DATE_NAME, docDate);
-			loaderArgs
-					.putString(FIELD_CONNECTION_STRING_NAME, connectionString);
+			exchangeArgs.putString(FIELD_DOC_NUM_NAME, docNum);
+			exchangeArgs.putLong(FIELD_DOC_DATE_NAME, docDate);
+			exchangeArgs.putString(FIELD_CONNECTION_STRING_NAME,
+					connectionString);
 
-			loaderArgs.putInt(FIELD_FIRST_LOADED_ROW_NUM_NAME,
+			exchangeArgs.putInt(FIELD_FIRST_LOADED_ROW_NUM_NAME,
 					spArr.get(i)[0] + 1);
-			loaderArgs.putInt(FIELD_LAST_LOADED_ROW_NUM_NAME,
+			exchangeArgs.putInt(FIELD_LAST_LOADED_ROW_NUM_NAME,
 					spArr.get(i)[1] + 1);
-			loaderArgs.putInt(FIELD_ROWS_IN_EACH_PARCEL_NAME, maxRowsInParcel);
+			exchangeArgs
+					.putInt(FIELD_ROWS_IN_EACH_PARCEL_NAME, maxRowsInParcel);
 
-			getSupportLoaderManager().initLoader(i, loaderArgs, this);
+			// Выгрузчик дополнительно имеет флаг.
+			if (uploading) {
+				exchangeArgs.putBoolean(UPLOADING_FLAG_FIELD_NAME, true);
+			}
+
+			getSupportLoaderManager().initLoader(i, exchangeArgs, this);
 		}
 	}
 
@@ -296,7 +313,14 @@ public class ItemsListLoader extends FragmentActivity implements
 	@Override
 	public Loader<Void> onCreateLoader(int id, Bundle args) {
 
-		Loader<Void> ldr = new ItemsAsyncTaskLoader(this, args);
+		boolean uploading = args.getBoolean(UPLOADING_FLAG_FIELD_NAME);
+
+		Loader<Void> ldr;
+		if (uploading) {
+			ldr = new ItemsAsyncTaskUploader(this, args);
+		} else {
+			ldr = new ItemsAsyncTaskLoader(this, args);
+		}
 
 		return ldr;
 	}
@@ -305,7 +329,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	public void onLoadFinished(Loader<Void> loader, Void data) {
 
 		setResult(RESULT_OK);
-		onCloseDialog(ITEMSLISTLOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ID, BUTTON_BACK_ID);
 
 	}
 
@@ -313,13 +337,19 @@ public class ItemsListLoader extends FragmentActivity implements
 	public void onLoaderReset(Loader<Void> loader) {
 
 		setResult(RESULT_CANCELED);
-		onCloseDialog(ITEMSLISTLOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ID, BUTTON_BACK_ID);
 
 	}
 
 	// /////////////////////////////////////////////////////
 	// AsyncTaskLoader<Void>
 	// /////////////////////////////////////////////////////
+	/**
+	 * Класс, реализующий загрузку содержимого документов.
+	 * 
+	 * @author programmer
+	 *
+	 */
 	private static class ItemsAsyncTaskLoader extends AsyncTaskLoader<Void> {
 
 		private Context context;
@@ -329,7 +359,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		private DBase dBase;
 
 		private String docNum;
-		private Long docDate;
+		private long docDate;
 		private String connectionString;
 
 		// Интервалы строк к получению.
@@ -539,7 +569,6 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		@Override
 		public void onAbandon() {
-
 			super.onAbandon();
 		}
 
@@ -777,12 +806,226 @@ public class ItemsListLoader extends FragmentActivity implements
 		}
 	}
 
+	/**
+	 * Класс, реализующий выгрузку содержимого документов.
+	 * 
+	 * @author programmer
+	 *
+	 */
+	private static class ItemsAsyncTaskUploader extends AsyncTaskLoader<Void> {
+
+		private Context context;
+
+		private MediaPlayer mp;
+
+		private DBase dBase;
+
+		private String docNum;
+		private long docDate;
+		private String connectionString;
+
+		// Интервалы строк к выгрузке.
+		SparseArray<int[]> spArr;
+
+		public ItemsAsyncTaskUploader(Context context, Bundle args) {
+
+			super(context);
+
+			if (args != null) {
+
+				docNum = args.getString(FIELD_DOC_NUM_NAME);
+				docDate = args.getLong(FIELD_DOC_DATE_NAME);
+				connectionString = args.getString(FIELD_CONNECTION_STRING_NAME);
+
+				int firstLoadersRowNumber = args
+						.getInt(FIELD_FIRST_LOADED_ROW_NUM_NAME);
+				int lastLoadersRowNumber = args
+						.getInt(FIELD_LAST_LOADED_ROW_NUM_NAME);
+				int maxRowsInParcel = args
+						.getInt(FIELD_ROWS_IN_EACH_PARCEL_NAME);
+
+				// Количество строк к отправке в данном экземлпяре задачи.
+				int rowsTotal = lastLoadersRowNumber - firstLoadersRowNumber
+						+ 1;
+
+				// Количество запросов, необходимых для отправки требуемого
+				// количества строк (с округлением вверх).
+				int queries = (int) Math.ceil((double) rowsTotal
+						/ maxRowsInParcel);
+
+				// Исходя из полученного интервала строк и количества строк в
+				// пакете производится разбивка строк по пакетам.
+				spArr = sliceInterval(rowsTotal, queries, maxRowsInParcel);
+			}
+
+			this.context = context;
+		}
+
+		@Override
+		public void onStartLoading() {
+
+			dBase = new DBase(context);
+			dBase.open();
+
+			mp = MediaPlayer.create(context, R.raw.powerup);
+			mp.setLooping(false);
+
+			forceLoad();
+
+			super.onStartLoading();
+		}
+
+		@Override
+		public Void loadInBackground() {
+
+			try {
+				Thread.sleep(5000);// TODO
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			if (Main.isDemoMode()) {
+
+			} else {
+
+				URL url;
+				HttpURLConnection urlConnection = null;
+				try {
+
+					url = new URL("http://www.android.com/");
+					urlConnection = (HttpURLConnection) url.openConnection();
+
+					// Разрешение ввода.
+					urlConnection.setDoInput(true);
+
+					// Разрешение вывода.
+					urlConnection.setDoOutput(true);
+
+					// Размер блока данных по-умолчанию.
+					urlConnection.setChunkedStreamingMode(0);
+
+					// Не использовать кэширование.
+					urlConnection.setUseCaches(false);
+
+					// Команда запроса, которая будет отправлена на сервер.
+					urlConnection.setRequestMethod("POST");
+
+					urlConnection
+							.setRequestProperty("Connection", "Keep-Alive");
+					urlConnection.setRequestProperty("ENCTYPE",
+							"multipart/form-data");
+
+					int boundary = 0; // Что это?
+					urlConnection.setRequestProperty("Content-Type",
+							"multipart/form-data;boundary=" + boundary);
+
+					// Что это?
+					String fileName = "";
+					urlConnection.setRequestProperty("uploaded_file", fileName);
+
+					OutputStream out = new BufferedOutputStream(
+							urlConnection.getOutputStream());
+
+					writeStream(out);
+
+					InputStream in = new BufferedInputStream(
+							urlConnection.getInputStream());
+
+				} catch (IOException e) {
+
+					e.printStackTrace();
+
+					// Чтение ответа сервера в случае ошибки.
+					InputStream errorIn = urlConnection.getErrorStream();
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+
+					if (urlConnection != null)
+						urlConnection.disconnect();
+				}
+
+			}
+
+			mp.start();
+
+			return null;
+		}
+
+		@Override
+		public void onStopLoading() {
+
+			cancelLoad();
+
+			super.onStopLoading();
+
+			onReleaseResources();
+		}
+
+		@Override
+		public void onCanceled(Void data) {
+
+			super.onCanceled(data);
+
+			onReleaseResources();
+		}
+
+		@Override
+		protected void onReset() {
+
+			super.onReset();
+
+			stopLoading();
+
+			onReleaseResources();
+		}
+
+		@Override
+		public void onAbandon() {
+			super.onAbandon();
+		}
+
+		/**
+		 * Освобождение ресурсов.
+		 */
+		private void onReleaseResources() {
+			if (mp != null)
+				mp.release();
+		}
+
+		/**
+		 * Установка состояния индикатора.
+		 */
+		private void setProgress(ProgressHandler progressHandler,
+				int progressIncrement, int max, int indeterminate) {
+
+			// Установка состояния индикатора.
+			if (progressHandler != null) {
+
+				android.os.Message msg = new android.os.Message();
+				msg.what = progressIncrement;
+				msg.arg1 = max;
+				msg.arg2 = indeterminate;
+
+				progressHandler.sendMessage(msg);
+			}
+		}
+
+		/**
+		 * Вывод данных в поток.
+		 */
+		private void writeStream(OutputStream out) {
+
+		}
+	}
+
 	@Override
 	public void onBackPressed() {
 
 		super.onBackPressed();
 
-		onCloseDialog(ITEMSLISTLOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ID, BUTTON_BACK_ID);
 	}
 
 	/**

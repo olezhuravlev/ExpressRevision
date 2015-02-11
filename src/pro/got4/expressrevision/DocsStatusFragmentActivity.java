@@ -37,9 +37,9 @@ import android.widget.Toast;
 public class DocsStatusFragmentActivity extends FragmentActivity implements
 		LoaderCallbacks<Boolean> {
 
-	public static final int DOCS_STATUS_FRAGMENT_ACTIVITY_ID = 100;
+	public static final int ID = 300;
 
-	public static final int DOCS_STATUS_LOADER_ID = 1;
+	public static final int DOCS_STATUS_LOADER_ID = 301;
 	public static final String DOCSLIST_LOADER_TAG = "docsstatusfragmentactivity_tag";
 
 	public static final String FIELD_COMMAND_NAME = "command";
@@ -89,17 +89,15 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 			String connectionString = extras
 					.getString(DocsListLoader.CONNECTION_STRING_FIELD_NAME);
 			String docNum = extras.getString(DBase.FIELD_DOC_NUM_NAME);
-			String docDateString = (String) extras
-					.get(DBase.FIELD_DOC_DATE_NAME);
+			long docDate = extras.getLong(DBase.FIELD_DOC_DATE_NAME);
 			COMMAND command = (COMMAND) extras.get(FIELD_COMMAND_NAME);
 			Integer status = extras.getInt(FIELD_STATUS_NAME);
 
 			if (!Main.isDemoMode()
 					&& (connectionString == null || connectionString.isEmpty())
-					&& (docNum == null || docNum.isEmpty())
-					&& (docDateString == null || docDateString.isEmpty())
+					&& (docNum == null || docNum.isEmpty()) && (docDate == 0L)
 					&& (command == null || command.toString().isEmpty())
-					&& (status == null)) {
+					&& (status == 0)) {
 
 				Toast.makeText(this,
 						getString(R.string.docsStatusSettingsNotSet),
@@ -150,7 +148,7 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 		private Context context;
 		private String connectionString;
 		private String docNum;
-		private Long docDate;
+		private long docDate;
 		private COMMAND command;
 		private int status;
 
@@ -171,8 +169,9 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 					.getString(DocsListLoader.CONNECTION_STRING_FIELD_NAME);
 			docNum = args.getString(DBase.FIELD_DOC_NUM_NAME);
 
-			String docDateString = args.getString(DBase.FIELD_DOC_DATE_NAME);
-			docDate = Long.valueOf(docDateString);
+			// String docDateString = args.getString(DBase.FIELD_DOC_DATE_NAME);
+			// docDate = Long.valueOf(docDateString);
+			docDate = args.getLong(DBase.FIELD_DOC_DATE_NAME);
 
 			command = (COMMAND) args.get(FIELD_COMMAND_NAME);
 			status = args.getInt(FIELD_STATUS_NAME);

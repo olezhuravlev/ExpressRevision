@@ -22,7 +22,7 @@ import android.widget.ListView;
 public class DocsListFragmentActivity extends FragmentActivity implements
 		LoaderCallbacks<Cursor>, OnClickListener {
 
-	public static final int DOCS_LIST_ID = 1;
+	public static final int ID = 100;
 
 	public static final int CONTEXTMENU_LOAD_BUTTON_ID = 1;
 	public static final int CONTEXTMENU_LOAD_CANCEL_BUTTON_ID = 2;
@@ -69,7 +69,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		registerForContextMenu(lvData);
 
 		// Загрузчик для чтения данных.
-		getSupportLoaderManager().initLoader(DOCS_LIST_ID, null, this);
+		getSupportLoaderManager().initLoader(ID, null, this);
 
 		// Если существует необходимость обновления списка документов, то
 		// получаем его с сервера повторно.
@@ -91,10 +91,10 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			intent.putExtras(getIntent());
 
 			// Запуск загрузки строк.
-			startActivityForResult(intent, DocsListLoader.DOCSLIST_LOADER_ID);
+			startActivityForResult(intent, DocsListLoader.ID);
 
 			// Чтобы обновить список.
-			getSupportLoaderManager().getLoader(DOCS_LIST_ID).forceLoad();
+			getSupportLoaderManager().getLoader(ID).forceLoad();
 		}
 	}
 
@@ -131,8 +131,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			startActivityForResult(
 					new Intent(this, DocsListLoader.class).putExtra(
 							DocsListLoader.CONNECTION_STRING_FIELD_NAME,
-							connectionString),
-					DocsListLoader.DOCSLIST_LOADER_ID);
+							connectionString), DocsListLoader.ID);
 
 			break;
 
@@ -170,7 +169,8 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			int rowsIdx = cursor.getColumnIndex(DBase.FIELD_DOC_ROWS_NAME);
 
 			String docNum = cursor.getString(numIdx);
-			String docDate = cursor.getString(dateIdx);
+			// String docDate = cursor.getString(dateIdx);
+			long docDate = cursor.getLong(dateIdx);
 			int rows = cursor.getInt(rowsIdx);
 
 			setResult(CONTEXTMENU_LOAD_BUTTON_ID,
@@ -256,10 +256,10 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 
 		switch (requestCode) {
 
-		case DocsListLoader.DOCSLIST_LOADER_ID:
+		case DocsListLoader.ID:
 
 			// Чтобы обновить список.
-			getSupportLoaderManager().getLoader(DOCS_LIST_ID).forceLoad();
+			getSupportLoaderManager().getLoader(ID).forceLoad();
 		}
 	}
 }

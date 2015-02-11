@@ -39,10 +39,10 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		LoaderCallbacks<Cursor>, TextWatcher, OnKeyListener, OnClickListener,
 		OnItemButtonClickListener {
 
-	public static final int ITEMS_LIST_ID = 2;
+	public static final int ID = 400;
 
-	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_BUTTON_ID = 1;
-	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_CANCEL_BUTTON_ID = 2;
+	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_BUTTON_ID = 401;
+	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_CANCEL_BUTTON_ID = 402;
 
 	private static final String NUMBER_INPUT_DIALOG_TAG = "number_input_dialog";
 
@@ -50,7 +50,8 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	public static final String START_ITEMS_LOADER = "start_items_loader";
 
-	private static final int STATUS_AFTER_SUCCESSFUL_LOADING = 2;
+	public static final int STATUS_AFTER_SUCCESSFUL_LOADING = 2;
+	public static final int STATUS_AFTER_SUCCESSFUL_UPLOADING = 3;
 
 	// ‘лаг того, что при отметке элементов как посещенных, выдел€тьс€
 	// должны все повторы элемента, встречающиес€ в списке.
@@ -114,7 +115,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		// «агрузчик дл€ чтени€ данных.
 		MyCursorLoader myCursorLoader = (MyCursorLoader) getSupportLoaderManager()
-				.initLoader(ITEMS_LIST_ID, null, this);
+				.initLoader(ID, null, this);
 		myCursorLoader.setParentalActivity(this);
 
 		// ≈сли указан флаг начала загрузки, то она начинаетс€.
@@ -131,10 +132,10 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			intent.putExtras(getIntent());
 
 			// «апуск загрузки строк.
-			startActivityForResult(intent, ItemsListLoader.ITEMSLISTLOADER_ID);
+			startActivityForResult(intent, ItemsListLoader.ID);
 
 			// „тобы обновить список.
-			getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+			getSupportLoaderManager().getLoader(ID).forceLoad();
 		}
 	}
 
@@ -189,7 +190,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 			// „тобы обновить список.
 			if (rowsAffected > 0)
-				getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+				getSupportLoaderManager().getLoader(ID).forceLoad();
 
 			return true;
 
@@ -271,7 +272,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-		if (requestCode == ItemsListLoader.ITEMSLISTLOADER_ID) {
+		if (requestCode == ItemsListLoader.ID) {
 
 			switch (resultCode) {
 			case RESULT_CANCELED: {
@@ -310,9 +311,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				int assignedRows = getIntent().getExtras().getInt(
 						DBase.FIELD_DOC_ROWS_NAME);
 
-				SpannableString coloredText = null;
-				String message1;
-				String message2;
 				if (rowsLoaded == assignedRows) {
 
 					// ≈сли загружено именно то количество строк, которое и
@@ -350,20 +348,19 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 							DocsStatusFragmentActivity.FIELD_COMMAND_NAME,
 							DocsStatusFragmentActivity.COMMAND.SET);
 
-					startActivityForResult(
-							intent,
-							DocsStatusFragmentActivity.DOCS_STATUS_FRAGMENT_ACTIVITY_ID);
+					startActivityForResult(intent,
+							DocsStatusFragmentActivity.ID);
 
 				} else {
 
 					int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
 
-					message1 = getString(R.string.loadingUnsuccessful);
+					String message1 = getString(R.string.loadingUnsuccessful);
 
-					message2 = message1 + "\n"
+					String message2 = message1 + "\n"
 							+ getString(R.string.rowsDeleted) + rowsDeleted;
 
-					coloredText = new SpannableString(message2);
+					SpannableString coloredText = new SpannableString(message2);
 					coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
 							message1.length(), 0);
 
@@ -374,39 +371,59 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 			} // case RESULT_OK: {
 			} // switch (resultCode) {
 
-		} else if (requestCode == DocsStatusFragmentActivity.DOCS_STATUS_FRAGMENT_ACTIVITY_ID) {
+		} else if (requestCode == DocsStatusFragmentActivity.ID) {
 
 			// ѕолучен ответ из активности, устанавливающей статус документа на
 			// сервере.
+
+			DBase dBase = new DBase(this);
+			dBase.open();
+			String message1;
+			String message2;
+			SpannableString coloredText;
+
 			switch (resultCode) {
 			case RESULT_OK:
 
-				// —татус успешно установлен, ничего предпринимать не нужно.
+				// —татус успешно установлен, ничего предпринимать не нужно,
+				// только вывести сообщение о загруженных строках.
+
+				long rowsLoaded = dBase.getRowsCount(DBase.TABLE_ITEMS_NAME);
+
+				message1 = getString(R.string.documentLoaded);
+
+				message2 = message1 + "\n" + getString(R.string.rowsLoaded)
+						+ rowsLoaded;
+
+				coloredText = new SpannableString(message2);
+				coloredText.setSpan(new ForegroundColorSpan(Color.GREEN), 0,
+						message1.length(), 0);
 				break;
 
 			default: {
+
 				// ¬о всех прочих случа€х считаетс€, что статус документа
 				// на сервере установить не удалось, и все полученные с
 				// него данные д.б. уничтожены, как недостоверные.
-				DBase dBase = new DBase(this);
-				dBase.open();
 				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
 
-				String message1 = getString(R.string.docLoadedButCantSetRevisionStatus);
-				String message2 = message1 + "\n"
-						+ getString(R.string.rowsDeleted) + rowsDeleted;
+				message1 = getString(R.string.docLoadedButCantSetRevisionStatus);
+				message2 = message1 + "\n" + getString(R.string.rowsDeleted)
+						+ rowsDeleted;
 
-				SpannableString coloredText = null;
+				coloredText = null;
 				coloredText = new SpannableString(message2);
 				coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
 						message1.length(), 0);
-				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 			}
 			} // switch (resultCode) {
+
+			Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
+
 		} // if (requestCode == ItemsListLoader.ITEMSLISTLOADER_ID)
 
 		// „тобы обновить список.
-		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+		getSupportLoaderManager().getLoader(ID).forceLoad();
 	}
 
 	@Override
@@ -421,7 +438,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 	@Override
 	public void afterTextChanged(Editable s) {
 		// „тобы обновить список.
-		getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+		getSupportLoaderManager().getLoader(ID).forceLoad();
 	}
 
 	public String getFilter() {
@@ -579,7 +596,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 		// „тобы обновить список.
 		if (rowsAffected > 0)
-			getSupportLoaderManager().getLoader(ITEMS_LIST_ID).forceLoad();
+			getSupportLoaderManager().getLoader(ID).forceLoad();
 	}
 
 	/**

@@ -26,10 +26,10 @@ import android.widget.EditText;
 public class PreferencesActivity extends PreferenceActivity implements
 		OnClickListener {
 
-	private static final int DIALOG_DEMOMODE_ONOFF_ID = 1;
+	private static final int ID = 600;
 
-	private static final int DOCS_EDITTEXT_ID = 0;
-	private static final int ITEMS_EDITTEXT_ID = 1;
+	private static final int DOCS_EDITTEXT_ID = 601;
+	private static final int ITEMS_EDITTEXT_ID = 602;
 
 	private static final String DIALOG_TITLE_FIELD_NAME = "title";
 	private static final String DIALOG_MESSAGE_FIELD_NAME = "message";
@@ -161,6 +161,8 @@ public class PreferencesActivity extends PreferenceActivity implements
 					@Override
 					public boolean onTouch(View v, MotionEvent event) {
 
+						v.performClick();
+
 						currentEditText_Id = v.getId();
 						valuableGestureWidth = v.getWidth() / DIVIDER;
 
@@ -181,6 +183,8 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 					@Override
 					public boolean onTouch(View v, MotionEvent event) {
+
+						v.performClick();
 
 						currentEditText_Id = v.getId();
 						valuableGestureWidth = v.getWidth() / DIVIDER;
@@ -228,7 +232,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 						args.putString(DIALOG_TITLE_FIELD_NAME, title);
 						args.putString(DIALOG_MESSAGE_FIELD_NAME, message);
 
-						showDialog(DIALOG_DEMOMODE_ONOFF_ID, args);
+						showDialog(ID, args);
 
 						return false;
 					}
@@ -246,7 +250,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 	@Override
 	protected Dialog onCreateDialog(int id, Bundle args) {
 
-		if (id == DIALOG_DEMOMODE_ONOFF_ID) {
+		if (id == ID) {
 
 			AlertDialog.Builder adb = new AlertDialog.Builder(this);
 
@@ -332,7 +336,7 @@ public class PreferencesActivity extends PreferenceActivity implements
 			}
 
 			// „тобы диалог каждый раз пересоздавалс€.
-			removeDialog(DIALOG_DEMOMODE_ONOFF_ID);
+			removeDialog(ID);
 
 			break;
 		}

@@ -15,7 +15,7 @@
                 android:key="connectionStringItems"
                 android:title="@string/connectionStringItems" />
             <EditTextPreference
-                android:defaultValue="500"
+                android:defaultValue="250"
                 android:inputType="number"
                 android:key="rowsInDataParcel"
                 android:title="@string/rowsInDataParcel" />
@@ -29,7 +29,7 @@
         </PreferenceScreen>
 
         <EditTextPreference
-            android:defaultValue="600"
+            android:defaultValue="60"
             android:inputType="number"
             android:key="docListOpeningTimeDelay"
             android:summary="@string/refreshDocListOnOpening_Summary"

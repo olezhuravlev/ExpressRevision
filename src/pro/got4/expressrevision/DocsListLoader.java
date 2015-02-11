@@ -40,10 +40,10 @@ import android.widget.Toast;
 public class DocsListLoader extends FragmentActivity implements
 		LoaderCallbacks<Void>, DialogListener {
 
-	public static final int DOCSLIST_LOADER_ID = 1;
+	public static final int ID = 200;
 	public static final String DOCSLIST_LOADER_TAG = "docslistloaderfragmentactivity_tag";
 
-	public static final int BUTTON_BACK_ID = 1;
+	public static final int BUTTON_BACK_ID = 201;
 
 	private ProgressDialogFragment pDialog; // Используется в хэндлере.
 
@@ -161,7 +161,7 @@ public class DocsListLoader extends FragmentActivity implements
 			pDialog.show(getSupportFragmentManager(), DOCSLIST_LOADER_TAG);
 		}
 
-		getSupportLoaderManager().initLoader(DOCSLIST_LOADER_ID, null, this);
+		getSupportLoaderManager().initLoader(ID, null, this);
 	}
 
 	@Override
@@ -201,7 +201,7 @@ public class DocsListLoader extends FragmentActivity implements
 	public void onLoadFinished(Loader<Void> loader, Void data) {
 
 		setResult(RESULT_OK);
-		onCloseDialog(DOCSLIST_LOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ID, BUTTON_BACK_ID);
 
 		// Установка даты обновления.
 		Main.setLastDocsListFetchingTime(new GregorianCalendar());
@@ -211,7 +211,7 @@ public class DocsListLoader extends FragmentActivity implements
 	public void onLoaderReset(Loader<Void> loader) {
 
 		setResult(RESULT_CANCELED);
-		onCloseDialog(DOCSLIST_LOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ID, BUTTON_BACK_ID);
 
 		// Установка даты обновления.
 		Main.setLastDocsListFetchingTime(new GregorianCalendar());
@@ -487,38 +487,6 @@ public class DocsListLoader extends FragmentActivity implements
 				progressHandler.sendMessage(msg);
 			}
 		}
-
-		// @Override
-		// public void deliverResult(Void data) {
-		//
-		// Message.show(this);
-		//
-		// super.deliverResult(data);
-		// }
-
-		// @Override
-		// public void onAbandon() {
-		//
-		// Message.show(this);
-		//
-		// super.onAbandon();
-		// }
-
-		// @Override
-		// public void onContentChanged() {
-		//
-		// Message.show(this);
-		//
-		// super.onContentChanged();
-		// }
-
-		// @Override
-		// public void onForceLoad() {
-		//
-		// Message.show(this);
-		//
-		// super.onForceLoad();
-		// }
 	}
 
 	@Override
@@ -526,7 +494,7 @@ public class DocsListLoader extends FragmentActivity implements
 
 		super.onBackPressed();
 
-		onCloseDialog(DOCSLIST_LOADER_ID, BUTTON_BACK_ID);
+		onCloseDialog(ID, BUTTON_BACK_ID);
 	}
 
 	/**
@@ -542,7 +510,7 @@ public class DocsListLoader extends FragmentActivity implements
 	// Слушатель прогресс-диалога.
 	public void onCloseDialog(int dialogId, int buttonId) {
 
-		getSupportLoaderManager().getLoader(DOCSLIST_LOADER_ID).abandon();
+		getSupportLoaderManager().getLoader(ID).abandon();
 
 		finish();
 	}

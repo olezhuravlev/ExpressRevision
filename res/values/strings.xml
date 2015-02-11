@@ -81,6 +81,10 @@
     <string name="itemsConnectionParametersNotSet">Нет параметров для получения содержимого документов!</string>
     <string name="itemsConnectionStringNotSet">Не указана строка соединения для получения содержимого документов!</string>
 
+    <string name="docSuccessfullyUploaded">Документ успешно передан на сервер.</string>
+    <string name="docIsNotUploaded">Документ передать на сервер не удалось!</string>
+    
+    
     <!-- Строки подключения -->
     <string name="docsConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
     <string name="itemsConnectionString">http://express.nsk.ru:9999/eritems.php</string>

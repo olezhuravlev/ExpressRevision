@@ -35,31 +35,33 @@ public final class R {
         public static final int Item_Name_ColorBack=0x7f090003;
     }
     public static final class drawable {
-        public static final int background=0x7f020000;
-        public static final int button_big_background=0x7f020001;
-        public static final int button_big_background_disabled=0x7f020002;
-        public static final int button_big_background_pressed=0x7f020003;
-        public static final int button_big_selector=0x7f020004;
-        public static final int button_docs_list_background=0x7f020005;
-        public static final int button_docs_list_background_disabled=0x7f020006;
-        public static final int button_docs_list_background_pressed=0x7f020007;
-        public static final int button_docs_list_layout=0x7f020008;
-        public static final int button_docs_list_selector=0x7f020009;
-        public static final int button_small_background=0x7f02000a;
-        public static final int button_small_background_disabled=0x7f02000b;
-        public static final int button_small_background_pressed=0x7f02000c;
-        public static final int button_small_selector=0x7f02000d;
-        public static final int delimeter=0x7f02000e;
-        public static final int delimeter_texture=0x7f02000f;
-        public static final int demo_text_red_45=0x7f020010;
-        public static final int demo_texture=0x7f020011;
-        public static final int docs_list_item_background=0x7f020012;
-        public static final int filter_field_background=0x7f020013;
-        public static final int filter_field_background2=0x7f020014;
-        public static final int items_list_item_background=0x7f020015;
-        public static final int items_list_item_background_visited=0x7f020016;
-        public static final int shop128=0x7f020017;
-        public static final int work_texture=0x7f020018;
+        public static final int animation=0x7f020000;
+        public static final int background=0x7f020001;
+        public static final int button_big_background=0x7f020002;
+        public static final int button_big_background_disabled=0x7f020003;
+        public static final int button_big_background_pressed=0x7f020004;
+        public static final int button_big_selector=0x7f020005;
+        public static final int button_docs_list_background=0x7f020006;
+        public static final int button_docs_list_background_disabled=0x7f020007;
+        public static final int button_docs_list_background_pressed=0x7f020008;
+        public static final int button_docs_list_layout=0x7f020009;
+        public static final int button_docs_list_selector=0x7f02000a;
+        public static final int button_rounded=0x7f02000b;
+        public static final int button_small_background=0x7f02000c;
+        public static final int button_small_background_disabled=0x7f02000d;
+        public static final int button_small_background_pressed=0x7f02000e;
+        public static final int button_small_selector=0x7f02000f;
+        public static final int delimeter=0x7f020010;
+        public static final int delimeter_texture=0x7f020011;
+        public static final int demo_text_red_45=0x7f020012;
+        public static final int demo_texture=0x7f020013;
+        public static final int docs_list_item_background=0x7f020014;
+        public static final int filter_field_background=0x7f020015;
+        public static final int filter_field_background2=0x7f020016;
+        public static final int items_list_item_background=0x7f020017;
+        public static final int items_list_item_background_visited=0x7f020018;
+        public static final int shop128=0x7f020019;
+        public static final int work_texture=0x7f02001a;
     }
     public static final class id {
         public static final int backgroundLayout=0x7f0a000c;
@@ -67,18 +69,19 @@ public final class R {
         public static final int buttonLoad=0x7f0a000f;
         public static final int buttonNo=0x7f0a000b;
         public static final int buttonStart=0x7f0a0024;
+        public static final int buttonUpload=0x7f0a0026;
         public static final int buttonYes=0x7f0a000a;
         public static final int cancel_Button=0x7f0a0005;
         public static final int clearFilterButton=0x7f0a0018;
         public static final int commentTextView=0x7f0a0015;
         public static final int dateTextView=0x7f0a0012;
         public static final int docsListView=0x7f0a0010;
-        public static final int documentFragment=0x7f0a0027;
+        public static final int documentFragment=0x7f0a0028;
         public static final int down_ImageButton=0x7f0a0003;
         public static final int item_code_textView=0x7f0a001b;
         public static final int item_descr_full_textView=0x7f0a001c;
         public static final int itemsFilterEditText=0x7f0a0017;
-        public static final int itemsFragment=0x7f0a0026;
+        public static final int itemsFragment=0x7f0a0027;
         public static final int listViewItems=0x7f0a0019;
         public static final int message_TextView=0x7f0a0000;
         public static final int numberTextView=0x7f0a0013;
@@ -116,8 +119,9 @@ public final class R {
         public static final int items_list_item_specif_visited=0x7f030009;
         public static final int items_list_item_visited=0x7f03000a;
         public static final int main=0x7f03000b;
-        public static final int prefs_listview=0x7f03000c;
-        public static final int x_document=0x7f03000d;
+        public static final int main2=0x7f03000c;
+        public static final int prefs_listview=0x7f03000d;
+        public static final int x_document=0x7f03000e;
     }
     public static final class raw {
         public static final int beep_interface=0x7f050000;
@@ -171,12 +175,14 @@ public final class R {
         public static final int demoModeOnWarning=0x7f07000e;
         public static final int demoMode_Summary=0x7f070003;
         public static final int displayOrientation=0x7f070021;
+        public static final int docIsNotUploaded=0x7f07003f;
         public static final int docLoadedButCantSetRevisionStatus=0x7f070031;
         public static final int docStatusRetrieving=0x7f070030;
+        public static final int docSuccessfullyUploaded=0x7f07003e;
         public static final int docsConnectionParametersNotSet=0x7f070039;
         /**  Строки подключения 
          */
-        public static final int docsConnectionString=0x7f07003e;
+        public static final int docsConnectionString=0x7f070040;
         public static final int docsConnectionStringNotSet=0x7f07003a;
         public static final int docsStatusSettingsNotSet=0x7f07003b;
         public static final int docsTableNotCleared=0x7f070028;
@@ -184,13 +190,13 @@ public final class R {
         public static final int documentLoaded=0x7f07002f;
         public static final int enterFilterString=0x7f070034;
         public static final int itemsConnectionParametersNotSet=0x7f07003c;
-        public static final int itemsConnectionString=0x7f07003f;
+        public static final int itemsConnectionString=0x7f070041;
         public static final int itemsConnectionStringNotSet=0x7f07003d;
         public static final int itemsListLoadedNumberOfUsingThreads=0x7f07001d;
         public static final int itemsListLoadedNumberOfUsingThreads_Summary=0x7f07001e;
         /**  Признак, выставляемый документу после успешной загрузки на устройство 
          */
-        public static final int itemsLoadingSuccessfulStatus=0x7f070043;
+        public static final int itemsLoadingSuccessfulStatus=0x7f070045;
         public static final int itemsTableNotCleared=0x7f070029;
         public static final int loadDocument=0x7f070013;
         public static final int loadDocuments=0x7f070012;
@@ -204,11 +210,11 @@ public final class R {
         public static final int ok=0x7f07000b;
         public static final int percent=0x7f070033;
         public static final int pleaseWait=0x7f07001a;
-        public static final int quantityDecimalSeparator=0x7f070041;
+        public static final int quantityDecimalSeparator=0x7f070043;
         /**  Для отображения количества 
          */
-        public static final int quantityFormatPattern=0x7f070040;
-        public static final int quantityGroupingSeparator=0x7f070042;
+        public static final int quantityFormatPattern=0x7f070042;
+        public static final int quantityGroupingSeparator=0x7f070044;
         public static final int refreshDocListOnOpening=0x7f07001b;
         public static final int refreshDocListOnOpening_Summary=0x7f07001c;
         public static final int resreshList=0x7f070011;

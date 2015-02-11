@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -16,6 +17,8 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,6 +48,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	private static boolean demoMode;
 
 	private Button buttonMain;
+	private Button buttonUpload;
 
 	private MediaPlayer mp;
 
@@ -58,9 +62,14 @@ public class Main extends FragmentActivity implements OnClickListener,
 	private static GregorianCalendar lastDocsListFetchingTime;
 
 	/**
-	 * Дата последнего получения содержимого документа.
+	 * Класс-контейнер, поля которого содержат сведения о документе.
+	 * 
 	 */
-	// private static GregorianCalendar lastItemsListFetchingTime;
+	public static class DocInfo {
+		public String DOC_NUM;
+		public long DOC_DATE;
+		public String STORE_DESCRIPTION;
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +85,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 		// Установка значений по умолчанию.
 		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 
-		setContentView(R.layout.main);
+		setContentView(R.layout.main2);// TODO
 
 		// открываем подключение к БД
 		db = new DBase(this);
@@ -85,45 +94,12 @@ public class Main extends FragmentActivity implements OnClickListener,
 		buttonMain = (Button) findViewById(R.id.buttonStart);
 		buttonMain.setOnClickListener(this);
 
+		buttonUpload = (Button) findViewById(R.id.buttonUpload);
+		buttonUpload.setOnClickListener(this);
+
 		if (savedInstanceState == null) {
-
-			// Проигрывание участка звукового файла.
-
-			// Начало и окончание проигрываемого отрезка.
-			// final int mStartTime = 0;
-			// final int mEndTime = 1200;
-
 			mp = MediaPlayer.create(this, R.raw.logo);
 			mp.start();
-			// mp.setOnSeekCompleteListener(new OnSeekCompleteListener() {
-			//
-			// Handler mHandler = new Handler();
-			//
-			// // Слушатель процедуры поиска.
-			// @Override
-			// public void onSeekComplete(MediaPlayer mp) {
-			// // Когда завершается процедура поиска, то вызывается это
-			// // событие.
-			// // Здесь запускаем плеер и хэндлеру отправляем
-			// // запускаемый объект с лагом в исполнении на
-			// // требуемое время.
-			// mp.start();
-			// // mHandler.postDelayed(mStopAction, mEndTime - mStartTime);
-			// }
-			//
-			// // Запускаемый объект, который остановит проигрывание и
-			// // освободит ресурс.
-			// final Runnable mStopAction = new Runnable() {
-			// @Override
-			// public void run() {
-			// mp.stop();
-			// mp.release();
-			// }
-			// };
-			// });
-
-			// Переход к проигрыванию отрезка.
-			// mp.seekTo(mStartTime);
 		}
 	}
 
@@ -149,7 +125,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 		// то предлагается его загрузить.
 		String btnText = getString(R.string.btnLoadDocument);
 
-		if (getLoadedItemsCount() > 0) {
+		long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
+
+		if (loadedItems > 0) {
 			btnText = getString(R.string.btnEditDocument);
 			btnText = btnText + ": " + getLoadedDocumentDescription(this);
 		}
@@ -239,9 +217,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		switch (id) {
 
-		case R.id.buttonStart:
+		case R.id.buttonStart: {
 
-			long loadedItems = getLoadedItemsCount();
+			long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
 
 			// Загрузка или списка демо-документов, или списка реальных
 			// документов, в зависимости от того, находится ли приложение в
@@ -261,8 +239,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 				intent.putExtra(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
 						connectionString);
 
-				startActivityForResult(intent,
-						DocsListFragmentActivity.DOCS_LIST_ID);
+				startActivityForResult(intent, DocsListFragmentActivity.ID);
+
 			} else {
 
 				// Загруженные строки документа существуют,
@@ -275,11 +253,34 @@ public class Main extends FragmentActivity implements OnClickListener,
 				intent.putExtra(ItemsListFragmentActivity.START_ITEMS_LOADER,
 						false);
 
-				startActivityForResult(intent,
-						ItemsListFragmentActivity.ITEMS_LIST_ID);
+				startActivityForResult(intent, ItemsListFragmentActivity.ID);
 			}
 
 			break;
+		}
+		case R.id.buttonUpload: {
+
+			// Запуск выгрузки содержимого документа.
+			Intent intent = new Intent(this, ItemsListLoader.class);
+
+			String connectionString = PreferenceManager
+					.getDefaultSharedPreferences(this).getString(
+							ItemsListLoader.CONNECTION_STRING_FIELD_NAME, "");
+			intent.putExtra(ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
+					connectionString);
+
+			DocInfo docInfo = getFirstDocumentInfo(this);
+			long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
+
+			intent.putExtra(DBase.FIELD_DOC_NUM_NAME, docInfo.DOC_NUM);
+			intent.putExtra(DBase.FIELD_DOC_DATE_NAME, docInfo.DOC_DATE);
+			intent.putExtra(DBase.FIELD_DOC_ROWS_NAME, loadedItems);
+			intent.putExtra(ItemsListLoader.UPLOADING_FLAG_FIELD_NAME, true);
+
+			startActivityForResult(intent, ItemsListLoader.ID);
+
+			break;
+		}
 
 		default:
 		}
@@ -315,14 +316,14 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		switch (requestCode) {
 
-		case DocsListFragmentActivity.DOCS_LIST_ID: {
+		case DocsListFragmentActivity.ID:
 
 			// Ответ получен из активности, отображающей список документов и
 			// загружающей выбранный.
 
 			switch (resultCode) {
 
-			case DocsListFragmentActivity.CONTEXTMENU_LOAD_BUTTON_ID: {
+			case DocsListFragmentActivity.CONTEXTMENU_LOAD_BUTTON_ID:
 
 				// В контекстном меню списка документов была нажата кнопка
 				// загрузки документа.
@@ -348,13 +349,116 @@ public class Main extends FragmentActivity implements OnClickListener,
 				intent.putExtra(ItemsListFragmentActivity.START_ITEMS_LOADER,
 						true);
 
-				startActivityForResult(intent,
-						ItemsListFragmentActivity.ITEMS_LIST_ID);
+				// Запуск активности, отображающей список номенклатуры.
+				startActivityForResult(intent, ItemsListFragmentActivity.ID);
 
 				break;
+
 			}
+
+		case ItemsListLoader.ID:
+
+			// Ответ получен из активности, выгружающей содержимое документа на
+			// сервер.
+
+			switch (resultCode) {
+			case ItemsListLoader.RESULT_OK:
+
+				// Если документ успешно отправлен на сервер, то производится
+				// попытка установить этому документу соответствующий статус на
+				// сервере.
+				Intent intent = new Intent(this,
+						DocsStatusFragmentActivity.class);
+
+				// Копирование параметров интента, в которых содержится
+				// номер и дата загружаемого документа.
+				intent.putExtras(getIntent());
+
+				// Строка соединения для получения статуса.
+				String connectionString = PreferenceManager
+						.getDefaultSharedPreferences(this)
+						.getString(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+								"");
+				intent.putExtra(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
+						connectionString);
+
+				// Добавление в параметры статуса, которы документ должен
+				// получить на сервере.
+				intent.putExtra(
+						DocsStatusFragmentActivity.FIELD_STATUS_NAME,
+						ItemsListFragmentActivity.STATUS_AFTER_SUCCESSFUL_UPLOADING);
+
+				// COMMAND.set - это команда на простую установку статуса.
+				// Впоследствии лучше изменить на команду установки статуса
+				// с проверкой текущего статуса документа.
+				// Т.е. указывать, с какого на какой именно статус м.б.
+				// изменен.
+				intent.putExtra(DocsStatusFragmentActivity.FIELD_COMMAND_NAME,
+						DocsStatusFragmentActivity.COMMAND.SET);
+
+				startActivityForResult(intent, DocsStatusFragmentActivity.ID);
+
+				break;
+
+			case ItemsListLoader.RESULT_CANCELED:
+
+				// Если документ не удалось отправить на сервер, то ничего
+				// делать не нужно.
+				break;
 			}
-		}
+
+			break;
+
+		case DocsStatusFragmentActivity.ID:
+
+			// Получен ответ из активности, устанавливающей статус документа на
+			// сервере.
+
+			DBase dBase = new DBase(this);
+			dBase.open();
+			String message1;
+			String message2;
+			SpannableString coloredText;
+
+			switch (resultCode) {
+			case RESULT_OK:
+
+				// Статус успешно установлен, строки документа можно удалить
+				// и вывести сообщение о загруженных строках.
+
+				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
+
+				message1 = getString(R.string.docSuccessfullyUploaded);
+				message2 = message1 + "\n" + getString(R.string.rowsDeleted)
+						+ rowsDeleted;
+
+				coloredText = null;
+				coloredText = new SpannableString(message2);
+				coloredText.setSpan(new ForegroundColorSpan(Color.GREEN), 0,
+						message1.length(), 0);
+
+				break;
+
+			default:
+
+				// Во всех прочих случаях считается, что статус документа
+				// на сервере установить не удалось, ничего делать не нужно,
+				// а только вывести сообщение.
+
+				long docRows = dBase.getRowsCount(DBase.TABLE_ITEMS_NAME);
+
+				message1 = getString(R.string.docIsNotUploaded);
+
+				message2 = message1 + "\n" + getString(R.string.rows) + docRows;
+
+				coloredText = new SpannableString(message2);
+				coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
+						message1.length(), 0);
+
+			}
+
+			Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
+
 			break;
 		}
 	}
@@ -362,9 +466,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 	/**
 	 * Возвращает количество строк загруженного документа.
 	 */
-	private long getLoadedItemsCount() {
-		return db.getRowsCount(DBase.TABLE_ITEMS_NAME);
-	}
+	// private long getLoadedItemsCount() {
+	// return db.getRowsCount(DBase.TABLE_ITEMS_NAME);
+	// }
 
 	/**
 	 * Устанавливает заголовок, ориентацию и оформление заднего фона указанного
@@ -468,10 +572,39 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 */
 	private static String getLoadedDocumentDescription(Activity activity) {
 
-		// Извлекается первая запись из таблицы загруженной номенклатуры.
-		// Из этой записи по идентификатору документа извлекается документ из
-		// таблицы загруженных документов.
-		// Из строки документа извлекается его номер, дата и описание склада.
+		DocInfo docInfo = getFirstDocumentInfo(activity);
+
+		String docNum = docInfo.DOC_NUM;
+		long docDate = docInfo.DOC_DATE;
+		String docDateString = DBase.dateFormatter.format(docDate);
+		String storeDescr = docInfo.STORE_DESCRIPTION;
+
+		String docDescription = "";
+		if (docNum != null && docDate != 0L && storeDescr != null) {
+
+			docDescription = storeDescr.concat(": ").concat(docNum)
+					.concat(" от ").concat(docDateString);
+		}
+
+		// Если документ не загружен, то возвращается просто название
+		// приложения.
+		if (docDescription.isEmpty())
+			docDescription = activity.getString(R.string.app_name);
+
+		return docDescription;
+	}
+
+	/**
+	 * Возвращает курсор на первую строку таблицы загруженных документов.</br>
+	 * SELECT</br> Docs.doc_Num AS DocNum,</br> Docs.doc_date AS DocDate,</br>
+	 * Docs.store_descr AS Store</br> FROM documents AS Docs</br> INNER JOIN
+	 * items AS Items ON Docs.doc_id = Items.doc_id LIMIT 1";
+	 *
+	 * @param activity
+	 * @return
+	 */
+	private static DocInfo getFirstDocumentInfo(Activity activity) {
+
 		String sql = "" + "SELECT " + "Docs." + DBase.FIELD_DOC_NUM_NAME
 				+ " AS DocNum, " + "Docs." + DBase.FIELD_DOC_DATE_NAME
 				+ " AS DocDate, " + "Docs." + DBase.FIELD_STORE_DESCR_NAME
@@ -481,25 +614,19 @@ public class Main extends FragmentActivity implements OnClickListener,
 				+ DBase.FIELD_DOC_ID_NAME + " LIMIT 1";
 
 		Cursor cursor = db.getRows(sql, null);
-		String docDescription = "";
+
+		DocInfo docInfo = new DocInfo();
+		docInfo.DOC_NUM = "";
+		docInfo.DOC_DATE = 0;
+		docInfo.STORE_DESCRIPTION = "";
 		if (cursor.moveToFirst() && cursor.isFirst()) {
-			// cursor.getCount();
 
-			String num = cursor.getString(0);
-			long date = cursor.getLong(1);
-			String docDateString = DBase.dateFormatter.format(date);
-			String store = cursor.getString(2);
-
-			docDescription = store.concat(": ").concat(num).concat(" от ")
-					.concat(docDateString);
+			docInfo.DOC_NUM = cursor.getString(0);
+			docInfo.DOC_DATE = cursor.getLong(1);
+			docInfo.STORE_DESCRIPTION = cursor.getString(2);
 		}
 
-		// Если документ не загружен, то возвращается просто название
-		// приложения.
-		if (docDescription.isEmpty())
-			docDescription = activity.getString(R.string.app_name);
-
-		return docDescription;
+		return docInfo;
 	}
 
 	/**
