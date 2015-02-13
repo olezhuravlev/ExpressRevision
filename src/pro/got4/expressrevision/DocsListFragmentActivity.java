@@ -171,7 +171,7 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 			String docNum = cursor.getString(numIdx);
 			// String docDate = cursor.getString(dateIdx);
 			long docDate = cursor.getLong(dateIdx);
-			int rows = cursor.getInt(rowsIdx);
+			long rows = cursor.getLong(rowsIdx);
 
 			setResult(CONTEXTMENU_LOAD_BUTTON_ID,
 					new Intent().putExtra(DBase.FIELD_DOC_NUM_NAME, docNum)

@@ -166,6 +166,9 @@ public final class R {
 
 
 
+
+
+
     
          */
         public static final int demoMode=0x7f070002;
@@ -177,6 +180,12 @@ public final class R {
         public static final int displayOrientation=0x7f070021;
         public static final int docIsNotUploaded=0x7f07003f;
         public static final int docLoadedButCantSetRevisionStatus=0x7f070031;
+        /**  Признак, выставляемый документу на сервере после успешной загрузки на устройство 
+         */
+        public static final int docStatusAfterSuccessfulLoading=0x7f070045;
+        /**  Признак, выставляемый документу на сервере после успешной загрузки на сервер 
+         */
+        public static final int docStatusAfterSuccessfulUploading=0x7f070046;
         public static final int docStatusRetrieving=0x7f070030;
         public static final int docSuccessfullyUploaded=0x7f07003e;
         public static final int docsConnectionParametersNotSet=0x7f070039;
@@ -194,9 +203,6 @@ public final class R {
         public static final int itemsConnectionStringNotSet=0x7f07003d;
         public static final int itemsListLoadedNumberOfUsingThreads=0x7f07001d;
         public static final int itemsListLoadedNumberOfUsingThreads_Summary=0x7f07001e;
-        /**  Признак, выставляемый документу после успешной загрузки на устройство 
-         */
-        public static final int itemsLoadingSuccessfulStatus=0x7f070045;
         public static final int itemsTableNotCleared=0x7f070029;
         public static final int loadDocument=0x7f070013;
         public static final int loadDocuments=0x7f070012;

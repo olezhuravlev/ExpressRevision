@@ -272,10 +272,16 @@ public class Main extends FragmentActivity implements OnClickListener,
 			DocInfo docInfo = getFirstDocumentInfo(this);
 			long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
 
+			if (loadedItems == 0)
+				return;
+
 			intent.putExtra(DBase.FIELD_DOC_NUM_NAME, docInfo.DOC_NUM);
 			intent.putExtra(DBase.FIELD_DOC_DATE_NAME, docInfo.DOC_DATE);
 			intent.putExtra(DBase.FIELD_DOC_ROWS_NAME, loadedItems);
 			intent.putExtra(ItemsListLoader.UPLOADING_FLAG_FIELD_NAME, true);
+			intent.putExtra(
+					ItemsListLoader.FIELD_STATUS_NAME,
+					Integer.parseInt(getString(R.string.docStatusAfterSuccessfulUploading)));
 
 			startActivityForResult(intent, ItemsListLoader.ID);
 
@@ -363,40 +369,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			switch (resultCode) {
 			case ItemsListLoader.RESULT_OK:
-
-				// Если документ успешно отправлен на сервер, то производится
-				// попытка установить этому документу соответствующий статус на
-				// сервере.
-				Intent intent = new Intent(this,
-						DocsStatusFragmentActivity.class);
-
-				// Копирование параметров интента, в которых содержится
-				// номер и дата загружаемого документа.
-				intent.putExtras(getIntent());
-
-				// Строка соединения для получения статуса.
-				String connectionString = PreferenceManager
-						.getDefaultSharedPreferences(this)
-						.getString(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
-								"");
-				intent.putExtra(DocsListLoader.CONNECTION_STRING_FIELD_NAME,
-						connectionString);
-
-				// Добавление в параметры статуса, которы документ должен
-				// получить на сервере.
-				intent.putExtra(
-						DocsStatusFragmentActivity.FIELD_STATUS_NAME,
-						ItemsListFragmentActivity.STATUS_AFTER_SUCCESSFUL_UPLOADING);
-
-				// COMMAND.set - это команда на простую установку статуса.
-				// Впоследствии лучше изменить на команду установки статуса
-				// с проверкой текущего статуса документа.
-				// Т.е. указывать, с какого на какой именно статус м.б.
-				// изменен.
-				intent.putExtra(DocsStatusFragmentActivity.FIELD_COMMAND_NAME,
-						DocsStatusFragmentActivity.COMMAND.SET);
-
-				startActivityForResult(intent, DocsStatusFragmentActivity.ID);
 
 				break;
 
@@ -599,7 +571,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * SELECT</br> Docs.doc_Num AS DocNum,</br> Docs.doc_date AS DocDate,</br>
 	 * Docs.store_descr AS Store</br> FROM documents AS Docs</br> INNER JOIN
 	 * items AS Items ON Docs.doc_id = Items.doc_id LIMIT 1";
-	 *
+	 * 
 	 * @param activity
 	 * @return
 	 */

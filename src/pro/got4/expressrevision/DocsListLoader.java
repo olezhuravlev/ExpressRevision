@@ -54,9 +54,10 @@ public class DocsListLoader extends FragmentActivity implements
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringDocs";
 
 	// Поля XML-парсера.
+	private static final String FIELD_DEVICE_ID_NAME = "deviceId";
 	private static final String DOC_TAG_NAME = "doc";
-	private static final String DOC_NUM_TAG_NAME = "num";
-	private static final String DOC_DATE_TAG_NAME = "date";
+	private static final String DOC_NUM_TAG_NAME = "docNum";
+	private static final String DOC_DATE_TAG_NAME = "docDate";
 	private static final String DOC_ROWS_TAG_NAME = "rows";
 
 	private static final String STORE_TAG_NAME = "store";
@@ -310,7 +311,8 @@ public class DocsListLoader extends FragmentActivity implements
 				TelephonyManager tm = (TelephonyManager) context
 						.getSystemService(Context.TELEPHONY_SERVICE);
 				String deviceId = tm.getDeviceId();
-				String uriString = connectionString + "?deviceid=" + deviceId;
+				String uriString = connectionString + "?"
+						+ FIELD_DEVICE_ID_NAME + "=" + deviceId;
 				try {
 
 					DocumentBuilderFactory dbFactory = DocumentBuilderFactory

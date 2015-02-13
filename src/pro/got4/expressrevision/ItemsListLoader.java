@@ -1,10 +1,14 @@
 package pro.got4.expressrevision;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
@@ -19,6 +23,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -58,10 +65,12 @@ public class ItemsListLoader extends FragmentActivity implements
 
 	public static final String NUMBER_OF_TREADS_FIELD_NAME = "itemsListLoadedNumberOfUsingThreads";
 	public static final String UPLOADING_FLAG_FIELD_NAME = "uploadingFlag";
+	public static final String FIELD_STATUS_NAME = "status";
 
 	private static final String FIELD_DOC_LOADED_ROWS_TOTAL_NAME = "docRowsTotal";
 	private static final String FIELD_DOC_ROWS_TOTAL_NAME = "docLoadedRowsTotal";
 
+	private static final String FIELD_DEVICE_ID_NAME = "deviceId";
 	private static final String FIELD_DOC_NUM_NAME = "docNum";
 	private static final String FIELD_DOC_DATE_NAME = "docDate";
 	private static final String FIELD_CONNECTION_STRING_NAME = "connectionString";
@@ -77,8 +86,8 @@ public class ItemsListLoader extends FragmentActivity implements
 
 	// Поля XML-парсера.
 	private static final String DOC_TAG_NAME = "doc";
-	private static final String DOC_NUM_TAG_NAME = "num";
-	private static final String DOC_DATE_TAG_NAME = "date";
+	private static final String DOC_NUM_TAG_NAME = "docNum";
+	private static final String DOC_DATE_TAG_NAME = "docDate";
 
 	private static final String ROW_TAG_NAME = "doc_row";
 	private static final String ROW_NUM_TAG_NAME = "num";
@@ -100,10 +109,18 @@ public class ItemsListLoader extends FragmentActivity implements
 	private static final String QUANT_ACC_TAG_NAME = "quant_acc";
 	private static final String QUANT_TAG_NAME = "quant";
 
+	// Поле JSON-объекта, хранящее данные о номере строке и количестве
+	// номенклатуры для неё.
+	private static final String DOC_ROW_QUANT_TAG_NAME = "row_quants";
+
 	// Форматтер даты для преобразования в формат, используемый для формирования
 	// идентификатора документа.
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(
 			"yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
+	// Форматтер даты для преобразования к виду, используемому в HTTP-запросах.
+	private static final SimpleDateFormat uriDateFormatter = new SimpleDateFormat(
+			"yyyyMMddHHmmss", Locale.getDefault());
 
 	// Во избежание утечек (см. подсказку, которая появляется, если класс
 	// хэндлера не делать статическим).
@@ -175,6 +192,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		super.onCreate(savedInstanceState);
 
 		boolean uploading = false;
+		int status = 0;
 		Bundle extras = getIntent().getExtras();
 		if (extras == null) {
 			Toast.makeText(this,
@@ -197,6 +215,7 @@ public class ItemsListLoader extends FragmentActivity implements
 			docRowsTotal = (int) extras.getLong(DBase.FIELD_DOC_ROWS_NAME);
 
 			uploading = extras.getBoolean(UPLOADING_FLAG_FIELD_NAME);
+			status = extras.getInt(FIELD_STATUS_NAME);
 		}
 
 		WEAK_REF_ACTIVITY = new WeakReference<ItemsListLoader>(this);
@@ -237,35 +256,46 @@ public class ItemsListLoader extends FragmentActivity implements
 				.getDefaultSharedPreferences(this).getString(
 						FIELD_ROWS_IN_EACH_PARCEL_NAME, "100"));
 
-		SparseArray<int[]> spArr = sliceInterval(docRowsTotal, threadsNumber,
-				maxRowsInParcel);
-		for (int i = 0; i < spArr.size(); i++) {
+		// Каждый загрузчик/выгрузчик получает набор параметров:
+		// - номер, дата документа;
+		// - строка соединения.
+		Bundle exchangeArgs = new Bundle();
+		exchangeArgs.putString(FIELD_DOC_NUM_NAME, docNum);
+		exchangeArgs.putLong(FIELD_DOC_DATE_NAME, docDate);
+		exchangeArgs.putString(FIELD_CONNECTION_STRING_NAME, connectionString);
+		exchangeArgs.putBoolean(UPLOADING_FLAG_FIELD_NAME, uploading);
+		exchangeArgs.putInt(FIELD_STATUS_NAME, status);
 
-			Bundle exchangeArgs = new Bundle();
+		if (uploading) {
 
-			// Каждый загрузчик/выгрузчик получает набор параметров:
+			// Выгрузка данных на сервер производится единственным загрузчиком.
+			getSupportLoaderManager().initLoader(0, exchangeArgs, this);
+
+		} else {
+
+			// Загрузка данных с сервера производится набором загрузчиков.
+			// Разбивка загружаемых строк на интервалы, каждый из которых будет
+			// загружаться отдельным запросом.
+			SparseArray<int[]> spArr = sliceInterval(docRowsTotal,
+					threadsNumber, maxRowsInParcel);
+
+			// На основании разбивки по интервалам каждый загрузчик
+			// дополнительно получает:
 			// - номер первой строки документа, которую он должен загрузить.
 			// - номер последней строки документа, которую он должен
 			// загрузить.
 			// - желательное количество строк в одном загружаемом пакете.
-			exchangeArgs.putString(FIELD_DOC_NUM_NAME, docNum);
-			exchangeArgs.putLong(FIELD_DOC_DATE_NAME, docDate);
-			exchangeArgs.putString(FIELD_CONNECTION_STRING_NAME,
-					connectionString);
+			for (int i = 0; i < spArr.size(); i++) {
 
-			exchangeArgs.putInt(FIELD_FIRST_LOADED_ROW_NUM_NAME,
-					spArr.get(i)[0] + 1);
-			exchangeArgs.putInt(FIELD_LAST_LOADED_ROW_NUM_NAME,
-					spArr.get(i)[1] + 1);
-			exchangeArgs
-					.putInt(FIELD_ROWS_IN_EACH_PARCEL_NAME, maxRowsInParcel);
+				exchangeArgs.putInt(FIELD_FIRST_LOADED_ROW_NUM_NAME,
+						spArr.get(i)[0] + 1);
+				exchangeArgs.putInt(FIELD_LAST_LOADED_ROW_NUM_NAME,
+						spArr.get(i)[1] + 1);
+				exchangeArgs.putInt(FIELD_ROWS_IN_EACH_PARCEL_NAME,
+						maxRowsInParcel);
 
-			// Выгрузчик дополнительно имеет флаг.
-			if (uploading) {
-				exchangeArgs.putBoolean(UPLOADING_FLAG_FIELD_NAME, true);
+				getSupportLoaderManager().initLoader(i, exchangeArgs, this);
 			}
-
-			getSupportLoaderManager().initLoader(i, exchangeArgs, this);
 		}
 	}
 
@@ -348,7 +378,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	 * Класс, реализующий загрузку содержимого документов.
 	 * 
 	 * @author programmer
-	 *
+	 * 
 	 */
 	private static class ItemsAsyncTaskLoader extends AsyncTaskLoader<Void> {
 
@@ -483,11 +513,12 @@ public class ItemsListLoader extends FragmentActivity implements
 
 				// Дата в БД имеет вид миллисекунд с начала Юникс-эпохи,
 				// и её следует преобразовать к виду "20140101000000".
-				SimpleDateFormat dateFormatter = new SimpleDateFormat(
-						"yyyyMMddHHmmss", Locale.getDefault());
-				String dateURIFormattedString = dateFormatter.format(docDate);
-				String query = "?deviceid=" + deviceId + "&docdate="
-						+ dateURIFormattedString + "&docnum='";
+				String dateURIFormattedString = uriDateFormatter
+						.format(docDate);
+				String query = "?" + FIELD_DEVICE_ID_NAME + "=" + deviceId
+						+ "&" + FIELD_DOC_DATE_NAME + "="
+						+ dateURIFormattedString + "&" + FIELD_DOC_NUM_NAME
+						+ "='";
 
 				// В номере документа может содержаться кириллица, поэтому
 				// необходимо преобразование.
@@ -791,8 +822,8 @@ public class ItemsListLoader extends FragmentActivity implements
 				itemValues.put(DBase.FIELD_QUANT_ACC_NAME, quantAcc);
 				itemValues.put(DBase.FIELD_QUANT_NAME, quant);
 
-				dBase.insert(dBase.getSQLiteDatabase(), DBase.TABLE_ITEMS_NAME,
-						itemValues);
+				long lastId = dBase.insert(dBase.getSQLiteDatabase(),
+						DBase.TABLE_ITEMS_NAME, itemValues);
 
 				++rowsCounter;
 
@@ -810,7 +841,7 @@ public class ItemsListLoader extends FragmentActivity implements
 	 * Класс, реализующий выгрузку содержимого документов.
 	 * 
 	 * @author programmer
-	 *
+	 * 
 	 */
 	private static class ItemsAsyncTaskUploader extends AsyncTaskLoader<Void> {
 
@@ -822,6 +853,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		private String docNum;
 		private long docDate;
+		private int status;
 		private String connectionString;
 
 		// Интервалы строк к выгрузке.
@@ -835,6 +867,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 				docNum = args.getString(FIELD_DOC_NUM_NAME);
 				docDate = args.getLong(FIELD_DOC_DATE_NAME);
+				status = args.getInt(FIELD_STATUS_NAME);
 				connectionString = args.getString(FIELD_CONNECTION_STRING_NAME);
 
 				int firstLoadersRowNumber = args
@@ -878,74 +911,104 @@ public class ItemsListLoader extends FragmentActivity implements
 		@Override
 		public Void loadInBackground() {
 
-			try {
-				Thread.sleep(5000);// TODO
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
 			if (Main.isDemoMode()) {
+
+				try {
+					Thread.sleep(5000);// TODO
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				// {"date":"2015-02-13 21:53:40",
+				// "deviceId":"356633059239416",
+				// "docNum":"ЭКС00000004",
+				// "docDate":"2015-02-04 18:02:19",
+				// "status":"3"}
 
 			} else {
 
-				URL url;
-				HttpURLConnection urlConnection = null;
+				// Получение записей документа и заполнение ими JSON-массива.
+				Cursor cursor = dBase.getRowsAll(DBase.TABLE_ITEMS_NAME,
+						DBase.FIELD_ROW_NUM_NAME);
+
+				int rowNum_Idx = cursor
+						.getColumnIndex(DBase.FIELD_ROW_NUM_NAME);
+				int quant_Idx = cursor.getColumnIndex(DBase.FIELD_QUANT_NAME);
+
+				cursor.moveToFirst();
+				if (!cursor.isFirst())
+					return null;
+
+				int rowNum;
+				float quant;
+				rowNum = cursor.getInt(rowNum_Idx);
+				quant = cursor.getFloat(quant_Idx);
+
+				JSONArray arr = new JSONArray();
 				try {
-
-					url = new URL("http://www.android.com/");
-					urlConnection = (HttpURLConnection) url.openConnection();
-
-					// Разрешение ввода.
-					urlConnection.setDoInput(true);
-
-					// Разрешение вывода.
-					urlConnection.setDoOutput(true);
-
-					// Размер блока данных по-умолчанию.
-					urlConnection.setChunkedStreamingMode(0);
-
-					// Не использовать кэширование.
-					urlConnection.setUseCaches(false);
-
-					// Команда запроса, которая будет отправлена на сервер.
-					urlConnection.setRequestMethod("POST");
-
-					urlConnection
-							.setRequestProperty("Connection", "Keep-Alive");
-					urlConnection.setRequestProperty("ENCTYPE",
-							"multipart/form-data");
-
-					int boundary = 0; // Что это?
-					urlConnection.setRequestProperty("Content-Type",
-							"multipart/form-data;boundary=" + boundary);
-
-					// Что это?
-					String fileName = "";
-					urlConnection.setRequestProperty("uploaded_file", fileName);
-
-					OutputStream out = new BufferedOutputStream(
-							urlConnection.getOutputStream());
-
-					writeStream(out);
-
-					InputStream in = new BufferedInputStream(
-							urlConnection.getInputStream());
-
-				} catch (IOException e) {
-
+					arr.put(rowNum);
+					arr.put(quant);
+				} catch (JSONException e) {
 					e.printStackTrace();
-
-					// Чтение ответа сервера в случае ошибки.
-					InputStream errorIn = urlConnection.getErrorStream();
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-
-					if (urlConnection != null)
-						urlConnection.disconnect();
+					return null;
 				}
 
+				boolean error = false;
+				while (cursor.moveToNext()) {
+					rowNum = cursor.getInt(rowNum_Idx);
+					quant = cursor.getFloat(quant_Idx);
+					try {
+						arr.put(rowNum);
+						arr.put(quant);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						error = true;
+						break;
+					}
+				}
+
+				if (error)
+					return null;
+
+				JSONObject jsonObj = new JSONObject();
+				try {
+
+					// Получение идентификатора устройства.
+					TelephonyManager tm = (TelephonyManager) context
+							.getSystemService(Context.TELEPHONY_SERVICE);
+					String deviceId = tm.getDeviceId();
+					jsonObj.put(FIELD_DEVICE_ID_NAME, deviceId);
+
+					String dateURIFormattedString = uriDateFormatter
+							.format(docDate);
+					jsonObj.put(FIELD_DOC_DATE_NAME, dateURIFormattedString);
+
+					// В номере документа может содержаться кириллица, поэтому
+					// необходимо бы преобразование.
+					// Но в случае с JSON почему-то нужно передавать
+					// кириллический номер как есть и он принимается на сервере
+					// корректно.
+					jsonObj.put(FIELD_DOC_NUM_NAME, docNum);
+
+					// Статус, который должен получить документ после
+					// заполнения.
+					jsonObj.put(FIELD_STATUS_NAME, status);
+
+					// Массив, содержащий данные о номере строки и количестве
+					// в ней.
+					jsonObj.put(DOC_ROW_QUANT_TAG_NAME, arr);
+
+				} catch (JSONException e) {
+					e.printStackTrace();
+					return null;
+				}
+
+				String urlString = "http://express.nsk.ru:9999/eritems_post.php";
+				try {
+					sendHttpJsonObject(urlString, jsonObj);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 
 			mp.start();
@@ -1013,10 +1076,182 @@ public class ItemsListLoader extends FragmentActivity implements
 		}
 
 		/**
-		 * Вывод данных в поток.
+		 * Загрузка JSONObject на сервер.
+		 * 
+		 * @param
 		 */
-		private void writeStream(OutputStream out) {
+		public String sendHttpJsonObject(String url, JSONObject jsonObj)
+				throws Exception {
 
+			HttpURLConnection connection = null;
+
+			try {
+
+				URL object = new URL(url);
+				connection = (HttpURLConnection) object.openConnection();
+
+				connection.setDoOutput(true);
+				connection.setDoInput(true);
+				connection.setUseCaches(false);
+				connection.setRequestMethod("POST");
+
+				// Формат и способ представления сущности.
+				connection.setRequestProperty("Content-Type",
+						"application/json");
+				// Список допустимых форматов ресурса.
+				connection.setRequestProperty("Accept", "application/json");
+
+				OutputStreamWriter streamWriter = new OutputStreamWriter(
+						connection.getOutputStream());
+
+				streamWriter.write(jsonObj.toString());
+				streamWriter.flush();
+
+				StringBuilder stringBuilder = new StringBuilder();
+
+				if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+					InputStreamReader streamReader = new InputStreamReader(
+							connection.getInputStream());
+					BufferedReader bufferedReader = new BufferedReader(
+							streamReader);
+
+					String response = null;
+					while ((response = bufferedReader.readLine()) != null) {
+						stringBuilder.append(response + "\n");
+					}
+					bufferedReader.close();
+
+					// System.out.println(stringBuilder.toString());
+					return stringBuilder.toString();
+
+				} else {
+
+					// System.out.println(connection.getResponseMessage());
+					throw new Exception(connection.getResponseMessage());
+					// return connection.getResponseMessage();
+				}
+			} catch (Exception e) {
+				// System.out.println(exception.toString());
+				throw e;
+			} finally {
+				if (connection != null) {
+					connection.disconnect();
+				}
+			}
+		}
+
+		/**
+		 * Загрузка файла на сервер (ОБРАЗЕЦ).
+		 * 
+		 * @param
+		 */
+		private void sendHttpFile(String fileName) {
+
+			String urlString = "http://express.nsk.ru:9999/_up_au.php";
+
+			HttpURLConnection httpUrlConnection = null;
+			DataOutputStream dataOutputStream = null;
+			DataInputStream dataInputStream = null;
+
+			String twoHyphens = "--";
+			String boundary = "*****";
+			String lineEnd = "\r\n"; // !!! Важно!
+
+			int bytesRead, bytesAvailable, bufferSize;
+			byte[] buffer;
+			int maxBufferSize = 1 * 1024 * 1024;
+
+			String responseFromServer = "";
+			try {
+				// Отправка данных на сервер POST-запросом.
+				FileInputStream fileInputStream = new FileInputStream(new File(
+						fileName));
+
+				URL url = new URL(urlString);
+
+				httpUrlConnection = (HttpURLConnection) url.openConnection();
+
+				// Для соединения разрешен ввод.
+				httpUrlConnection.setDoInput(true);
+
+				// Для соединения разрешен вывод.
+				httpUrlConnection.setDoOutput(true);
+
+				// Кэш не использовать.
+				httpUrlConnection.setUseCaches(false);
+
+				// Команда, которая будет послана на HTTP-сервер.
+				httpUrlConnection.setRequestMethod("POST");
+
+				// Установка свойств полей заголовка.
+				// Постоянное соединение
+				// (использование одного TCP-соединения для отправки и получения
+				// множественных HTTP-запросов и ответов вместо открытия нового
+				// соединения для каждой пары запрос-ответ).
+				httpUrlConnection
+						.setRequestProperty("Connection", "Keep-Alive");
+
+				// Единственное значение, позволяющее передачу файла в
+				// POST-запросе.
+				// Тип содержимого multipart/form-data — это составной тип
+				// содержимого, чаще всего использующийся для отправки HTML-форм
+				// с бинарными (не-ASCII) данными методом POST протокола HTTP.
+				httpUrlConnection.setRequestProperty("Content-Type",
+						"multipart/form-data;boundary=" + boundary);
+
+				// Поток для записи данных в URL-соединение.
+				OutputStream oStream = httpUrlConnection.getOutputStream();
+
+				// Оболочка существующего потока, записывающая в него
+				// типизированные данные.
+				dataOutputStream = new DataOutputStream(oStream);
+				dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
+
+				// Способ распределения сущностей в сообщении при передаче
+				// нескольких фрагментов.
+				dataOutputStream
+						.writeBytes("Content-Disposition:form-data; name=\"ufile\";filename=\""
+								+ fileName + "\"" + lineEnd);
+				dataOutputStream.writeBytes(lineEnd);
+
+				// create a buffer of maximum size
+				bytesAvailable = fileInputStream.available();
+				bufferSize = Math.min(bytesAvailable, maxBufferSize);
+				buffer = new byte[bufferSize];
+				// read file and write it into form...
+				bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+				while (bytesRead > 0) {
+					dataOutputStream.write(buffer, 0, bufferSize);
+					bytesAvailable = fileInputStream.available();
+					bufferSize = Math.min(bytesAvailable, maxBufferSize);
+					bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+				}
+				// send multipart form data necesssary after file data...
+				dataOutputStream.writeBytes(lineEnd);
+				dataOutputStream.writeBytes(twoHyphens + boundary + twoHyphens
+						+ lineEnd);
+				// close streams
+				System.out.println("File is written");
+				fileInputStream.close();
+				dataOutputStream.flush();
+				dataOutputStream.close();
+			} catch (Exception e) {
+				System.out.println("error: " + e);
+			}
+
+			// ------------------ read the SERVER RESPONSE
+			try {
+				InputStream is = httpUrlConnection.getInputStream();
+				dataInputStream = new DataInputStream(is);
+				String str;
+
+				while ((str = dataInputStream.readLine()) != null) {
+					System.out.println("Server Response " + str);
+				}
+				dataInputStream.close();
+			} catch (Exception e) {
+				System.out.println("error: " + e);
+			}
 		}
 	}
 
@@ -1043,7 +1278,11 @@ public class ItemsListLoader extends FragmentActivity implements
 
 		// Останавливаются все загрузчики.
 		for (int i = 0; i < threadsNumber; i++) {
-			getSupportLoaderManager().getLoader(i).abandon();
+
+			Loader<Void> loader = getSupportLoaderManager().getLoader(i);
+
+			if (loader != null)
+				loader.abandon();
 		}
 
 		finish();

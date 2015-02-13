@@ -42,6 +42,7 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 	public static final int DOCS_STATUS_LOADER_ID = 301;
 	public static final String DOCSLIST_LOADER_TAG = "docsstatusfragmentactivity_tag";
 
+	private static final String FIELD_DEVICE_ID_NAME = "deviceId";
 	public static final String FIELD_COMMAND_NAME = "command";
 	public static final String FIELD_STATUS_NAME = "status";
 
@@ -57,8 +58,8 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 
 	// Поля XML-парсера.
 	private static final String DOC_TAG_NAME = "doc";
-	private static final String DOC_NUM_TAG_NAME = "num";
-	private static final String DOC_DATE_TAG_NAME = "date";
+	private static final String DOC_NUM_TAG_NAME = "docNum";
+	private static final String DOC_DATE_TAG_NAME = "docDate";
 	private static final String DOC_STATUS_TAG_NAME = "status";
 
 	/** Called when the activity is first created. */
@@ -213,20 +214,20 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 				TelephonyManager tm = (TelephonyManager) context
 						.getSystemService(Context.TELEPHONY_SERVICE);
 				String deviceId = tm.getDeviceId();
-				String uriString = connectionString + "?deviceid=" + deviceId
-						+ "&command=" + getGETCommand(command) + "&status="
-						+ status;
+				String uriString = connectionString + "?"
+						+ FIELD_DEVICE_ID_NAME + "=" + deviceId + "&"
+						+ FIELD_COMMAND_NAME + "=" + getGETCommand(command)
+						+ "&" + FIELD_STATUS_NAME + "=" + status;
 
 				try {
-
 					// Дата в БД имеет вид миллисекунд с начала Юникс-эпохи,
 					// и её следует преобразовать к виду "20140101000000".
-					uriString = uriString + "&docdate="
+					uriString = uriString + "&" + DOC_DATE_TAG_NAME + "="
 							+ dateFormatterTo.format(docDate);
 
 					// В номере документа может содержаться кириллица, поэтому
 					// необходимо преобразование.
-					uriString = uriString + "&docnum='"
+					uriString = uriString + "&" + DOC_NUM_TAG_NAME + "='"
 							+ URLEncoder.encode(docNum, HTTP.UTF_8) + "'";
 
 					DocumentBuilderFactory dbFactory = DocumentBuilderFactory

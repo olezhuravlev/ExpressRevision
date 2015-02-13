@@ -50,9 +50,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 	public static final String START_ITEMS_LOADER = "start_items_loader";
 
-	public static final int STATUS_AFTER_SUCCESSFUL_LOADING = 2;
-	public static final int STATUS_AFTER_SUCCESSFUL_UPLOADING = 3;
-
 	// Флаг того, что при отметке элементов как посещенных, выделяться
 	// должны все повторы элемента, встречающиеся в списке.
 	private static boolean setDuplicatesAsVisited;
@@ -308,7 +305,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 
 				// Сверка количества загруженных строк с тем количеством,
 				// которое указано для загружаемого документа.
-				int assignedRows = getIntent().getExtras().getInt(
+				long assignedRows = getIntent().getExtras().getLong(
 						DBase.FIELD_DOC_ROWS_NAME);
 
 				if (rowsLoaded == assignedRows) {
@@ -337,7 +334,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 					// получить на сервере.
 					intent.putExtra(
 							DocsStatusFragmentActivity.FIELD_STATUS_NAME,
-							STATUS_AFTER_SUCCESSFUL_LOADING);
+							Integer.parseInt(getString(R.string.docStatusAfterSuccessfulLoading)));
 
 					// COMMAND.set - это команда на простую установку статуса.
 					// Впоследствии лучше изменить на команду установки статуса

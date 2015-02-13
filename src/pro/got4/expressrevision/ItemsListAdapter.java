@@ -189,7 +189,7 @@ public class ItemsListAdapter extends ResourceCursorAdapter implements
 		if (docId_Idx == rowNum_Idx)
 			fillColumnIndices(cursor);
 
-		// String docId = cursor.getString(docId_Idx);
+		//String docId = cursor.getString(docId_Idx);
 		int rowNum = cursor.getInt(rowNum_Idx);
 		String itemCode = cursor.getString(itemCode_Idx);
 		// String itemDescr = cursor.getString(itemDescr_Idx);
