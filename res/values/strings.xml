@@ -14,12 +14,6 @@
 
     <string name="app_name">Экспресс-Ревизия</string>
     <string name="settings_title">Настройки</string>
-
-    <!--
-    <string name="demoMode_on">Включить демо-режим</string>
-    <string name="demoMode_off">Отключить демо-режим</string>
-    -->
-
     <string name="demoMode">Демо-режим</string>
     <string name="demoMode_Summary">Обучающий режим работы, не требующий подключения к источникам данных.</string>
     <string name="setDuplicatesAsVisited">Отмечать дубликаты как посещенные</string>
@@ -31,6 +25,7 @@
     <string name="no">Нет</string>
     <string name="ok">ОК</string>
     <string name="cancel">Отмена</string>
+    <string name="upload">Отправить</string>
     <string name="demoModeOnConfirmation">Включить демо-режим?</string>
     <string name="demoModeOnWarning">Внимание!\nВсе данные текущей ревизии будут уничтожены!\nПродолжить?</string>
     <string name="demoModeOffConfirmation">Отключить демо-режим?</string>
@@ -53,8 +48,6 @@
     <string name="userPrefs">Пользовательские настройки</string>
     <string name="displayOrientation">Ориентация экрана</string>
     <string name="connectPrefs">Настройки подключения</string>
-    <string name="connectionStringDocs">Получение списка документов</string>
-    <string name="connectionStringItems">Получение содержимого документов</string>
     <string name="rowsInDataParcel">Строк в пакете данных</string>
     <string name="clearTables">Очистить данные</string>
     <string name="tablesCleared">Данные очищены!</string>
@@ -82,10 +75,15 @@
     <string name="itemsConnectionStringNotSet">Не указана строка соединения для получения содержимого документов!</string>
     <string name="docSuccessfullyUploaded">Документ успешно передан на сервер.</string>
     <string name="docIsNotUploaded">Документ передать на сервер не удалось!</string>
+    <string name="serverResponse">Ответ сервера:</string>
 
-    <!-- Строки подключения -->
+    <!-- Строки подключения и их заголовки -->
+    <string name="connectionStringDocs">Получение списка документов</string>
     <string name="docsConnectionString">http://express.nsk.ru:9999/erdocs.php</string>
+    <string name="connectionStringItems">Получение содержимого документов</string>
     <string name="itemsConnectionString">http://express.nsk.ru:9999/eritems.php</string>
+    <string name="connectionStringItemsPost">Отправка содержимого документов</string>
+    <string name="itemsPostConnectionString">http://express.nsk.ru:9999/eritems_post.php</string>
 
     <!-- Для отображения количества -->
     <string name="quantityFormatPattern">###,###.##</string>

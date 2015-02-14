@@ -15,12 +15,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
@@ -35,6 +35,7 @@ import pro.got4.expressrevision.dialogs.ProgressDialogFragment;
 import pro.got4.expressrevision.dialogs.ProgressDialogFragment.DialogListener;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -55,9 +56,10 @@ import android.widget.Toast;
  * 
  */
 public class ItemsListLoader extends FragmentActivity implements
-		LoaderCallbacks<Void>, DialogListener {
+		LoaderCallbacks<JSONObject>, DialogListener {
 
 	public static final int ID = 500;
+	public static final int BUTTON_BACK_ID = 501;
 
 	private static final int DEMO_MODE_SLEEP_TIME = 50;
 
@@ -66,6 +68,9 @@ public class ItemsListLoader extends FragmentActivity implements
 	public static final String NUMBER_OF_TREADS_FIELD_NAME = "itemsListLoadedNumberOfUsingThreads";
 	public static final String UPLOADING_FLAG_FIELD_NAME = "uploadingFlag";
 	public static final String FIELD_STATUS_NAME = "status";
+	public static final String FIELD_SERVER_OPERATION_DATE_NAME = "date";
+	public static final String FIELD_SERVER_MESSAGE_NAME = "error";
+	public static final String FIELD_RESULT_NAME = "result";
 
 	private static final String FIELD_DOC_LOADED_ROWS_TOTAL_NAME = "docRowsTotal";
 	private static final String FIELD_DOC_ROWS_TOTAL_NAME = "docLoadedRowsTotal";
@@ -79,10 +84,9 @@ public class ItemsListLoader extends FragmentActivity implements
 	private static final String FIELD_LAST_LOADED_ROW_NUM_NAME = "lastRow";
 	private static final String FIELD_ROWS_IN_EACH_PARCEL_NAME = "rowsInDataParcel";
 
-	public static final int BUTTON_BACK_ID = 501;
-
 	// Имя поля, которое в экстрах хранится строка соединения.
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringItems";
+	public static final String CONNECTION_STRING_UPLOAD_PREFS_FIELD_NAME = "connectionStringItemsPost";
 
 	// Поля XML-парсера.
 	private static final String DOC_TAG_NAME = "doc";
@@ -190,6 +194,10 @@ public class ItemsListLoader extends FragmentActivity implements
 	public void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
+
+		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this, true)) {
+			finish();
+		}
 
 		boolean uploading = false;
 		int status = 0;
@@ -341,30 +349,44 @@ public class ItemsListLoader extends FragmentActivity implements
 	// /////////////////////////////////////////////////////
 
 	@Override
-	public Loader<Void> onCreateLoader(int id, Bundle args) {
+	public Loader<JSONObject> onCreateLoader(int id, Bundle args) {
 
 		boolean uploading = args.getBoolean(UPLOADING_FLAG_FIELD_NAME);
 
-		Loader<Void> ldr;
+		Loader<JSONObject> ldr;
 		if (uploading) {
 			ldr = new ItemsAsyncTaskUploader(this, args);
 		} else {
 			ldr = new ItemsAsyncTaskLoader(this, args);
 		}
-
 		return ldr;
 	}
 
 	@Override
-	public void onLoadFinished(Loader<Void> loader, Void data) {
+	public void onLoadFinished(Loader<JSONObject> loader, JSONObject data) {
 
-		setResult(RESULT_OK);
+		// Объект data может уже содержать в себе результат работы активности.
+		// Но если его там нет, то считается, что всё нормально.
+		int resultCode = RESULT_OK;
+		try {
+			resultCode = (Integer) data.get(FIELD_RESULT_NAME);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		// Объект data может содержать в себе некоторые сообщения, которые
+		// следует отобразить в вызывающей активности.
+		Intent intent = new Intent();
+		intent.putExtra(FIELD_RESULT_NAME, data.toString());
+
+		setResult(resultCode, intent);
+
 		onCloseDialog(ID, BUTTON_BACK_ID);
 
 	}
 
 	@Override
-	public void onLoaderReset(Loader<Void> loader) {
+	public void onLoaderReset(Loader<JSONObject> loader) {
 
 		setResult(RESULT_CANCELED);
 		onCloseDialog(ID, BUTTON_BACK_ID);
@@ -380,7 +402,8 @@ public class ItemsListLoader extends FragmentActivity implements
 	 * @author programmer
 	 * 
 	 */
-	private static class ItemsAsyncTaskLoader extends AsyncTaskLoader<Void> {
+	private static class ItemsAsyncTaskLoader extends
+			AsyncTaskLoader<JSONObject> {
 
 		private Context context;
 
@@ -444,7 +467,9 @@ public class ItemsListLoader extends FragmentActivity implements
 		}
 
 		@Override
-		public Void loadInBackground() {
+		public JSONObject loadInBackground() {
+
+			JSONObject jsonResponse = new JSONObject();
 
 			if (Main.isDemoMode()) {
 
@@ -476,7 +501,22 @@ public class ItemsListLoader extends FragmentActivity implements
 						try {
 							TimeUnit.MILLISECONDS.sleep(DEMO_MODE_SLEEP_TIME);
 						} catch (InterruptedException e) {
+
 							e.printStackTrace();
+
+							// В случае ошибки возвращаем её описание.
+							try {
+
+								jsonResponse.put(FIELD_RESULT_NAME,
+										RESULT_CANCELED);
+								jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+										e.getMessage());
+
+								return jsonResponse;
+
+							} catch (JSONException e1) {
+								e1.printStackTrace();
+							}
 						}
 
 						if (!isStarted() || isAbandoned() || isReset())
@@ -494,6 +534,14 @@ public class ItemsListLoader extends FragmentActivity implements
 								WEAK_REF_ACTIVITY.get().getDocRowsTotal(), 0);
 					}
 				}
+
+				try {
+					jsonResponse.put(FIELD_RESULT_NAME, RESULT_OK);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
+				return jsonResponse;
 
 			} else {
 
@@ -524,8 +572,22 @@ public class ItemsListLoader extends FragmentActivity implements
 				// необходимо преобразование.
 				try {
 					query = query + URLEncoder.encode(docNum, HTTP.UTF_8) + "'";
-				} catch (UnsupportedEncodingException e1) {
-					e1.printStackTrace();
+				} catch (UnsupportedEncodingException e) {
+
+					e.printStackTrace();
+
+					// В случае ошибки возвращаем её описание.
+					try {
+
+						jsonResponse.put(FIELD_RESULT_NAME, RESULT_CANCELED);
+						jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+								e.getMessage());
+
+						return jsonResponse;
+
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
 				}
 
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory
@@ -555,19 +617,42 @@ public class ItemsListLoader extends FragmentActivity implements
 						// извлекается содержимое только одного документа, то и
 						// узел всегда один.
 						parseDocument(domDoc, dBase);
-					}
 
-				} catch (ParserConfigurationException e) {
-					e.printStackTrace();
+						try {
+							jsonResponse.put(FIELD_RESULT_NAME, RESULT_OK);
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+
+					}
 				} catch (Exception e) {
+
 					e.printStackTrace();
+
+					// В случае ошибки возвращаем её описание.
+					try {
+
+						jsonResponse.put(FIELD_RESULT_NAME, RESULT_CANCELED);
+						jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+								e.getMessage());
+
+						return jsonResponse;
+
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
 				}
 
 			} // if (Main.isDemoMode()) {
 
 			mp.start();
 
-			return null;
+			return jsonResponse;
+		}
+
+		@Override
+		public void deliverResult(JSONObject data) {
+			super.deliverResult(data);
 		}
 
 		@Override
@@ -581,7 +666,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		}
 
 		@Override
-		public void onCanceled(Void data) {
+		public void onCanceled(JSONObject data) {
 
 			super.onCanceled(data);
 
@@ -843,7 +928,8 @@ public class ItemsListLoader extends FragmentActivity implements
 	 * @author programmer
 	 * 
 	 */
-	private static class ItemsAsyncTaskUploader extends AsyncTaskLoader<Void> {
+	private static class ItemsAsyncTaskUploader extends
+			AsyncTaskLoader<JSONObject> {
 
 		private Context context;
 
@@ -855,6 +941,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		private long docDate;
 		private int status;
 		private String connectionString;
+		String deviceId;
 
 		// Интервалы строк к выгрузке.
 		SparseArray<int[]> spArr;
@@ -889,6 +976,11 @@ public class ItemsListLoader extends FragmentActivity implements
 				// Исходя из полученного интервала строк и количества строк в
 				// пакете производится разбивка строк по пакетам.
 				spArr = sliceInterval(rowsTotal, queries, maxRowsInParcel);
+
+				// Получение идентификатора устройства.
+				TelephonyManager tm = (TelephonyManager) context
+						.getSystemService(Context.TELEPHONY_SERVICE);
+				deviceId = tm.getDeviceId();
 			}
 
 			this.context = context;
@@ -909,21 +1001,51 @@ public class ItemsListLoader extends FragmentActivity implements
 		}
 
 		@Override
-		public Void loadInBackground() {
+		public JSONObject loadInBackground() {
+
+			JSONObject jsonResponse = new JSONObject();
 
 			if (Main.isDemoMode()) {
 
-				try {
-					Thread.sleep(5000);// TODO
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-
+				// Имитация ответа, возвращаемого сервером.
 				// {"date":"2015-02-13 21:53:40",
 				// "deviceId":"356633059239416",
 				// "docNum":"ЭКС00000004",
 				// "docDate":"2015-02-04 18:02:19",
 				// "status":"3"}
+				try {
+
+					Thread.sleep(2000);
+
+					String demoServerDate = dateFormatter.format(new Date());
+
+					jsonResponse.put(FIELD_SERVER_OPERATION_DATE_NAME,
+							demoServerDate);
+					jsonResponse.put(FIELD_DEVICE_ID_NAME, deviceId);
+					jsonResponse.put(FIELD_DOC_NUM_NAME, docNum);
+					jsonResponse.put(FIELD_DOC_DATE_NAME, docDate);
+					jsonResponse.put(FIELD_STATUS_NAME, status);
+					jsonResponse.put(FIELD_RESULT_NAME, RESULT_OK);
+
+					mp.start();
+
+				} catch (Exception e) {
+
+					e.printStackTrace();
+
+					// В случае ошибки возвращаем её описание.
+					try {
+
+						jsonResponse.put(FIELD_RESULT_NAME, RESULT_CANCELED);
+						jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+								e.getMessage());
+
+						return jsonResponse;
+
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
+				}
 
 			} else {
 
@@ -949,8 +1071,21 @@ public class ItemsListLoader extends FragmentActivity implements
 					arr.put(rowNum);
 					arr.put(quant);
 				} catch (JSONException e) {
+
 					e.printStackTrace();
-					return null;
+
+					// В случае ошибки возвращаем её описание.
+					try {
+
+						jsonResponse.put(FIELD_RESULT_NAME, RESULT_CANCELED);
+						jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+								e.getMessage());
+
+						return jsonResponse;
+
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
 				}
 
 				boolean error = false;
@@ -962,21 +1097,26 @@ public class ItemsListLoader extends FragmentActivity implements
 						arr.put(quant);
 					} catch (JSONException e) {
 						e.printStackTrace();
-						error = true;
-						break;
+
+						// В случае ошибки возвращаем её описание.
+						try {
+
+							jsonResponse
+									.put(FIELD_RESULT_NAME, RESULT_CANCELED);
+							jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+									e.getMessage());
+
+							return jsonResponse;
+
+						} catch (JSONException e1) {
+							e1.printStackTrace();
+						}
 					}
 				}
 
-				if (error)
-					return null;
-
-				JSONObject jsonObj = new JSONObject();
 				try {
 
-					// Получение идентификатора устройства.
-					TelephonyManager tm = (TelephonyManager) context
-							.getSystemService(Context.TELEPHONY_SERVICE);
-					String deviceId = tm.getDeviceId();
+					JSONObject jsonObj = new JSONObject();
 					jsonObj.put(FIELD_DEVICE_ID_NAME, deviceId);
 
 					String dateURIFormattedString = uriDateFormatter
@@ -985,9 +1125,8 @@ public class ItemsListLoader extends FragmentActivity implements
 
 					// В номере документа может содержаться кириллица, поэтому
 					// необходимо бы преобразование.
-					// Но в случае с JSON почему-то нужно передавать
-					// кириллический номер как есть и он принимается на сервере
-					// корректно.
+					// Но в случае с JSON используется UTF-8 и преобразовывать
+					// его не нужно.
 					jsonObj.put(FIELD_DOC_NUM_NAME, docNum);
 
 					// Статус, который должен получить документ после
@@ -998,22 +1137,43 @@ public class ItemsListLoader extends FragmentActivity implements
 					// в ней.
 					jsonObj.put(DOC_ROW_QUANT_TAG_NAME, arr);
 
-				} catch (JSONException e) {
-					e.printStackTrace();
-					return null;
-				}
+					jsonResponse = sendHttpJsonObject(connectionString, jsonObj);
+					jsonResponse.put(FIELD_RESULT_NAME, RESULT_OK);
 
-				String urlString = "http://express.nsk.ru:9999/eritems_post.php";
-				try {
-					sendHttpJsonObject(urlString, jsonObj);
+					mp.start();
+
 				} catch (Exception e) {
+
 					e.printStackTrace();
+
+					// В случае ошибки возвращаем её описание.
+					try {
+
+						jsonResponse.put(FIELD_RESULT_NAME, RESULT_CANCELED);
+						jsonResponse.put(FIELD_SERVER_MESSAGE_NAME,
+								e.getMessage());
+
+						return jsonResponse;
+
+					} catch (JSONException e1) {
+						e1.printStackTrace();
+					}
 				}
 			}
+			return jsonResponse;
+		}
 
-			mp.start();
+		@Override
+		public void onCanceled(JSONObject data) {
 
-			return null;
+			super.onCanceled(data);
+
+			onReleaseResources();
+		}
+
+		@Override
+		public void deliverResult(JSONObject data) {
+			super.deliverResult(data);
 		}
 
 		@Override
@@ -1022,14 +1182,6 @@ public class ItemsListLoader extends FragmentActivity implements
 			cancelLoad();
 
 			super.onStopLoading();
-
-			onReleaseResources();
-		}
-
-		@Override
-		public void onCanceled(Void data) {
-
-			super.onCanceled(data);
 
 			onReleaseResources();
 		}
@@ -1080,7 +1232,7 @@ public class ItemsListLoader extends FragmentActivity implements
 		 * 
 		 * @param
 		 */
-		public String sendHttpJsonObject(String url, JSONObject jsonObj)
+		public JSONObject sendHttpJsonObject(String url, JSONObject jsonObj)
 				throws Exception {
 
 			HttpURLConnection connection = null;
@@ -1121,8 +1273,10 @@ public class ItemsListLoader extends FragmentActivity implements
 					}
 					bufferedReader.close();
 
+					String jsonString = stringBuilder.toString();
 					// System.out.println(stringBuilder.toString());
-					return stringBuilder.toString();
+
+					return new JSONObject(jsonString);
 
 				} else {
 

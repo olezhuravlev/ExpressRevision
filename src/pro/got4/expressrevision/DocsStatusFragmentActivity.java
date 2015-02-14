@@ -70,9 +70,7 @@ public class DocsStatusFragmentActivity extends FragmentActivity implements
 
 		setContentView(R.layout.doc_set_status);
 
-		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this)) {
-			Toast.makeText(this, R.string.networkNotAvailable,
-					Toast.LENGTH_LONG).show();
+		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this, true)) {
 			finish();
 		}
 

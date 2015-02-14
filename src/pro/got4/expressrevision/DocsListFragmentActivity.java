@@ -23,9 +23,8 @@ public class DocsListFragmentActivity extends FragmentActivity implements
 		LoaderCallbacks<Cursor>, OnClickListener {
 
 	public static final int ID = 100;
-
-	public static final int CONTEXTMENU_LOAD_BUTTON_ID = 1;
-	public static final int CONTEXTMENU_LOAD_CANCEL_BUTTON_ID = 2;
+	public static final int CONTEXTMENU_LOAD_BUTTON_ID = 101;
+	public static final int CONTEXTMENU_LOAD_CANCEL_BUTTON_ID = 102;
 
 	private ListView lvData;
 

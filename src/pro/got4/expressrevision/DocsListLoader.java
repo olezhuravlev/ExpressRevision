@@ -41,14 +41,15 @@ public class DocsListLoader extends FragmentActivity implements
 		LoaderCallbacks<Void>, DialogListener {
 
 	public static final int ID = 200;
-	public static final String DOCSLIST_LOADER_TAG = "docslistloaderfragmentactivity_tag";
-
 	public static final int BUTTON_BACK_ID = 201;
+
+	private static final int DEMO_MODE_SLEEP_TIME = 500;
+
+	public static final String DOCSLIST_LOADER_TAG = "docslistloaderfragmentactivity_tag";
 
 	private ProgressDialogFragment pDialog; // Используется в хэндлере.
 
 	private ProgressHandler progressHandler; // Используется в AsyncTaskLoader.
-	private static final int DEMO_MODE_SLEEP_TIME = 500;
 
 	// Имя поля, которое в экстрах хранит строку соединения.
 	public static final String CONNECTION_STRING_FIELD_NAME = "connectionStringDocs";
@@ -122,9 +123,7 @@ public class DocsListLoader extends FragmentActivity implements
 
 		super.onCreate(savedInstanceState);
 
-		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this)) {
-			Toast.makeText(this, R.string.networkNotAvailable,
-					Toast.LENGTH_LONG).show();
+		if (!Main.isDemoMode() && !Main.isNetworkAvailable(this, true)) {
 			finish();
 		}
 

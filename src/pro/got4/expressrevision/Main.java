@@ -2,6 +2,9 @@ package pro.got4.expressrevision;
 
 import java.util.GregorianCalendar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import pro.got4.expressrevision.dialogs.CustomDialogFragment;
 import android.app.Activity;
 import android.content.Context;
@@ -85,7 +88,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 		// ”становка значений по умолчанию.
 		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 
-		setContentView(R.layout.main2);// TODO
+		setContentView(R.layout.main);// TODO
 
 		// открываем подключение к Ѕƒ
 		db = new DBase(this);
@@ -114,7 +117,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 				.getBoolean(FIELD_DEMOMODE_NAME, false);
 
 		setStyle(this);
-
+		setUploadButtonVisibility();
 		setStartButtonText();
 	}
 
@@ -264,8 +267,10 @@ public class Main extends FragmentActivity implements OnClickListener,
 			Intent intent = new Intent(this, ItemsListLoader.class);
 
 			String connectionString = PreferenceManager
-					.getDefaultSharedPreferences(this).getString(
-							ItemsListLoader.CONNECTION_STRING_FIELD_NAME, "");
+					.getDefaultSharedPreferences(this)
+					.getString(
+							ItemsListLoader.CONNECTION_STRING_UPLOAD_PREFS_FIELD_NAME,
+							"");
 			intent.putExtra(ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
 					connectionString);
 
@@ -322,14 +327,12 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		switch (requestCode) {
 
-		case DocsListFragmentActivity.ID:
+		case DocsListFragmentActivity.ID: {
 
 			// ќтвет получен из активности, отображающей список документов и
 			// загружающей выбранный.
 
-			switch (resultCode) {
-
-			case DocsListFragmentActivity.CONTEXTMENU_LOAD_BUTTON_ID:
+			if (resultCode == DocsListFragmentActivity.CONTEXTMENU_LOAD_BUTTON_ID) {
 
 				// ¬ контекстном меню списка документов была нажата кнопка
 				// загрузки документа.
@@ -357,90 +360,125 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 				// «апуск активности, отображающей список номенклатуры.
 				startActivityForResult(intent, ItemsListFragmentActivity.ID);
-
-				break;
-
 			}
-
-		case ItemsListLoader.ID:
-
-			// ќтвет получен из активности, выгружающей содержимое документа на
-			// сервер.
-
-			switch (resultCode) {
-			case ItemsListLoader.RESULT_OK:
-
-				break;
-
-			case ItemsListLoader.RESULT_CANCELED:
-
-				// ≈сли документ не удалось отправить на сервер, то ничего
-				// делать не нужно.
-				break;
-			}
-
-			break;
-
-		case DocsStatusFragmentActivity.ID:
-
-			// ѕолучен ответ из активности, устанавливающей статус документа на
-			// сервере.
-
-			DBase dBase = new DBase(this);
-			dBase.open();
-			String message1;
-			String message2;
-			SpannableString coloredText;
-
-			switch (resultCode) {
-			case RESULT_OK:
-
-				// —татус успешно установлен, строки документа можно удалить
-				// и вывести сообщение о загруженных строках.
-
-				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
-
-				message1 = getString(R.string.docSuccessfullyUploaded);
-				message2 = message1 + "\n" + getString(R.string.rowsDeleted)
-						+ rowsDeleted;
-
-				coloredText = null;
-				coloredText = new SpannableString(message2);
-				coloredText.setSpan(new ForegroundColorSpan(Color.GREEN), 0,
-						message1.length(), 0);
-
-				break;
-
-			default:
-
-				// ¬о всех прочих случа€х считаетс€, что статус документа
-				// на сервере установить не удалось, ничего делать не нужно,
-				// а только вывести сообщение.
-
-				long docRows = dBase.getRowsCount(DBase.TABLE_ITEMS_NAME);
-
-				message1 = getString(R.string.docIsNotUploaded);
-
-				message2 = message1 + "\n" + getString(R.string.rows) + docRows;
-
-				coloredText = new SpannableString(message2);
-				coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
-						message1.length(), 0);
-
-			}
-
-			Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 
 			break;
 		}
-	}
+		case ItemsListLoader.ID: {
 
-	/**
-	 * ¬озвращает количество строк загруженного документа.
-	 */
-	// private long getLoadedItemsCount() {
-	// return db.getRowsCount(DBase.TABLE_ITEMS_NAME);
-	// }
+			// ќтвет получен из активности, выгружающей содержимое документа
+			// на сервер.
+
+			String messageTitle = "";
+			String messageText = "";
+			String messageServer = "";
+			SpannableString coloredText;
+
+			switch (resultCode) {
+
+			case ItemsListLoader.RESULT_OK: {
+
+				// ƒокумент был успешно отправлен на сервер.
+				// —троки документа можно удалить.
+				DBase dBase = new DBase(this);
+				dBase.open();
+
+				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
+				messageTitle = getString(R.string.docSuccessfullyUploaded);
+				messageText = "\n" + getString(R.string.rowsDeleted)
+						+ rowsDeleted;
+
+				// —ообщение от сервера.
+				if (data != null) {
+
+					Bundle extras = data.getExtras();
+					String jsonResponse = extras
+							.getString(ItemsListLoader.FIELD_RESULT_NAME);
+
+					if (jsonResponse != null) {
+						JSONObject jsonObject;
+						try {
+							jsonObject = new JSONObject(jsonResponse);
+							messageServer = jsonObject
+									.getString(ItemsListLoader.FIELD_SERVER_MESSAGE_NAME);
+						} catch (JSONException e) {
+						}
+					}
+				}
+
+				if (!messageServer.isEmpty()) {
+					messageServer = "\n" + getString(R.string.serverResponse)
+							+ "\n" + messageServer;
+				}
+
+				coloredText = new SpannableString(messageTitle + messageText
+						+ messageServer);
+				coloredText.setSpan(new ForegroundColorSpan(Color.GREEN), 0,
+						messageTitle.length(), 0);
+				coloredText.setSpan(new ForegroundColorSpan(Color.YELLOW),
+						messageTitle.length() + messageText.length(),
+						messageTitle.length() + messageText.length()
+								+ messageServer.length(), 0);
+
+				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
+
+				break;
+			}
+
+			case ItemsListLoader.RESULT_CANCELED: {
+
+				// ƒокумент отправить на сервер не удалось.
+				// ¬ыводитс€ соответствующее сообщение.
+				messageTitle = getString(R.string.docIsNotUploaded);
+				messageText = "\n" + getString(R.string.serverResponse);
+
+				// —ообщение от сервера.
+				if (data != null) {
+
+					Bundle extras = data.getExtras();
+					String jsonResponse = extras
+							.getString(ItemsListLoader.FIELD_RESULT_NAME);
+
+					if (jsonResponse != null) {
+						JSONObject jsonObject;
+						try {
+							jsonObject = new JSONObject(jsonResponse);
+							messageServer = jsonObject
+									.getString(ItemsListLoader.FIELD_SERVER_MESSAGE_NAME);
+						} catch (JSONException e) {
+						}
+					}
+				}
+
+				if (messageServer.isEmpty()) {
+					messageText = "";
+				} else {
+					messageServer = "\n" + messageServer;
+				}
+
+				coloredText = new SpannableString(messageTitle + messageText
+						+ messageServer);
+				coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
+						messageTitle.length(), 0);
+				coloredText.setSpan(new ForegroundColorSpan(Color.YELLOW),
+						messageTitle.length() + messageText.length(),
+						messageTitle.length() + messageText.length()
+								+ messageServer.length(), 0);
+
+				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
+
+				break;
+
+			} // case ItemsListLoader.RESULT_CANCELED:
+			} // switch (resultCode) {
+
+			break;
+
+		} // case ItemsListLoader.ID:
+		} // switch (requestCode) {
+
+		setUploadButtonVisibility();
+	}
 
 	/**
 	 * ”станавливает заголовок, ориентацию и оформление заднего фона указанного
@@ -652,14 +690,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 		return false;
 	}
 
-	// /**
-	// * ¬озвращает флаг необходимости получени€ нового содержимого выбранного
-	// * документа с сервера.
-	// */
-	// public static boolean itemsListNeedsToBeFetched() {
-	// return true;
-	// }
-
 	/**
 	 * @return the lastDocsListFetchingTime
 	 */
@@ -680,27 +710,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public static void setLastDocsListFetchingTime(GregorianCalendar time) {
 		Main.lastDocsListFetchingTime = time;
 	}
-
-	// /**
-	// * @return the lastDocsListFetchingTime
-	// */
-	// public static GregorianCalendar getLastItemsListFetchingTime() {
-	//
-	// GregorianCalendar c = new GregorianCalendar(0, 0, 0);
-	//
-	// if (lastItemsListFetchingTime != null)
-	// c = (GregorianCalendar) lastItemsListFetchingTime.clone();
-	//
-	// return c;
-	// }
-	//
-	// /**
-	// * @param lastDocsListFetchingTime
-	// * the lastDocsListFetchingTime to set
-	// */
-	// public static void setLastItemsListFetchingTime(GregorianCalendar time) {
-	// Main.lastItemsListFetchingTime = time;
-	// }
 
 	/**
 	 * ¬озвращает флаг установленного демо-режима.
@@ -733,11 +742,41 @@ public class Main extends FragmentActivity implements OnClickListener,
 	 * 
 	 * @return
 	 */
-	public static boolean isNetworkAvailable(Context context) {
+	public static boolean isNetworkAvailable(Context context,
+			boolean showMessage) {
+
 		ConnectivityManager connectivityManager = (ConnectivityManager) context
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetworkInfo = connectivityManager
 				.getActiveNetworkInfo();
-		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+
+		boolean isNetworkAvailable = activeNetworkInfo != null
+				&& activeNetworkInfo.isConnected();
+
+		if (!isNetworkAvailable && showMessage) {
+
+			SpannableString coloredText = new SpannableString(
+					context.getString(R.string.networkNotAvailable));
+			coloredText
+					.setSpan(new ForegroundColorSpan(Color.rgb(60, 158, 230)),
+							11, 23, 0);
+			Toast.makeText(context, coloredText, Toast.LENGTH_LONG).show();
+		}
+
+		return isNetworkAvailable;
+	}
+
+	/**
+	 * ”станавливает видимость кнопки выгрузки на сервер.
+	 */
+	private void setUploadButtonVisibility() {
+
+		long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
+
+		if (loadedItems > 0) {
+			buttonUpload.setVisibility(View.VISIBLE);
+		} else {
+			buttonUpload.setVisibility(View.GONE);
+		}
 	}
 }

@@ -30,12 +30,15 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 	private static final int DOCS_EDITTEXT_ID = 601;
 	private static final int ITEMS_EDITTEXT_ID = 602;
+	private static final int ITEMS_POST_EDITTEXT_ID = 603;
 
 	private static final String DIALOG_TITLE_FIELD_NAME = "title";
 	private static final String DIALOG_MESSAGE_FIELD_NAME = "message";
 
 	private static final String CONNECTION_STRING_DOCS_PREFS_ID = "connectionStringDocs";
 	private static final String CONNECTION_STRING_ITEMS_PREFS_ID = "connectionStringItems";
+	private static final String CONNECTION_STRING_ITEMS_POST_PREFS_ID = "connectionStringItemsPost";
+
 	private static final String DEMO_MODE_PREFS_ID = "demoModePrefs";
 
 	private CheckBoxPreference demoModePref;
@@ -58,6 +61,9 @@ public class PreferencesActivity extends PreferenceActivity implements
 
 	private EditTextPreference connectionStringItemsPref;
 	private EditText connectionStringItemsPref_EditText;
+
+	private EditTextPreference connectionStringItemsPostPref;
+	private EditText connectionStringItemsPostPref_EditText;
 
 	/**
 	 * ИД элемента, над которым производится жест.
@@ -129,9 +135,15 @@ public class PreferencesActivity extends PreferenceActivity implements
 							case DOCS_EDITTEXT_ID:
 								connectionStringDocsPref_EditText
 										.setText(getString(R.string.docsConnectionString));
+								break;
 							case ITEMS_EDITTEXT_ID:
 								connectionStringItemsPref_EditText
 										.setText(getString(R.string.itemsConnectionString));
+								break;
+							case ITEMS_POST_EDITTEXT_ID:
+								connectionStringItemsPostPref_EditText
+										.setText(getString(R.string.itemsPostConnectionString));
+								break;
 							}
 
 							resetStates();
@@ -179,6 +191,29 @@ public class PreferencesActivity extends PreferenceActivity implements
 				.getEditText();
 		connectionStringItemsPref_EditText.setId(ITEMS_EDITTEXT_ID);
 		connectionStringItemsPref_EditText
+				.setOnTouchListener(new OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+
+						v.performClick();
+
+						currentEditText_Id = v.getId();
+						valuableGestureWidth = v.getWidth() / DIVIDER;
+
+						gDetector.onTouchEvent(event);
+
+						return false;
+					}
+				});
+
+		// Установка детектора жестов для настройки получателя содержимого
+		// документа.
+		connectionStringItemsPostPref = (EditTextPreference) findPreference(CONNECTION_STRING_ITEMS_POST_PREFS_ID);
+		connectionStringItemsPostPref_EditText = connectionStringItemsPostPref
+				.getEditText();
+		connectionStringItemsPostPref_EditText.setId(ITEMS_POST_EDITTEXT_ID);
+		connectionStringItemsPostPref_EditText
 				.setOnTouchListener(new OnTouchListener() {
 
 					@Override

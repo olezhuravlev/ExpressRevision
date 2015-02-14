@@ -40,7 +40,6 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 		OnItemButtonClickListener {
 
 	public static final int ID = 400;
-
 	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_BUTTON_ID = 401;
 	public static final int CONTEXTMENU_SET_DUPLICATES_AS_VISITED_CANCEL_BUTTON_ID = 402;
 
