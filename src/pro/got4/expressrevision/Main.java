@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -27,10 +29,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class Main extends FragmentActivity implements OnClickListener,
 		CustomDialogFragment.OnCloseCustomDialogListener {
+
+	private static final int ID = 50;
 
 	public static final String FIELD_ORIENTATION_NAME = "displayOrientation";
 	public static final String FIELD_DOCS_LIST_OPENING_TIME_DELAY_NAME = "docListOpeningTimeDelay";
@@ -41,7 +46,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 	public static final String FIELD_DEMOMODE_NAME = "demoModePrefs";
 
-	public static final int DIALOG_DATA_CLEANING_CONFIRMATION = 1;
+	public static final int DIALOG_DATA_CLEANING_CONFIRMATION_ITEM_IDX = 1;
+	public static final int DIALOG_DATA_CLEANING_CONFIRMATION_ID = 51;
+	public static final int DIALOG_UPLOAD_TO_SERVER_CONFIRMATION_ID = 52;
 
 	public static DBase db;
 
@@ -52,6 +59,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 	private Button buttonMain;
 	private Button buttonUpload;
+	private TextView versionNameTextView;
 
 	private MediaPlayer mp;
 
@@ -81,14 +89,10 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		super.onCreate(savedInstanceState);
 
-		// if (savedInstanceState != null) {
-		//
-		// }
-
 		// Установка значений по умолчанию.
 		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 
-		setContentView(R.layout.main);// TODO
+		setContentView(R.layout.main);
 
 		// открываем подключение к БД
 		db = new DBase(this);
@@ -99,6 +103,16 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 		buttonUpload = (Button) findViewById(R.id.buttonUpload);
 		buttonUpload.setOnClickListener(this);
+
+		versionNameTextView = (TextView) findViewById(R.id.versionNameTextView);
+
+		PackageInfo pInfo;
+		try {
+			pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			versionNameTextView.setText("ver." + pInfo.versionName);
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
 
 		if (savedInstanceState == null) {
 			mp = MediaPlayer.create(this, R.raw.logo);
@@ -164,7 +178,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public void onCloseCustomDialog(int dialogId, int buttonId) {
 
 		switch (dialogId) {
-		case (DIALOG_DATA_CLEANING_CONFIRMATION): {
+		case (DIALOG_DATA_CLEANING_CONFIRMATION_ID): {
 
 			// В вызванном диалоге подтверждения очистки данных пользователь
 			// подтвердил действие.
@@ -193,6 +207,39 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			break;
 		}
+		case (DIALOG_UPLOAD_TO_SERVER_CONFIRMATION_ID): {
+
+			// В вызванном диалоге подтверждения отправки данных на сервер
+			// пользователь подтвердил действие.
+			if (buttonId == CustomDialogFragment.BUTTON_YES) {
+				// Запуск выгрузки содержимого документа.
+				Intent intent = new Intent(this, ItemsListLoader.class);
+
+				String connectionString = PreferenceManager
+						.getDefaultSharedPreferences(this)
+						.getString(
+								ItemsListLoader.CONNECTION_STRING_UPLOAD_PREFS_FIELD_NAME,
+								"");
+				intent.putExtra(ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
+						connectionString);
+
+				DocInfo docInfo = getFirstDocumentInfo(this);
+				long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
+
+				if (loadedItems == 0)
+					return;
+
+				intent.putExtra(DBase.FIELD_DOC_NUM_NAME, docInfo.DOC_NUM);
+				intent.putExtra(DBase.FIELD_DOC_DATE_NAME, docInfo.DOC_DATE);
+				intent.putExtra(DBase.FIELD_DOC_ROWS_NAME, loadedItems);
+				intent.putExtra(ItemsListLoader.UPLOADING_FLAG_FIELD_NAME, true);
+				intent.putExtra(
+						ItemsListLoader.FIELD_STATUS_NAME,
+						Integer.parseInt(getString(R.string.docStatusAfterSuccessfulUploading)));
+
+				startActivityForResult(intent, ItemsListLoader.ID);
+			}
+		}
 		default:
 		}
 	}
@@ -201,7 +248,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public boolean onPrepareOptionsMenu(Menu menu) {
 
 		// Отключение кнопки очистки таблиц.
-		MenuItem item = menu.getItem(DIALOG_DATA_CLEANING_CONFIRMATION);
+		MenuItem item = menu
+				.getItem(DIALOG_DATA_CLEANING_CONFIRMATION_ITEM_IDX);
 		boolean rowsExist = true;
 		if (db.getRowsCount(DBase.TABLE_DOCS_NAME)
 				+ db.getRowsCount(DBase.TABLE_ITEMS_NAME) == 0) {
@@ -263,33 +311,11 @@ public class Main extends FragmentActivity implements OnClickListener,
 		}
 		case R.id.buttonUpload: {
 
-			// Запуск выгрузки содержимого документа.
-			Intent intent = new Intent(this, ItemsListLoader.class);
-
-			String connectionString = PreferenceManager
-					.getDefaultSharedPreferences(this)
-					.getString(
-							ItemsListLoader.CONNECTION_STRING_UPLOAD_PREFS_FIELD_NAME,
-							"");
-			intent.putExtra(ItemsListLoader.CONNECTION_STRING_FIELD_NAME,
-					connectionString);
-
-			DocInfo docInfo = getFirstDocumentInfo(this);
-			long loadedItems = db.getRowsCount(DBase.TABLE_ITEMS_NAME);
-
-			if (loadedItems == 0)
-				return;
-
-			intent.putExtra(DBase.FIELD_DOC_NUM_NAME, docInfo.DOC_NUM);
-			intent.putExtra(DBase.FIELD_DOC_DATE_NAME, docInfo.DOC_DATE);
-			intent.putExtra(DBase.FIELD_DOC_ROWS_NAME, loadedItems);
-			intent.putExtra(ItemsListLoader.UPLOADING_FLAG_FIELD_NAME, true);
-			intent.putExtra(
-					ItemsListLoader.FIELD_STATUS_NAME,
-					Integer.parseInt(getString(R.string.docStatusAfterSuccessfulUploading)));
-
-			startActivityForResult(intent, ItemsListLoader.ID);
-
+			// Отображение диалога о выгрузке данных на сервер.
+			CustomDialogFragment.showDialog_YesNo(
+					getString(R.string.uploadDataToServer),
+					getString(R.string.uploadDataToServerMessage),
+					DIALOG_UPLOAD_TO_SERVER_CONFIRMATION_ID, Main.this);
 			break;
 		}
 
@@ -315,7 +341,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 			CustomDialogFragment.showDialog_YesNo(
 					getString(R.string.dataCleaning),
 					getString(R.string.dataCleaningQuestion),
-					DIALOG_DATA_CLEANING_CONFIRMATION, Main.this);
+					DIALOG_DATA_CLEANING_CONFIRMATION_ID, Main.this);
 		}
 		}
 
@@ -368,27 +394,18 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			// Ответ получен из активности, выгружающей содержимое документа
 			// на сервер.
-
+			String status = "";
 			String messageTitle = "";
 			String messageText = "";
 			String messageServer = "";
-			SpannableString coloredText;
+			SpannableString coloredText = null;
 
 			switch (resultCode) {
 
 			case ItemsListLoader.RESULT_OK: {
 
-				// Документ был успешно отправлен на сервер.
-				// Строки документа можно удалить.
-				DBase dBase = new DBase(this);
-				dBase.open();
-
-				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
-				messageTitle = getString(R.string.docSuccessfullyUploaded);
-				messageText = "\n" + getString(R.string.rowsDeleted)
-						+ rowsDeleted;
-
 				// Сообщение от сервера.
+				JSONObject jsonObject = null;
 				if (data != null) {
 
 					Bundle extras = data.getExtras();
@@ -396,9 +413,10 @@ public class Main extends FragmentActivity implements OnClickListener,
 							.getString(ItemsListLoader.FIELD_RESULT_NAME);
 
 					if (jsonResponse != null) {
-						JSONObject jsonObject;
 						try {
 							jsonObject = new JSONObject(jsonResponse);
+							status = jsonObject
+									.getString(ItemsListLoader.FIELD_STATUS_NAME);
 							messageServer = jsonObject
 									.getString(ItemsListLoader.FIELD_SERVER_MESSAGE_NAME);
 						} catch (JSONException e) {
@@ -406,9 +424,37 @@ public class Main extends FragmentActivity implements OnClickListener,
 					}
 				}
 
-				if (!messageServer.isEmpty()) {
-					messageServer = "\n" + getString(R.string.serverResponse)
-							+ "\n" + messageServer;
+				// Документ был отправлен на сервер, где для документа должен
+				// был быть установлен соответствующий статус.
+				// Этот статус должен совпадать с требуемым - это будет
+				// подтверждением того, что фактическая загрузка произошла
+				// успешно.
+				// После этого документ с устройства можно удалить.
+				String requiredStatus = getString(R.string.docStatusAfterSuccessfulUploading);
+				if (status.equals(requiredStatus)) {
+
+					DBase dBase = new DBase(this);
+					dBase.open();
+					// int rowsDeleted =
+					// dBase.clearTable(DBase.TABLE_ITEMS_NAME);
+					messageTitle = getString(R.string.docSuccessfullyUploaded);
+					messageText = "\n" + getString(R.string.rowsDeleted); // +
+					// rowsDeleted;
+
+				} else {
+
+					// Статус документ не совпадает с требуемым, это признак
+					// сбоя при загрузке документа.
+					messageTitle = getString(R.string.docIsNotUploaded);
+					messageText = "\n" + getString(R.string.serverResponse);
+					messageServer = getString(R.string.cantSetDocStatus);
+
+				}
+
+				if (messageServer.isEmpty()) {
+					messageText = "";
+				} else {
+					messageServer = "\n" + messageServer;
 				}
 
 				coloredText = new SpannableString(messageTitle + messageText
@@ -419,7 +465,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 						messageTitle.length() + messageText.length(),
 						messageTitle.length() + messageText.length()
 								+ messageServer.length(), 0);
-
 				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 
 				break;
@@ -779,4 +824,5 @@ public class Main extends FragmentActivity implements OnClickListener,
 			buttonUpload.setVisibility(View.GONE);
 		}
 	}
+
 }

@@ -148,6 +148,7 @@ public class ItemsListLoader extends FragmentActivity implements
 
 	private int threadsNumber = 0;
 	private int maxRowsInParcel = 0;
+	private boolean uploading;
 
 	// /////////////////////////////////////////////////////
 	// Хэндлер.
@@ -199,7 +200,7 @@ public class ItemsListLoader extends FragmentActivity implements
 			finish();
 		}
 
-		boolean uploading = false;
+		uploading = false;
 		int status = 0;
 		Bundle extras = getIntent().getExtras();
 		if (extras == null) {
@@ -326,14 +327,6 @@ public class ItemsListLoader extends FragmentActivity implements
 		super.onPause();
 
 		progressHandler = null;
-
-		// Если загружены не все строки, то результат 0.
-		// Если всё, то 1.
-		if (docRowsTotal == docLoadedRowsTotal) {
-			setResult(RESULT_OK);
-		} else {
-			setResult(RESULT_CANCELED);
-		}
 	}
 
 	@Override
@@ -365,24 +358,40 @@ public class ItemsListLoader extends FragmentActivity implements
 	@Override
 	public void onLoadFinished(Loader<JSONObject> loader, JSONObject data) {
 
-		// Объект data может уже содержать в себе результат работы активности.
-		// Но если его там нет, то считается, что всё нормально.
-		int resultCode = RESULT_OK;
-		try {
-			resultCode = (Integer) data.get(FIELD_RESULT_NAME);
-		} catch (JSONException e) {
-			e.printStackTrace();
+		if (uploading) {
+
+			// При выгрузке здесь проверки не производится, а в результат
+			// устанавливается строка ответа сервера.
+			// Объект data может уже содержать в себе результат работы
+			// активности.
+			// Но если его там нет, то считается, что всё нормально.
+			int resultCode = RESULT_OK;
+			try {
+				resultCode = (Integer) data.get(FIELD_RESULT_NAME);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+			// Объект data нужно передать вызывающей активности для дальнейшего
+			// анализа.
+			Intent intent = new Intent();
+			intent.putExtra(FIELD_RESULT_NAME, data.toString());
+
+			setResult(resultCode, intent);
+
+		} else {
+
+			// При загрузке сервера проверка состоит в том, что сверяется
+			// количество
+			// строк документа с фактически загруженным количеством строк.
+			if (docRowsTotal == docLoadedRowsTotal) {
+				setResult(RESULT_OK);
+			} else {
+				setResult(RESULT_CANCELED);
+			}
 		}
 
-		// Объект data может содержать в себе некоторые сообщения, которые
-		// следует отобразить в вызывающей активности.
-		Intent intent = new Intent();
-		intent.putExtra(FIELD_RESULT_NAME, data.toString());
-
-		setResult(resultCode, intent);
-
 		onCloseDialog(ID, BUTTON_BACK_ID);
-
 	}
 
 	@Override

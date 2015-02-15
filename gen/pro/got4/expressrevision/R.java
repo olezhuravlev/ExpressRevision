@@ -79,12 +79,12 @@ public final class R {
         public static final int commentTextView=0x7f0a0015;
         public static final int dateTextView=0x7f0a0012;
         public static final int docsListView=0x7f0a0010;
-        public static final int documentFragment=0x7f0a0028;
+        public static final int documentFragment=0x7f0a0029;
         public static final int down_ImageButton=0x7f0a0003;
         public static final int item_code_textView=0x7f0a001b;
         public static final int item_descr_full_textView=0x7f0a001c;
         public static final int itemsFilterEditText=0x7f0a0017;
-        public static final int itemsFragment=0x7f0a0027;
+        public static final int itemsFragment=0x7f0a0028;
         public static final int listViewItems=0x7f0a0019;
         public static final int message_TextView=0x7f0a0000;
         public static final int numberTextView=0x7f0a0013;
@@ -108,6 +108,7 @@ public final class R {
         public static final int textViewMessage=0x7f0a0007;
         public static final int textViewTitle=0x7f0a0006;
         public static final int up_ImageButton=0x7f0a0001;
+        public static final int versionNameTextView=0x7f0a0027;
     }
     public static final class layout {
         public static final int dialog_input_number=0x7f030000;
@@ -149,14 +150,15 @@ public final class R {
         public static final int btnLoadDocument=0x7f070006;
         public static final int btnSetVisitedOff=0x7f070007;
         public static final int cancel=0x7f07000c;
+        public static final int cantSetDocStatus=0x7f070030;
         public static final int clearTables=0x7f070025;
         public static final int clearValue=0x7f070036;
         public static final int connectPrefs=0x7f070023;
         /**  Строки подключения и их заголовки 
          */
-        public static final int connectionStringDocs=0x7f070040;
-        public static final int connectionStringItems=0x7f070042;
-        public static final int connectionStringItemsPost=0x7f070044;
+        public static final int connectionStringDocs=0x7f070042;
+        public static final int connectionStringItems=0x7f070044;
+        public static final int connectionStringItemsPost=0x7f070046;
         public static final int currency=0x7f070035;
         public static final int dataCleaning=0x7f070029;
         public static final int dataCleaningQuestion=0x7f07002a;
@@ -169,17 +171,16 @@ public final class R {
         public static final int demoMode_Summary=0x7f070003;
         public static final int displayOrientation=0x7f070022;
         public static final int docIsNotUploaded=0x7f07003e;
-        public static final int docLoadedButCantSetRevisionStatus=0x7f070030;
         /**  Признак, выставляемый документу на сервере после успешной загрузки на устройство 
          */
-        public static final int docStatusAfterSuccessfulLoading=0x7f070049;
+        public static final int docStatusAfterSuccessfulLoading=0x7f07004b;
         /**  Признак, выставляемый документу на сервере после успешной загрузки на сервер 
          */
-        public static final int docStatusAfterSuccessfulUploading=0x7f07004a;
+        public static final int docStatusAfterSuccessfulUploading=0x7f07004c;
         public static final int docStatusRetrieving=0x7f07002f;
         public static final int docSuccessfullyUploaded=0x7f07003d;
         public static final int docsConnectionParametersNotSet=0x7f070038;
-        public static final int docsConnectionString=0x7f070041;
+        public static final int docsConnectionString=0x7f070043;
         public static final int docsConnectionStringNotSet=0x7f070039;
         public static final int docsStatusSettingsNotSet=0x7f07003a;
         public static final int docsTableNotCleared=0x7f070027;
@@ -187,11 +188,11 @@ public final class R {
         public static final int documentLoaded=0x7f07002e;
         public static final int enterFilterString=0x7f070033;
         public static final int itemsConnectionParametersNotSet=0x7f07003b;
-        public static final int itemsConnectionString=0x7f070043;
+        public static final int itemsConnectionString=0x7f070045;
         public static final int itemsConnectionStringNotSet=0x7f07003c;
         public static final int itemsListLoadedNumberOfUsingThreads=0x7f07001e;
         public static final int itemsListLoadedNumberOfUsingThreads_Summary=0x7f07001f;
-        public static final int itemsPostConnectionString=0x7f070045;
+        public static final int itemsPostConnectionString=0x7f070047;
         public static final int itemsTableNotCleared=0x7f070028;
         public static final int loadDocument=0x7f070014;
         public static final int loadDocuments=0x7f070013;
@@ -205,11 +206,11 @@ public final class R {
         public static final int ok=0x7f07000b;
         public static final int percent=0x7f070032;
         public static final int pleaseWait=0x7f07001b;
-        public static final int quantityDecimalSeparator=0x7f070047;
+        public static final int quantityDecimalSeparator=0x7f070049;
         /**  Для отображения количества 
          */
-        public static final int quantityFormatPattern=0x7f070046;
-        public static final int quantityGroupingSeparator=0x7f070048;
+        public static final int quantityFormatPattern=0x7f070048;
+        public static final int quantityGroupingSeparator=0x7f07004a;
         public static final int refreshDocListOnOpening=0x7f07001c;
         public static final int refreshDocListOnOpening_Summary=0x7f07001d;
         public static final int resreshList=0x7f070012;
@@ -224,6 +225,8 @@ public final class R {
         public static final int settings_title=0x7f070001;
         public static final int tablesCleared=0x7f070026;
         public static final int upload=0x7f07000d;
+        public static final int uploadDataToServer=0x7f070040;
+        public static final int uploadDataToServerMessage=0x7f070041;
         public static final int userPrefs=0x7f070021;
         public static final int yes=0x7f070009;
     }

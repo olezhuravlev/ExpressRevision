@@ -60,7 +60,7 @@
     <string name="rowsDeleted">Cтрок удалено:</string>
     <string name="documentLoaded">Ревизия загружена</string>
     <string name="docStatusRetrieving">Установка статуса документа</string>
-    <string name="docLoadedButCantSetRevisionStatus">Статус документа установить не удалось!</string>
+    <string name="cantSetDocStatus">Статус документа установить не удалось!</string>
     <string name="rowsLoaded">Строк загружено:</string>
     <string name="percent">%</string>
     <string name="enterFilterString">Строка для поиска...</string>
@@ -76,6 +76,8 @@
     <string name="docSuccessfullyUploaded">Документ успешно передан на сервер.</string>
     <string name="docIsNotUploaded">Документ передать на сервер не удалось!</string>
     <string name="serverResponse">Ответ сервера:</string>
+    <string name="uploadDataToServer">Отправить данные на сервер?</string>
+    <string name="uploadDataToServerMessage">В случае успешной отправки данные с этого устройства будут удалены!</string>
 
     <!-- Строки подключения и их заголовки -->
     <string name="connectionStringDocs">Получение списка документов</string>

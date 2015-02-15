@@ -403,7 +403,7 @@ public class ItemsListFragmentActivity extends FragmentActivity implements
 				// него данные д.б. уничтожены, как недостоверные.
 				int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
 
-				message1 = getString(R.string.docLoadedButCantSetRevisionStatus);
+				message1 = getString(R.string.cantSetDocStatus);
 				message2 = message1 + "\n" + getString(R.string.rowsDeleted)
 						+ rowsDeleted;
 
