@@ -541,14 +541,16 @@ public class ItemsListLoader extends FragmentActivity implements
 						setProgress(WEAK_REF_ACTIVITY.get()
 								.getProgressHandler(), rowsLoaded,
 								WEAK_REF_ACTIVITY.get().getDocRowsTotal(), 0);
-					}
-				}
+					} // while (cursor.moveToNext()) {
+				} // if (cursor.isFirst()) {
 
 				try {
 					jsonResponse.put(FIELD_RESULT_NAME, RESULT_OK);
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
+
+				mp.start();
 
 				return jsonResponse;
 

@@ -36,6 +36,8 @@ public class Main extends FragmentActivity implements OnClickListener,
 		CustomDialogFragment.OnCloseCustomDialogListener {
 
 	private static final int ID = 50;
+	public static final int DIALOG_DATA_CLEANING_CONFIRMATION_ID = 51;
+	public static final int DIALOG_UPLOAD_TO_SERVER_CONFIRMATION_ID = 52;
 
 	public static final String FIELD_ORIENTATION_NAME = "displayOrientation";
 	public static final String FIELD_DOCS_LIST_OPENING_TIME_DELAY_NAME = "docListOpeningTimeDelay";
@@ -47,8 +49,6 @@ public class Main extends FragmentActivity implements OnClickListener,
 	public static final String FIELD_DEMOMODE_NAME = "demoModePrefs";
 
 	public static final int DIALOG_DATA_CLEANING_CONFIRMATION_ITEM_IDX = 1;
-	public static final int DIALOG_DATA_CLEANING_CONFIRMATION_ID = 51;
-	public static final int DIALOG_UPLOAD_TO_SERVER_CONFIRMATION_ID = 52;
 
 	public static DBase db;
 
@@ -200,9 +200,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 				// Дату получения списка документов тоже нужно сбросить.
 				setLastDocsListFetchingTime(null);
 
-				setStartButtonText();
-
 				setStyle(this);
+				setUploadButtonVisibility();
+				setStartButtonText();
 			}
 
 			break;
@@ -212,6 +212,7 @@ public class Main extends FragmentActivity implements OnClickListener,
 			// В вызванном диалоге подтверждения отправки данных на сервер
 			// пользователь подтвердил действие.
 			if (buttonId == CustomDialogFragment.BUTTON_YES) {
+
 				// Запуск выгрузки содержимого документа.
 				Intent intent = new Intent(this, ItemsListLoader.class);
 
@@ -398,31 +399,33 @@ public class Main extends FragmentActivity implements OnClickListener,
 			String messageTitle = "";
 			String messageText = "";
 			String messageServer = "";
+			int messageTitleColor = Color.GREEN;
+			int messageServerColor = Color.YELLOW;
+
 			SpannableString coloredText = null;
 
-			switch (resultCode) {
+			// Статус и сообщение от сервера.
+			JSONObject jsonObject = null;
+			if (data != null) {
 
-			case ItemsListLoader.RESULT_OK: {
+				Bundle extras = data.getExtras();
+				String jsonResponse = extras
+						.getString(ItemsListLoader.FIELD_RESULT_NAME);
 
-				// Сообщение от сервера.
-				JSONObject jsonObject = null;
-				if (data != null) {
-
-					Bundle extras = data.getExtras();
-					String jsonResponse = extras
-							.getString(ItemsListLoader.FIELD_RESULT_NAME);
-
-					if (jsonResponse != null) {
-						try {
-							jsonObject = new JSONObject(jsonResponse);
-							status = jsonObject
-									.getString(ItemsListLoader.FIELD_STATUS_NAME);
-							messageServer = jsonObject
-									.getString(ItemsListLoader.FIELD_SERVER_MESSAGE_NAME);
-						} catch (JSONException e) {
-						}
+				if (jsonResponse != null) {
+					try {
+						jsonObject = new JSONObject(jsonResponse);
+						status = jsonObject
+								.getString(ItemsListLoader.FIELD_STATUS_NAME);
+						messageServer = jsonObject
+								.getString(ItemsListLoader.FIELD_SERVER_MESSAGE_NAME);
+					} catch (JSONException e) {
 					}
 				}
+			}
+
+			switch (resultCode) {
+			case ItemsListLoader.RESULT_OK: {
 
 				// Документ был отправлен на сервер, где для документа должен
 				// был быть установлен соответствующий статус.
@@ -435,37 +438,21 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 					DBase dBase = new DBase(this);
 					dBase.open();
-					// int rowsDeleted =
-					// dBase.clearTable(DBase.TABLE_ITEMS_NAME);
+					int rowsDeleted = dBase.clearTable(DBase.TABLE_ITEMS_NAME);
 					messageTitle = getString(R.string.docSuccessfullyUploaded);
-					messageText = "\n" + getString(R.string.rowsDeleted); // +
-					// rowsDeleted;
+					messageText = getString(R.string.rowsDeleted) + rowsDeleted;
+					messageServer = "";
 
 				} else {
 
 					// Статус документ не совпадает с требуемым, это признак
 					// сбоя при загрузке документа.
 					messageTitle = getString(R.string.docIsNotUploaded);
-					messageText = "\n" + getString(R.string.serverResponse);
+					messageText = getString(R.string.serverResponse);
 					messageServer = getString(R.string.cantSetDocStatus);
 
+					messageTitleColor = Color.RED;
 				}
-
-				if (messageServer.isEmpty()) {
-					messageText = "";
-				} else {
-					messageServer = "\n" + messageServer;
-				}
-
-				coloredText = new SpannableString(messageTitle + messageText
-						+ messageServer);
-				coloredText.setSpan(new ForegroundColorSpan(Color.GREEN), 0,
-						messageTitle.length(), 0);
-				coloredText.setSpan(new ForegroundColorSpan(Color.YELLOW),
-						messageTitle.length() + messageText.length(),
-						messageTitle.length() + messageText.length()
-								+ messageServer.length(), 0);
-				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 
 				break;
 			}
@@ -475,47 +462,37 @@ public class Main extends FragmentActivity implements OnClickListener,
 				// Документ отправить на сервер не удалось.
 				// Выводится соответствующее сообщение.
 				messageTitle = getString(R.string.docIsNotUploaded);
-				messageText = "\n" + getString(R.string.serverResponse);
+				messageText = getString(R.string.serverResponse);
 
-				// Сообщение от сервера.
-				if (data != null) {
-
-					Bundle extras = data.getExtras();
-					String jsonResponse = extras
-							.getString(ItemsListLoader.FIELD_RESULT_NAME);
-
-					if (jsonResponse != null) {
-						JSONObject jsonObject;
-						try {
-							jsonObject = new JSONObject(jsonResponse);
-							messageServer = jsonObject
-									.getString(ItemsListLoader.FIELD_SERVER_MESSAGE_NAME);
-						} catch (JSONException e) {
-						}
-					}
-				}
-
-				if (messageServer.isEmpty()) {
-					messageText = "";
-				} else {
-					messageServer = "\n" + messageServer;
-				}
-
-				coloredText = new SpannableString(messageTitle + messageText
-						+ messageServer);
-				coloredText.setSpan(new ForegroundColorSpan(Color.RED), 0,
-						messageTitle.length(), 0);
-				coloredText.setSpan(new ForegroundColorSpan(Color.YELLOW),
-						messageTitle.length() + messageText.length(),
-						messageTitle.length() + messageText.length()
-								+ messageServer.length(), 0);
-
-				Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
+				messageTitleColor = Color.RED;
 
 				break;
 
 			} // case ItemsListLoader.RESULT_CANCELED:
 			} // switch (resultCode) {
+
+			if (!messageText.isEmpty()) {
+				messageText = "\n" + messageText;
+			}
+
+			if (!messageServer.isEmpty()) {
+				messageServer = "\n" + messageServer;
+			}
+
+			if (messageServer.isEmpty()) {
+				messageText = "";
+			}
+
+			coloredText = new SpannableString(messageTitle + messageText
+					+ messageServer);
+			coloredText.setSpan(new ForegroundColorSpan(messageTitleColor), 0,
+					messageTitle.length(), 0);
+			coloredText.setSpan(new ForegroundColorSpan(messageServerColor),
+					messageTitle.length() + messageText.length(),
+					messageTitle.length() + messageText.length()
+							+ messageServer.length(), 0);
+
+			Toast.makeText(this, coloredText, Toast.LENGTH_LONG).show();
 
 			break;
 
@@ -802,9 +779,9 @@ public class Main extends FragmentActivity implements OnClickListener,
 
 			SpannableString coloredText = new SpannableString(
 					context.getString(R.string.networkNotAvailable));
-			coloredText
-					.setSpan(new ForegroundColorSpan(Color.rgb(60, 158, 230)),
-							11, 23, 0);
+			coloredText.setSpan(
+					new ForegroundColorSpan(Color.rgb(100, 170, 230)), 11, 23,
+					0);
 			Toast.makeText(context, coloredText, Toast.LENGTH_LONG).show();
 		}
 
